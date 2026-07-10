@@ -1,0 +1,33 @@
+# GA4 sensitive-column catalog (FR-1.1) — the asset's differentiation core.
+# Single source of truth consumed by BOTH sides (FR-1.2):
+#   build:   marts *_models.yml policy_tags must agree with these levels
+#   inspect: checkpoint #4 flags high/medium columns missing their policy tag
+#
+# Rule (FR-1.2): this file ships recommended DEFAULTS and stays unchanged in
+# engagements; per-engagement changes go ONLY in `overrides` (e.g. promote
+# user_pseudo_id to high under strict regulation). No code edits to re-level.
+version: 1
+
+levels: [high, medium, low]
+
+# Post-transform column names (as they appear in staging/marts) -> level.
+columns:
+  user_id: high # self-assigned member/CRM id
+  user_pseudo_id: medium # pseudonymous analytics id, needed for joins
+  geo_city: medium
+  geo_region: medium
+  device_category: low
+  traffic_source: low
+  event_name: low
+  event_date: low
+  event_ts: low
+
+# event_params keys recommended for typed promotion (FR-1.3) and the level the
+# promoted column receives. Which keys actually get promoted is an engagement
+# parameter; anything left nested is covered by dataset IAM + value-scan (A+).
+promoted_event_params:
+  page_location: high # query strings can carry PII
+  page_referrer: high # same risk as page_location
+
+# Engagement-level re-mapping: column name -> level. Empty in the template.
+overrides: {}
