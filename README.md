@@ -1,53 +1,64 @@
-# terraform-gcp-template
+# secure-ga4-bq-template
 
-**GCP Terraform starter on the ai-dev-foundation base** — a template repository for
-infrastructure projects where AI agents are the primary developers. It layers a Terraform
-setup on top of everything [ai-dev-foundation](https://github.com/Yukihide-Mitsuoka/ai-dev-foundation)
-provides (rules, guardrails, skills, hooks, CI).
+**Secure standard asset for GA4→BigQuery** — a template repository for engagements that
+build or inspect GA4→BQ **mart layers** with three security controls baked in:
+① column-level security (policy tags) ② least-privilege IAM ③ cost-optimized audit
+logging. Built on [terraform-gcp-template](https://github.com/Yukihide-Mitsuoka/terraform-gcp-template)
+(which is built on [ai-dev-foundation](https://github.com/Yukihide-Mitsuoka/ai-dev-foundation)).
 
 > **AI agents:** stop reading this file. Your entry point is [CLAUDE.md](CLAUDE.md)
-> (Claude Code) or [AGENTS.md](AGENTS.md) (everyone else).
+> (Claude Code) or [AGENTS.md](AGENTS.md) (everyone else). Requirements live in
+> [docs/requirements/](docs/requirements/README.md).
 
 ## Position in the template chain
 
 ```
-ai-dev-foundation ──sync──▶ terraform-gcp-template ──sync──▶ your infra project
-   (base template)              (this repo)                       │ source=?ref
-                                     │ source=?ref                ▼
-                                     └──────────▶ terraform-gcp-modules (tagged library)
+ai-dev-foundation ─sync▶ terraform-gcp-template ─sync▶ secure-ga4-bq-template ─"Use this template"▶ engagement repo
+   (base template)          (GCP/Terraform layer)           (this repo)
+                                                                 │ source=?ref            uses:@v1
+                                                                 ├────────▶ terraform-gcp-modules (tagged library)
+                                                                 └────────▶ gcp-cicd-workflows (reusable workflows)
 ```
 
 | Decision | Rule |
 |----------|------|
-| Need Terraform/GCP? | "Use this template" **here** |
-| No Terraform? | Use [ai-dev-foundation](https://github.com/Yukihide-Mitsuoka/ai-dev-foundation) directly |
-| Reusable building blocks | Live in [terraform-gcp-modules](https://github.com/Yukihide-Mitsuoka/terraform-gcp-modules), **referenced by tag, never copied** |
-| Base updates | ai-dev-foundation changes arrive here as sync PRs ([template-sync.yml](.github/workflows/template-sync.yml), manual trigger any time); downstream repos repoint their sync source to THIS repo |
+| New GA4→BQ secure-mart engagement? | "Use this template" **here** — one repo per engagement |
+| Plain GCP/Terraform project (no GA4 asset)? | Use [terraform-gcp-template](https://github.com/Yukihide-Mitsuoka/terraform-gcp-template) |
+| Reusable Terraform building blocks | [terraform-gcp-modules](https://github.com/Yukihide-Mitsuoka/terraform-gcp-modules), referenced by tag, never copied |
+| Reusable CI/CD (WIF auth, deploy, cost gate) | [gcp-cicd-workflows](https://github.com/Yukihide-Mitsuoka/gcp-cicd-workflows), `uses: ...@v1` |
+| Base updates | terraform-gcp-template changes arrive as sync PRs ([template-sync.yml](.github/workflows/template-sync.yml)); engagement repos repoint their sync source to THIS repo |
 
-## What this adds on top of ai-dev-foundation
+## What this adds on top of terraform-gcp-template
 
-| Addition | Location |
-|----------|----------|
-| Terraform root-config layout (per-env) | [`infra/envs/`](infra/) with a worked `dev` example referencing the module library pinned at `?ref=v0.1.0` |
-| Canonical Makefile wired for this layout | [`Makefile`](Makefile) — fmt/lint/validate/test over `infra/`; `plan ENV=<env>`; heavier layered-foundations reference remains in [`profiles/terraform-gcp/`](profiles/terraform-gcp/) |
-| Terraform gitignore/state hygiene | `.gitignore` |
+| Addition | Location | Status |
+|----------|----------|--------|
+| Normative requirements (2 modes: build / inspect; 11 deterministic inspection checkpoints; GA4 sensitive-column catalog; dbt/Dataform rail) | [`docs/requirements/`](docs/requirements/README.md) | imported |
+| GA4 sensitivity catalog + `event_params` unnest examples | planned | — |
+| dbt / Dataform engine profiles (profile-copy selection) | planned | — |
+| WIF wiring (deployer SA + read-only inspector SA) | planned — design in [design-modules-wif-wiring.md](docs/requirements/design-modules-wif-wiring.md) | — |
+| Inspection engine (INFORMATION_SCHEMA / IAM / Logging collectors) | planned | — |
 
-Everything else (`.ai/` rules, `.skills/`, `.claude/` hooks and skills, `.github/`
-workflows, docs skeleton) comes from the base — see its
-[README](https://github.com/Yukihide-Mitsuoka/ai-dev-foundation#readme).
+The Terraform building blocks themselves (`bigquery-dataset`, `bigquery-policy-tags`,
+`bigquery-data-policy`, `log-router-sink`, `bq-inspector-role`) are **not** in this repo:
+they will be added to terraform-gcp-modules and referenced by tag.
+
+## Visibility
+
+This repo is **private**: the requirement docs carry engagement pricing and internal
+organization details. Sanitize those before ever flipping visibility.
 
 ## Using this template
 
-1. **Create the repo**: GitHub → "Use this template".
+1. **Create the engagement repo**: GitHub → "Use this template".
 2. **Repoint template sync**: in `.github/workflows/template-sync.yml`, change
-   `source_repo_path` to `Yukihide-Mitsuoka/terraform-gcp-template`; set the repo variable
-   `TEMPLATE_SYNC_ENABLED=true` to receive updates.
-3. **Replace placeholders**: `grep -rn "{{" . --exclude-dir=.git` — mission, project name,
-   state bucket in `infra/envs/*/versions.tf`.
+   `source_repo_path` to `Yukihide-Mitsuoka/secure-ga4-bq-template`; set the repo variable
+   `TEMPLATE_SYNC_ENABLED=true`.
+3. **Replace placeholders**: `grep -rn "{{" . --exclude-dir=.git` — engagement parameters
+   (sensitivity-catalog overrides, unnest keys, IAM principals, audit-log scope) are the
+   per-engagement input; the template body stays unchanged (FR-7).
 4. **Configure GitHub** (one-time): `bash scripts/setup-github.sh`.
 5. **Install local gates**: `make setup`.
-6. **Verify**: `make doctor && make build` (build = credential-free validate of every env).
-7. Point your agent at the repo and assign it an issue.
+6. **Verify**: `make doctor && make build`.
 
 ## License
 
