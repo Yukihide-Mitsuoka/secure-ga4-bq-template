@@ -1,0 +1,12 @@
+version: 2
+
+sources:
+  - name: ga4
+    description: >
+      Google-created GA4 export (daily events_* shards). Read-only source, locked down
+      by dataset IAM (requirements 3.3); column-level controls do NOT apply here.
+    database: "{{ var('ga4_export_project') }}"
+    schema: "{{ var('ga4_export_dataset') }}"
+    tables:
+      - name: events
+        identifier: events_* # daily shards; filter by _TABLE_SUFFIX in models

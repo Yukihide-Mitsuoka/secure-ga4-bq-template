@@ -1,0 +1,14 @@
+# Copy to profiles.yml (same directory; Makefile sets DBT_PROFILES_DIR=.).
+# oauth = Application Default Credentials: `gcloud auth application-default login`
+# locally, WIF-minted credentials on CI. No keyfiles ever (GR-001).
+ga4_secure_marts:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: oauth
+      project: my-project # engagement parameter
+      dataset: staging # default schema; per-layer schemas come from dbt_project.yml
+      location: asia-northeast1 # MUST equal the Terraform var.region (taxonomy location)
+      threads: 4
+      job_execution_timeout_seconds: 300
