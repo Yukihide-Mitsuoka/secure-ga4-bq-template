@@ -56,6 +56,7 @@ be added freely below them.
 | Profile | Stack | Source |
 |---------|-------|--------|
 | [terraform-gcp/](terraform-gcp/) | Terraform (GCP foundations, layered), Python tooling via uv, OPA policies, Excel SSoT generator | adapted 2026-07-02 from a production foundations project |
+| [dbt-bigquery/](dbt-bigquery/) | dbt + BigQuery secure-mart rail: SQLFluff lint, GA4 skeleton with policy-tagged exemplar models (activation = copy Makefile + skeleton) | authored 2026-07-11 |
 | [typescript-node/](typescript-node/) | Node.js + pnpm + Prettier + ESLint + tsc + Vitest | authored 2026-07-02 |
 | [python-uv/](python-uv/) | Python + uv + Ruff + mypy + pytest | authored 2026-07-02 |
 
