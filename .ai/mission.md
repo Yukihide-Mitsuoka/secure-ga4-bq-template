@@ -7,25 +7,31 @@ read_when: [onboarding, planning, architecture]
 
 # Mission
 
-<!-- TEMPLATE: Replace the {{placeholders}} when instantiating this template for a real project. -->
-
 ## What this project is
 
-{{PROJECT_NAME}} — {{ONE_SENTENCE_DESCRIPTION}}
+secure-ga4-bq-template — a reusable template that builds (Terraform + CI/CD) and
+inspects (read-only deterministic checks) GA4→BigQuery **mart layers** with three
+security controls baked in: column-level security via policy tags, least-privilege IAM,
+and cost-optimized audit logging. Normative requirements live in
+[docs/requirements/](../docs/requirements/README.md).
 
 | Field | Value |
 |-------|-------|
-| Problem being solved | {{PROBLEM}} |
-| Primary users | {{USERS}} |
-| Core value | {{VALUE}} |
-| Explicitly out of scope | {{NON_GOALS}} |
+| Problem being solved | Conventional GA4→BQ builds (export → query → mart → viz) ship with zero security controls; retrofitting them is manual, unrepeatable, and usually skipped |
+| Primary users | AI-agent-driven engagements delivering GA4→BQ marts for mid-size data-active companies with thin security staffing; each engagement instantiates this template |
+| Core value | Add the three controls at effort parity with a non-secure build (build mode), and audit existing environments with deterministic checks plus AI-drafted remediation (inspect mode) |
+| Explicitly out of scope | Row-level security; Cloud-DLP-based protection; viz-tool (Looker etc.) access control; collection-time (client-side) PII prevention |
 
 ## Success criteria
 
 <!-- Measurable. AI uses these to judge whether a proposed change moves the project forward. -->
 
-1. {{CRITERION_1}}
-2. {{CRITERION_2}}
+1. Build mode: a verification environment reproduces a clean build with all three
+   controls, and column-level access control demonstrably blocks a non-privileged
+   reader on pseudo-sensitive columns (requirements §8, acceptance B).
+2. Inspect mode: the inspector detects ≥10 of the 11 deterministic checkpoints (FR-4)
+   read-only, under a least-privilege custom role (FR-6), at INFORMATION_SCHEMA-level
+   scan cost.
 
 ## Role of AI agents in this project
 
