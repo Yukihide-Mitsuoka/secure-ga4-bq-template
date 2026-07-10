@@ -33,7 +33,7 @@ ai-dev-foundation ─sync▶ terraform-gcp-template ─sync▶ secure-ga4-bq-tem
 | Addition | Location | Status |
 |----------|----------|--------|
 | Normative requirements (2 modes: build / inspect; 11 deterministic inspection checkpoints; GA4 sensitive-column catalog; dbt/Dataform rail) | [`docs/requirements/`](docs/requirements/README.md) | imported |
-| GA4 sensitivity catalog + `event_params` unnest examples | exemplar in [`profiles/dbt-bigquery/skeleton/`](profiles/dbt-bigquery/skeleton/); full catalog planned | partial |
+| GA4 sensitivity catalog + `event_params` unnest examples | [`catalog/ga4-sensitivity.yml`](catalog/README.md) + exemplar in [`profiles/dbt-bigquery/skeleton/`](profiles/dbt-bigquery/skeleton/) | imported |
 | dbt / Dataform engine profiles (profile-copy selection) | dbt: [`profiles/dbt-bigquery/`](profiles/dbt-bigquery/README.md); Dataform planned | partial |
 | WIF wiring (deployer SA + read-only inspector SA) | planned — design in [design-modules-wif-wiring.md](docs/requirements/design-modules-wif-wiring.md) | — |
 | Inspection engine (INFORMATION_SCHEMA / IAM / Logging collectors) | planned | — |
