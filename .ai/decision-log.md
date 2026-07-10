@@ -17,6 +17,7 @@ old one. One line per entry. AI agents append entries in the same PR as the chan
 
 | Date | ID | Decision | Link |
 |------|----|----------|------|
+| 2026-07-11 | LOG-0009 | Verification env (`infra/envs/dev`) wires the minimum module set (3 layer datasets + taxonomy, `?ref=v0.3.0`). The taxonomy/dataset location-match constraint is enforced by construction: both modules receive the same `var.region` | [infra/envs/dev/main.tf](../infra/envs/dev/main.tf) |
 | 2026-07-11 | LOG-0008 | Repo bootstrapped as the 4th-tier template (parent: terraform-gcp-template; sync repointed). Requirements imported verbatim into `docs/requirements/` as Japanese source docs (deliberate ADR-0002 deviation — they are user-authored requirement sources, not AI-facing rules; English summaries follow with implementation). Repo stays **private** until business figures (pricing, internal org names) are sanitized | [docs/requirements/](../docs/requirements/README.md) |
 | 2026-07-03 | LOG-0007 | Markdown formatting MUST be frontmatter-aware: mdformat pinned via pre-commit with `mdformat-frontmatter` + `mdformat-gfm`, config in `.mdformat.toml` (`wrap=keep`, `number=true`). A naive run once collapsed all YAML frontmatter into headings — never use a formatter without these plugins | [.mdformat.toml](../.mdformat.toml) |
 | 2026-07-02 | ADR-0002 | AI-facing docs are written in English | [ADR-0002](../docs/adr/0002-ai-facing-docs-in-english.md) |
