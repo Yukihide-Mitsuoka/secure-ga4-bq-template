@@ -1,0 +1,24 @@
+version: 2
+
+# Staging materializes as VIEWS: BigQuery cannot attach policy tags to view columns,
+# so this layer is protected by dataset IAM alone (deliberate — see profile README).
+# Sensitivity is documented here and ENFORCED in the marts layer.
+models:
+  - name: stg_ga4__events
+    description: Typed unnest of the GA4 export; one row per event.
+    columns:
+      - name: event_ts
+        description: Event timestamp (from event_timestamp micros).
+        tests:
+          - not_null
+      - name: user_id
+        description: Self-assigned member/CRM id. Sensitivity high (catalog FR-1.1).
+      - name: user_pseudo_id
+        description: Pseudonymous analytics id. Sensitivity medium.
+      - name: geo_city
+        description: City-level geo. Sensitivity medium.
+      - name: page_location
+        description: >
+          Page URL. Query strings can carry PII, which column-level control alone
+          cannot prevent — value-scan detection (FR-4 A+) is the complement.
+          Sensitivity high.

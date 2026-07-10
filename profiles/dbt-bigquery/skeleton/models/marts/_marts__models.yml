@@ -1,0 +1,32 @@
+version: 2
+
+# Marts are TABLES: this is where column-level security engages. Tag resource names
+# come from Terraform (vars wired from `terraform output policy_tag_ids`); one tag
+# per column (BigQuery constraint). The executing SA needs
+# datacatalog.taxonomies.get + bigquery.tables.setCategory to attach them.
+models:
+  - name: fct_events
+    description: Event fact table; the consumer-facing, policy-tagged surface.
+    columns:
+      - name: event_date
+        description: Partition column; queries MUST filter on it (require_partition_filter).
+      - name: event_name
+        description: Sensitivity low.
+        tests:
+          - not_null:
+              config:
+                # Partition-aware test window — required because the table enforces
+                # a partition filter on every query, including tests.
+                where: "event_date >= date_sub(current_date(), interval 3 day)"
+      - name: user_id
+        description: Sensitivity high.
+        policy_tags: ["{{ var('policy_tag_high') }}"]
+      - name: page_location
+        description: Sensitivity high (query-string PII risk).
+        policy_tags: ["{{ var('policy_tag_high') }}"]
+      - name: user_pseudo_id
+        description: Sensitivity medium.
+        policy_tags: ["{{ var('policy_tag_medium') }}"]
+      - name: geo_city
+        description: Sensitivity medium.
+        policy_tags: ["{{ var('policy_tag_medium') }}"]
