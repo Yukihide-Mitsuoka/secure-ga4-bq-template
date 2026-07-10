@@ -27,10 +27,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: AndreasAugustin/actions-template-sync@v2
         with:
-          # This repo syncs from ai-dev-foundation (its direct parent). Downstream repos
-          # created from THIS template must repoint this to Yukihide-Mitsuoka/terraform-gcp-template.
-          source_repo_path: "Yukihide-Mitsuoka/ai-dev-foundation"
+          # This repo syncs from terraform-gcp-template (its direct parent). Downstream
+          # engagement repos created from THIS template must repoint this to
+          # Yukihide-Mitsuoka/secure-ga4-bq-template.
+          source_repo_path: "Yukihide-Mitsuoka/terraform-gcp-template"
           upstream_branch: main
-          pr_title: "build: sync with ai-dev-foundation template"
+          pr_title: "build: sync with terraform-gcp-template"
           pr_labels: "type:ci,type:dependencies"
-          pr_commit_msg: "build: sync with ai-dev-foundation template"
+          pr_commit_msg: "build: sync with terraform-gcp-template"
