@@ -1,0 +1,22 @@
+# Files the template-sync workflow must NEVER overwrite in downstream repos —
+# everything a project customizes. Rules/workflows/skills DO sync (that's the point).
+src/**
+tests/**
+docs/**
+profiles/**
+CLAUDE.md
+README.md
+Makefile
+.env.example
+.ai/mission.md
+.ai/decision-log.md
+.github/CODEOWNERS
+.templatesyncignore
+
+# terraform-gcp-template additions: never let the ai-dev-foundation sync touch the
+# Terraform layer this template adds on top of the foundation.
+infra/**
+.github/workflows/template-sync.yml
+# ci.yml carries this stack's runtime setup (hashicorp/setup-terraform); port base CI
+# improvements manually when a sync PR shows a diff here.
+.github/workflows/ci.yml
