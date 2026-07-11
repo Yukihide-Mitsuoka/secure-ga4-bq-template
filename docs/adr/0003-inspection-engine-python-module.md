@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| Status | proposed |
+| Status | accepted (2026-07-11, repository owner: "クエリは実行しない" confirmed) |
 | Date | 2026-07-11 |
 | Deciders | repository owner |
 | Author | Claude (AI agent) |
