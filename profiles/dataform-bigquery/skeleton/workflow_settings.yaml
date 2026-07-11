@@ -1,0 +1,20 @@
+# GA4 secure-mart skeleton, Dataform engine (rail FR-1). Same layer conventions as
+# the dbt profile: staging (stg_ga4__*) -> intermediate (int_*) -> marts (fct_*/dim_*),
+# one dataset each, matching the datasets Terraform creates in infra/envs/<env>.
+dataformCoreVersion: "3.0.0"
+defaultProject: my-project # engagement parameter
+defaultLocation: asia-northeast1 # MUST equal the Terraform var.region (taxonomy location)
+defaultDataset: staging # per-layer datasets are set in each .sqlx config
+# Assertions materialize as views; keep them inside the Terraform-managed, IAM-locked
+# staging dataset rather than an unmanaged dataform_assertions dataset.
+defaultAssertionDataset: staging
+
+vars:
+  # Engagement parameters (FR-7) — wire from Terraform outputs:
+  #   terraform -chdir=infra/envs/dev output -json policy_tag_ids
+  policy_tag_high: ""
+  policy_tag_medium: ""
+  policy_tag_low: ""
+  # The Google-created GA4 export (read-only source; locked down by dataset IAM):
+  ga4_export_project: ""
+  ga4_export_dataset: "" # e.g. analytics_123456789
