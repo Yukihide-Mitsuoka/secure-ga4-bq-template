@@ -31,3 +31,27 @@ variable "fine_grained_readers" {
   type        = map(list(string))
   default     = {}
 }
+
+# --- WIF wiring (design B) ---
+
+variable "github_repository" {
+  description = "GitHub repository (owner/name) whose workflows may impersonate the deployer and inspector SAs. Engagement instances MUST override this with their own repo."
+  type        = string
+  default     = "Yukihide-Mitsuoka/secure-ga4-bq-template"
+}
+
+variable "deployer_roles" {
+  description = "Project roles for the deployer SA. Candidate minimal set per design B-1 (open point D-1: refine against a real apply; bigquery.dataOwner because dataEditor lacks bigquery.datasets.update, needed to manage dataset access entries; projectIamAdmin deliberately absent — this env manages no project-level IAM)."
+  type        = list(string)
+  default = [
+    "roles/bigquery.dataOwner",
+    "roles/datacatalog.admin",
+    "roles/logging.configWriter",
+  ]
+}
+
+variable "inspector_service_account_id" {
+  description = "Account id (name before @) of the read-only inspector SA (FR-6)."
+  type        = string
+  default     = "bq-inspector"
+}
