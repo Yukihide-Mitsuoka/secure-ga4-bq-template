@@ -84,9 +84,10 @@ make setup                             # installs deps + pre-commit hooks
 Open the repo with Claude Code (reads `CLAUDE.md` automatically) or tell any other agent
 to read `AGENTS.md`. Assign it an issue and go.
 
-The template ships a worked example module (`src/modules/catalog/` + `tests/modules/catalog/`)
-— imitate its shape (COD-050) or delete both when you start real code. Run `make doctor`
-anytime to self-check the template (frontmatter integrity + guard-hook tests).
+Imitate the shape of the existing modules under `src/modules/` when adding code
+(COD-050); the original worked example (`src/modules/catalog/`) was deleted when real
+code landed — see git history for the reference shape. Run `make doctor` anytime to
+self-check the template (frontmatter integrity + guard-hook tests).
 
 ---
 
