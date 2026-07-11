@@ -1,0 +1,24 @@
+# Engagement parameters for the inspection engine (FR-7, design section 2.2).
+# Copy to inspection-params.yml (or any path), fill in your project, then:
+#   make inspect PARAMS=inspection-params.yml
+# Everything except project_id/expected_location is optional - absent keys use
+# the template's recommended defaults (override the file, never the code).
+version: 1
+project_id: my-project # REQUIRED: the GCP project to inspect (read-only)
+expected_location: asia-northeast1 # REQUIRED: CHK-11 location baseline
+
+datasets:
+  mart_patterns: ["mart*", "stg*", "staging", "intermediate", "marts"]
+  raw_patterns: ["analytics_*"] # containment-only: IAM checks, no column walk
+  exclude: [] # out of scope; listed in the report as skipped
+
+audit:
+  high_sensitivity_datasets: [] # FR-3: the only place Data Access logs should target
+  retention_max_days: 365 # CHK-07 sink-destination retention ceiling
+
+thresholds:
+  large_table_bytes: 10737418240 # 10 GiB - CHK-08
+  long_lived_days: 90 # CHK-10
+  require_cmek: false # CHK-11: false -> CMEK absence is INFO, true -> HIGH
+
+catalog_path: catalog/ga4-sensitivity.yml
