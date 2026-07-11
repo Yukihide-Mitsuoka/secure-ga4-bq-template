@@ -7,7 +7,7 @@ updated: 2026-07-11
 
 # Implementation design (draft): Inspection engine
 
-- Status: Draft v0.1 — pending ADR-0003 approval (GR-022 gate)
+- Status: v0.2 — ADR-0003 **accepted** 2026-07-11; implementation may proceed (GR-022 gate passed)
 - Requirements: [requirements-secure-asset.md](requirements-secure-asset.md) FR-4 (11
   deterministic checkpoints), FR-5 (report output — machine-readable part only), FR-6 /
   [design-modules-wif-wiring.md](design-modules-wif-wiring.md) A-5 (inspector
@@ -230,8 +230,8 @@ Each PR lands green and releasable; effort tracks requirements §9.2 (点検エ�
 
 1. CHK-06 sink-filter matching: exact BigQuery data-access filter grammar to recognize
    (start with the two house patterns from FR-3 layer 2/3; extend by evidence).
-2. `roles/viewer` severity (MEDIUM here) — confirm with owner; FR-2 bans all three
-   basic roles, FR-4 #1 names only owner/editor.
-3. Whether the placeholder `src/modules/catalog/` example module is deleted in PR 2
-   (its own MODULE.md says to delete it when a real project starts) — separate commit
-   either way.
+2. ~~`roles/viewer` severity~~ **Settled 2026-07-11 (owner)**: viewer IS detected,
+   at MEDIUM; owner/editor stay HIGH (LOG-0014).
+3. ~~Placeholder `src/modules/catalog/` deletion~~ **Settled 2026-07-11 (owner)**:
+   delete as soon as it is no longer needed — i.e. in the PR that lands the real
+   inspection module skeleton (LOG-0014).
