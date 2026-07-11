@@ -21,8 +21,9 @@ Architecture decision: [ADR-0003](../../../docs/adr/0003-inspection-engine-pytho
 | Entry point | Layer | Description |
 |-------------|-------|-------------|
 | `Finding`, `Severity`, `sorted_findings` | domain | Output vocabulary every consumer reads |
-| `RunInspection.handle(...) -> Report` | application | (planned — design §8 PR 7) snapshot → 11 checks → report |
-| `ga4-bq-inspect` CLI | interface | (planned — design §8 PR 7) `--params` file in, findings.json + summary.md out |
+| `Report`, `Coverage` | domain | The complete output frame: findings + §4.2 coverage + params echo |
+| `RunInspection.handle(params) -> Report` | application | snapshot → 11 checks → sorted report |
+| `make inspect PARAMS=<yaml>` (`python -m src.modules.inspection.interface.cli`) | interface | engagement params in, `findings.json` + `summary.md` out; `--fail-on` gates CI |
 
 ## Events
 
@@ -56,11 +57,11 @@ directory. It never mutates any GCP resource.
 ## Layout
 
 ```
-domain/finding.py       # Severity, Finding, sorted_findings (this PR)
-domain/...              # snapshot/params/catalog models + checks/ (design §8 PR 3-5)
-application/            # ports + collect_snapshot/run_inspection (PR 6-7)
-infrastructure/         # discovery-client adapters, YAML repos, report writers (PR 6-7)
-interface/              # argparse CLI (PR 7)
+domain/                 # finding/snapshot/params/catalog/report models + checks/ (11 pure checkpoints)
+application/            # ports.py + collect_snapshot.py + run_inspection.py
+infrastructure/         # gcp/ discovery-client adapters, YAML repos, JSON/Markdown report writers, system clock
+interface/cli.py        # argparse CLI (make inspect)
 ```
 
-Tests mirror this at `tests/modules/inspection/`. Run: `make test-unit`.
+Tests mirror this at `tests/modules/inspection/` (unit tier + a live-flagged
+integration smoke test gated on `INSPECT_LIVE_PROJECT`). Run: `make test-unit`.
