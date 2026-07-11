@@ -23,3 +23,8 @@ output "inspector_sa_email" {
   description = "Inspector SA email -> repo variable INSPECTOR_SA (bq-inspect; read-only, FR-6)."
   value       = google_service_account.inspector.email
 }
+
+output "inspector_role_id" {
+  description = "Full bqInspector custom role resource name (design A-5)."
+  value       = module.inspector_role.role_id
+}
