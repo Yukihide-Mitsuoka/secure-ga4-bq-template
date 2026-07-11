@@ -25,11 +25,13 @@ internals — cross-module calls use the target's MODULE.md public API or events
 
 ## Modules
 
-Real bounded contexts live here; **imitate the shape of the existing modules**
-(COD-050) when adding one. The template's original worked example
-(`modules/catalog/`, a Python product-catalog demo) was deleted when real code
-landed, per its own instruction and LOG-0014 — see git history for the
-reference shape.
+[`modules/inspection/`](modules/inspection/MODULE.md) is this repo's real bounded
+context: the FR-4 inspection engine (ADR-0003). **Imitate its shape** (COD-050) when
+adding modules. Run its tests via `make test-unit`.
+
+The template's original worked example (`modules/catalog/`, a Python product-catalog
+demo) was deleted when this real module landed, per its own instruction and LOG-0014
+— see git history if you need the reference shape.
 
 ## MODULE.md template
 

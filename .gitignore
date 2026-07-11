@@ -21,8 +21,11 @@ vendor/
 # Test & coverage output
 coverage/
 .coverage
+coverage.xml
 htmlcov/
 .pytest_cache/
+.ruff_cache/
+.mypy_cache/
 junit.xml
 
 # IDE / OS noise

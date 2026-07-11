@@ -11,14 +11,12 @@ Style: **modular monolith, Clean Architecture layers inside each module, boundar
 Domain-Driven Design bounded contexts.** Start as a monolith; extract services only when
 an ADR justifies it.
 
-<!-- TEMPLATE: adjust the stack table when instantiating. The layer rules below are stack-agnostic. -->
-
 | Field | Value |
 |-------|-------|
-| Language / runtime | {{STACK}} |
-| Persistence | {{DATABASE}} |
-| Deployment target | {{DEPLOY_TARGET}} |
-| Architecture docs | `docs/architecture/` |
+| Language / runtime | Terraform ≥1.5 (IaC, modules by tag) + Python 3.12 via uv (inspection engine — ADR-0003) |
+| Persistence | BigQuery (governed mart datasets); the engine itself persists nothing |
+| Deployment target | GCP, WIF-authenticated GitHub Actions (design-modules-wif-wiring.md) |
+| Architecture docs | `docs/architecture/`, `docs/adr/` |
 
 ## ARC-001: Canonical directory layout
 
