@@ -38,5 +38,15 @@ whole catalog: `user_id`/planted emails (high), `user_pseudo_id`/`geo.city` (med
 `?email=` query-string row for the A+ value-scan demo. Idempotent; point the dbt vars
 `ga4_export_project`/`ga4_export_dataset` at the seeded dataset.
 
+### WIF wiring (deployer / inspector SA)
+
+`wif.tf` wires keyless GitHub Actions auth (design-modules-wif-wiring.md §B) with two
+purpose-separated identities: the **deployer SA** (github-oidc module; terraform
+plan/apply) and the **inspector SA** (plain resources + `bqInspector` custom role per
+design §A-5; read-only, FR-6). After apply, set the GitHub repo variables from the
+outputs: `WIF_PROVIDER`, `DEPLOYER_SA`, `INSPECTOR_SA`. Caller workflows that consume
+them (`tf-plan`/`tf-apply`/`bq-inspect` from gcp-cicd-workflows) are wired separately
+once those shared workflows exist.
+
 Update triggers: new env → new `envs/<env>/`; new module reference → bump/pin note in the
 PR; backend change → `versions.tf` + `docs/deployment/`.

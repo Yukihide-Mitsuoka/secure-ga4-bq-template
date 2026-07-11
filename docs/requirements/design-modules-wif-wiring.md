@@ -108,7 +108,7 @@ updated: 2026-07-10
 ---
 
 ## D. 未決事項
-1. deployer SA の最小権限セットの確定（広すぎる `*.admin` を避けた具体ロール）。
-2. inspector SA を github-oidcモジュール拡張で作るか、アセットテンプレ側の素リソースで持つか。
-3. A-5 custom role の権限リスト精査（実機で読み取り経路の過不足を確認）。
+1. deployer SA の最小権限セット — 暫定実装済み（`infra/envs/dev/wif.tf`: `bigquery.dataOwner`＋`datacatalog.admin`＋`logging.configWriter`、projectIamAdminは含めない）。実機applyでの過不足確認は未実施。
+2. ~~inspector SA を github-oidcモジュール拡張で作るか、アセットテンプレ側の素リソースで持つか。~~ **決着（2026-07-11）**: アセットテンプレ側の素リソース（`infra/envs/dev/wif.tf`）。github-oidcモジュールはSAを1つしか作らない前提のため、複数SA対応への拡張は現時点でconsumerが1つ（この2つ目のSA自体）のみで時期尚早（COD-020）。
+3. A-5 custom role の権限リスト精査（実機で読み取り経路の過不足を確認）— ロール自体は `bq-inspector-role` モジュール（`terraform-gcp-modules?ref=v0.4.0`）として実装済み。実機精査は未実施。
 4. taxonomy/policy tag のTerraformリソース名がDataplex改名に追随して変わる可能性（バージョン固定で対応）。
