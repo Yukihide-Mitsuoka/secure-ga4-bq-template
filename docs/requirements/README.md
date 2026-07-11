@@ -15,7 +15,7 @@ for **what** to build; `.ai/` stays the source of truth for **how** to work.
 | [requirements-dbt-dataform-rail.md](requirements-dbt-dataform-rail.md) | Mart-build rail: dbt/Dataform engine selection via profile-copy, shared governance layer, CI dry-run cost gate | v1.0 |
 | [requirements-service-packaging.md](requirements-service-packaging.md) | Service packaging: common core + customization axes + 3 presets, pricing rationale, proposal-draft AI (deterministic preset detection → LLM fills text) | v1.0 draft |
 | [design-modules-wif-wiring.md](design-modules-wif-wiring.md) | Implementation design: interfaces of the 5 new Terraform modules, WIF wiring (deployer SA / inspector SA), new CI workflows | draft v0.1 |
-| [design-inspection-engine.md](design-inspection-engine.md) | Implementation design: FR-4 inspection engine — module layout, snapshot model, deterministic rules for the 11 checkpoints, engagement params, CLI/report contract, delivery slices (gated by ADR-0003) | draft v0.1 |
+| [design-inspection-engine.md](design-inspection-engine.md) | Implementation design: FR-4 inspection engine — module layout, snapshot model, deterministic rules for the 11 checkpoints, engagement params, CLI/report contract, delivery slices (ADR-0003) | **implemented v1.0** |
 
 ## Reading notes
 
