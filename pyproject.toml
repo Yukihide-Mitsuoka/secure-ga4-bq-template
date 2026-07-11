@@ -46,3 +46,10 @@ strict = true
 mypy_path = "."
 namespace_packages = true
 explicit_package_bases = true
+
+# googleapiclient/google.auth ship no type information; the untyped surface is
+# confined to infrastructure/gcp (COD-041) — adapters receive services as Any
+# and return typed domain records.
+[[tool.mypy.overrides]]
+module = ["googleapiclient.*", "google.auth", "google.auth.*"]
+ignore_missing_imports = true
