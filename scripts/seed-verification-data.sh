@@ -18,7 +18,9 @@
 #
 # Usage:
 #   scripts/seed-verification-data.sh -p <project> [-d analytics_000000000] \
-#       [-l asia-northeast1] [-s YYYYMMDD]
+#       [-l asia-northeast1] [-s YYYYMMDD] [-n]
+#   -n = bq dry run: validates the SQL against the API, creates nothing, bills nothing.
+#        (The trailing count SELECT is skipped — it reads the table the dry run never creates.)
 #
 # After seeding, wire the dbt vars (profiles/dbt-bigquery/README.md):
 #   ga4_export_project: <project>   ga4_export_dataset: <dataset>
@@ -29,15 +31,17 @@ DATASET="analytics_000000000"
 LOCATION="asia-northeast1"
 SHARD="$(date -u +%Y%m%d)"
 PROJECT=""
+DRY_RUN=false
 
-while getopts "p:d:l:s:h" opt; do
+while getopts "p:d:l:s:nh" opt; do
   case "$opt" in
     p) PROJECT="$OPTARG" ;;
     d) DATASET="$OPTARG" ;;
     l) LOCATION="$OPTARG" ;;
     s) SHARD="$OPTARG" ;;
+    n) DRY_RUN=true ;;
     h) grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
-    *) echo "usage: $0 -p <project> [-d dataset] [-l location] [-s YYYYMMDD]" >&2; exit 2 ;;
+    *) echo "usage: $0 -p <project> [-d dataset] [-l location] [-s YYYYMMDD] [-n]" >&2; exit 2 ;;
   esac
 done
 
@@ -45,17 +49,9 @@ done
 case "$SHARD" in [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]) ;; *) echo "error: -s must be YYYYMMDD" >&2; exit 2 ;; esac
 ISO_DATE="${SHARD:0:4}-${SHARD:4:2}-${SHARD:6:2}"
 
-echo "Seeding ${PROJECT}.${DATASET}.events_${SHARD} (${LOCATION})"
-
-bq --project_id="$PROJECT" --location="$LOCATION" query \
-  --use_legacy_sql=false --nouse_cache <<SQL
-CREATE SCHEMA IF NOT EXISTS \`${PROJECT}.${DATASET}\`
-OPTIONS (
-  location = '${LOCATION}',
-  description = 'FR-8 pseudo GA4 export (verification data, no real PII). Lock down with dataset IAM like a real export.'
-);
-
-CREATE OR REPLACE TABLE \`${PROJECT}.${DATASET}.events_${SHARD}\` AS
+# Row literals are kept free of table references so the -n path can validate the
+# exact same SELECT standalone (a dry run cannot see the dataset the real run creates).
+ROWS_SQL=$(cat <<SQL
 SELECT * FROM UNNEST([
   -- 1) clean logged-in pageview: high(user_id) + medium(pseudo, city) columns populated
   STRUCT(
@@ -113,7 +109,30 @@ SELECT * FROM UNNEST([
       STRUCT('page_referrer', STRUCT('https://t.co/abc123', NULL, NULL, NULL))
     ]
   )
-]);
+])
+SQL
+)
+
+if "$DRY_RUN"; then
+  echo "Dry run: validating row SQL for ${PROJECT}.${DATASET}.events_${SHARD} (${LOCATION}) — nothing is created"
+  bq --project_id="$PROJECT" --location="$LOCATION" query \
+    --use_legacy_sql=false --dry_run "$ROWS_SQL"
+  echo "Dry run OK."
+  exit 0
+fi
+
+echo "Seeding ${PROJECT}.${DATASET}.events_${SHARD} (${LOCATION})"
+
+bq --project_id="$PROJECT" --location="$LOCATION" query \
+  --use_legacy_sql=false --nouse_cache <<SQL
+CREATE SCHEMA IF NOT EXISTS \`${PROJECT}.${DATASET}\`
+OPTIONS (
+  location = '${LOCATION}',
+  description = 'FR-8 pseudo GA4 export (verification data, no real PII). Lock down with dataset IAM like a real export.'
+);
+
+CREATE OR REPLACE TABLE \`${PROJECT}.${DATASET}.events_${SHARD}\` AS
+${ROWS_SQL};
 
 SELECT
   COUNT(*) AS rows_seeded,
