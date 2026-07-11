@@ -29,5 +29,14 @@ Rules:
 (FR-7) enter via `layer_iam_members` and `fine_grained_readers`; the raw `analytics_*`
 export dataset is Google-created and locked down out of band (requirements §3.3).
 
+### Verification data (FR-8)
+
+`scripts/seed-verification-data.sh` seeds a pseudo GA4 export shard
+(`analytics_000000000.events_YYYYMMDD`, nested export shape, no real PII) covering the
+whole catalog: `user_id`/planted emails (high), `user_pseudo_id`/`geo.city` (medium),
+`page_location`/`page_referrer` keys for typed promotion (FR-1.3), and a
+`?email=` query-string row for the A+ value-scan demo. Idempotent; point the dbt vars
+`ga4_export_project`/`ga4_export_dataset` at the seeded dataset.
+
 Update triggers: new env → new `envs/<env>/`; new module reference → bump/pin note in the
 PR; backend change → `versions.tf` + `docs/deployment/`.
