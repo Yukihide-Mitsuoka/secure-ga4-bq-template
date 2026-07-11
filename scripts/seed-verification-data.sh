@@ -49,74 +49,67 @@ done
 case "$SHARD" in [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]) ;; *) echo "error: -s must be YYYYMMDD" >&2; exit 2 ;; esac
 ISO_DATE="${SHARD:0:4}-${SHARD:4:2}-${SHARD:6:2}"
 
+# SQL fragment helpers. Every event_params entry and inner struct is emitted with
+# identical, fully-cast field types — BigQuery refuses to unify struct literals whose
+# NULLs it typed differently (caught by an actual dry run, 2026-07-11).
+ep_s() { printf "STRUCT('%s' AS key, STRUCT(CAST('%s' AS STRING) AS string_value, CAST(NULL AS INT64) AS int_value, CAST(NULL AS FLOAT64) AS float_value, CAST(NULL AS FLOAT64) AS double_value) AS value)" "$1" "$2"; }
+ep_i() { printf "STRUCT('%s' AS key, STRUCT(CAST(NULL AS STRING) AS string_value, CAST(%s AS INT64) AS int_value, CAST(NULL AS FLOAT64) AS float_value, CAST(NULL AS FLOAT64) AS double_value) AS value)" "$1" "$2"; }
+ts_micros() { printf "UNIX_MICROS(TIMESTAMP('%s %s+00'))" "$ISO_DATE" "$1"; }
+
 # Row literals are kept free of table references so the -n path can validate the
 # exact same SELECT standalone (a dry run cannot see the dataset the real run creates).
+# UNION ALL instead of an UNNEST([...]) array: columns unify independently, which
+# sidesteps whole-row struct-supertype resolution.
 ROWS_SQL=$(cat <<SQL
-SELECT * FROM UNNEST([
-  -- 1) clean logged-in pageview: high(user_id) + medium(pseudo, city) columns populated
-  STRUCT(
-    '${SHARD}' AS event_date,
-    UNIX_MICROS(TIMESTAMP('${ISO_DATE} 09:15:00+00')) AS event_timestamp,
-    'page_view' AS event_name,
-    'U0001' AS user_id,
-    '1111.2222333344' AS user_pseudo_id,
-    STRUCT('Tokyo' AS city) AS geo,
-    STRUCT('desktop' AS category) AS device,
-    STRUCT('google' AS source) AS traffic_source,
-    [
-      STRUCT('page_location' AS key, STRUCT('https://shop.example.com/items/101' AS string_value, CAST(NULL AS INT64) AS int_value, CAST(NULL AS FLOAT64) AS float_value, CAST(NULL AS FLOAT64) AS double_value) AS value),
-      STRUCT('page_referrer', STRUCT('https://www.google.com/', NULL, NULL, NULL)),
-      STRUCT('quantity', STRUCT(CAST(NULL AS STRING), 2, NULL, NULL))
-    ] AS event_params
-  ),
-  -- 2) bad instrumentation: raw EMAIL inside event_params values (FR-8 high; A+ value-scan target)
-  STRUCT(
-    '${SHARD}', UNIX_MICROS(TIMESTAMP('${ISO_DATE} 10:02:00+00')), 'sign_up',
-    'U0002', '5555.6666777788',
-    STRUCT('Yokohama'), STRUCT('mobile'), STRUCT('newsletter'),
-    [
-      STRUCT('page_location', STRUCT('https://shop.example.com/register/done', NULL, NULL, NULL)),
-      STRUCT('user_email', STRUCT('taro.yamada@example.com', NULL, NULL, NULL))
-    ]
-  ),
-  -- 3) query-string PII in page_location (?email=...) — the GA4-specific A+ demo row
-  STRUCT(
-    '${SHARD}', UNIX_MICROS(TIMESTAMP('${ISO_DATE} 11:30:00+00')), 'purchase',
-    CAST(NULL AS STRING), '9999.0000111122',
-    STRUCT('Osaka'), STRUCT('mobile'), STRUCT('email'),
-    [
-      STRUCT('page_location', STRUCT('https://shop.example.com/thanks?order=550&email=hanako.sato@example.com', NULL, NULL, NULL)),
-      STRUCT('page_referrer', STRUCT('https://shop.example.com/checkout', NULL, NULL, NULL))
-    ]
-  ),
-  -- 4) phone number planted in params (A+ periphery)
-  STRUCT(
-    '${SHARD}', UNIX_MICROS(TIMESTAMP('${ISO_DATE} 13:45:00+00')), 'contact_support',
-    'U0003', '3333.4444555566',
-    STRUCT('Nagoya'), STRUCT('tablet'), STRUCT('(direct)'),
-    [
-      STRUCT('page_location', STRUCT('https://shop.example.com/support', NULL, NULL, NULL)),
-      STRUCT('support_tel', STRUCT('090-1234-5678', NULL, NULL, NULL))
-    ]
-  ),
-  -- 5) anonymous browse: user_id NULL boundary, pseudo-only identification
-  STRUCT(
-    '${SHARD}', UNIX_MICROS(TIMESTAMP('${ISO_DATE} 15:20:00+00')), 'page_view',
-    CAST(NULL AS STRING), '7777.8888999900',
-    STRUCT('Sapporo'), STRUCT('desktop'), STRUCT('twitter'),
-    [
-      STRUCT('page_location', STRUCT('https://shop.example.com/items/205', NULL, NULL, NULL)),
-      STRUCT('page_referrer', STRUCT('https://t.co/abc123', NULL, NULL, NULL))
-    ]
-  )
-])
+-- 1) clean logged-in pageview: high(user_id) + medium(pseudo, city) columns populated
+SELECT
+  '${SHARD}' AS event_date,
+  $(ts_micros 09:15:00) AS event_timestamp,
+  'page_view' AS event_name,
+  CAST('U0001' AS STRING) AS user_id,
+  '1111.2222333344' AS user_pseudo_id,
+  STRUCT('Tokyo' AS city) AS geo,
+  STRUCT('desktop' AS category) AS device,
+  STRUCT('google' AS source) AS traffic_source,
+  [$(ep_s page_location 'https://shop.example.com/items/101'),
+   $(ep_s page_referrer 'https://www.google.com/'),
+   $(ep_i quantity 2)] AS event_params
+-- 2) bad instrumentation: raw EMAIL inside event_params values (FR-8 high; A+ value-scan target)
+UNION ALL SELECT
+  '${SHARD}', $(ts_micros 10:02:00), 'sign_up',
+  'U0002', '5555.6666777788',
+  STRUCT('Yokohama' AS city), STRUCT('mobile' AS category), STRUCT('newsletter' AS source),
+  [$(ep_s page_location 'https://shop.example.com/register/done'),
+   $(ep_s user_email 'taro.yamada@example.com')]
+-- 3) query-string PII in page_location (?email=...) — the GA4-specific A+ demo row
+UNION ALL SELECT
+  '${SHARD}', $(ts_micros 11:30:00), 'purchase',
+  CAST(NULL AS STRING), '9999.0000111122',
+  STRUCT('Osaka' AS city), STRUCT('mobile' AS category), STRUCT('email' AS source),
+  [$(ep_s page_location 'https://shop.example.com/thanks?order=550&email=hanako.sato@example.com'),
+   $(ep_s page_referrer 'https://shop.example.com/checkout')]
+-- 4) phone number planted in params (A+ periphery)
+UNION ALL SELECT
+  '${SHARD}', $(ts_micros 13:45:00), 'contact_support',
+  'U0003', '3333.4444555566',
+  STRUCT('Nagoya' AS city), STRUCT('tablet' AS category), STRUCT('(direct)' AS source),
+  [$(ep_s page_location 'https://shop.example.com/support'),
+   $(ep_s support_tel '090-1234-5678')]
+-- 5) anonymous browse: user_id NULL boundary, pseudo-only identification
+UNION ALL SELECT
+  '${SHARD}', $(ts_micros 15:20:00), 'page_view',
+  CAST(NULL AS STRING), '7777.8888999900',
+  STRUCT('Sapporo' AS city), STRUCT('desktop' AS category), STRUCT('twitter' AS source),
+  [$(ep_s page_location 'https://shop.example.com/items/205'),
+   $(ep_s page_referrer 'https://t.co/abc123')]
 SQL
 )
 
 if "$DRY_RUN"; then
   echo "Dry run: validating row SQL for ${PROJECT}.${DATASET}.events_${SHARD} (${LOCATION}) — nothing is created"
-  bq --project_id="$PROJECT" --location="$LOCATION" query \
-    --use_legacy_sql=false --dry_run "$ROWS_SQL"
+  # stdin, not a positional arg: SQL comment lines (--) would be parsed as flags.
+  printf '%s\n' "$ROWS_SQL" | bq --project_id="$PROJECT" --location="$LOCATION" query \
+    --use_legacy_sql=false --dry_run
   echo "Dry run OK."
   exit 0
 fi
