@@ -18,6 +18,9 @@ venv/
 target/
 vendor/
 
+# Inspection engine output (generated reports; engagement copies live elsewhere)
+reports/
+
 # Test & coverage output
 coverage/
 .coverage

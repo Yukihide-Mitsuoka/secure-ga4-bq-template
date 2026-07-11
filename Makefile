@@ -4,7 +4,7 @@
 # The heavier layered-foundations reference stays available in profiles/terraform-gcp/.
 
 .PHONY: setup format lint test test-unit test-integration coverage build run \
-        security-scan sbom clean help doctor plan
+        security-scan sbom clean help doctor plan inspect
 
 FILE ?=
 ENV ?= dev
@@ -61,10 +61,21 @@ build: ## Credential-free gates: terraform validate every env + uv lockfile cons
 	done
 	uv lock --check
 
-run: plan ## For IaC, "run" shows the plan; the inspection CLI arrives with design §8 PR 7
+run: plan ## For IaC, "run" shows the plan; the inspection engine runs via `make inspect`
 
 plan: ## Plan the selected env (ENV=dev by default; needs credentials + backend)
 	cd infra/envs/$(ENV) && terraform init -input=false && terraform plan
+
+# ---------------------------------------------------------------------------
+# Project extensions — inspection engine (read-only; needs ADC credentials)
+# ---------------------------------------------------------------------------
+
+PARAMS ?= inspection-params.yml
+OUT ?= reports
+
+inspect: ## Run the FR-4 inspection (PARAMS=<engagement yaml> [OUT=reports] [FAIL_ON=HIGH])
+	uv run python -m src.modules.inspection.interface.cli \
+		--params "$(PARAMS)" --out-dir "$(OUT)" $(if $(FAIL_ON),--fail-on $(FAIL_ON))
 
 security-scan: ## Local sweep: secrets + IaC misconfig + python dependency vulns
 	@if command -v gitleaks >/dev/null 2>&1; then gitleaks detect --no-banner; else echo "gitleaks not installed — CI still enforces SEC-002"; fi
