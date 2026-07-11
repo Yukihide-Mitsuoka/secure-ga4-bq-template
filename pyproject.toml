@@ -1,0 +1,48 @@
+# Python side of the two-toolchain root (ADR-0003): the FR-4 inspection engine.
+# Not a distributable package (tool.uv.package=false) — imports resolve from the
+# repo root (pythonpath), mirroring the src/modules/<context> layout (ARC-001).
+[project]
+name = "secure-ga4-bq-template"
+version = "0.1.0"
+description = "Secure GA4->BigQuery mart asset: governed build rails + deterministic inspection engine (FR-4)"
+requires-python = ">=3.12"
+dependencies = [
+    # ADR-0003 Option 2: one discovery client covers all four read-only APIs
+    # (BigQuery metadata, Resource Manager IAM, Data Catalog, Logging config).
+    "google-api-python-client>=2.100,<3",
+    "google-auth>=2.23,<3",
+    # Catalog + engagement-parameter files are YAML (catalog/ga4-sensitivity.yml).
+    "pyyaml>=6.0,<7",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "types-pyyaml>=6.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+# Terraform/profile dirs carry no Python; keep ruff scoped to real code.
+include = ["src/**/*.py", "tests/**/*.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+mypy_path = "."
+namespace_packages = true
+explicit_package_bases = true
