@@ -11,15 +11,16 @@ with source as (
 
 renamed as (
 
+    -- simple references first, calculations after (SQLFluff ST06)
     select
-        parse_date('%Y%m%d', event_date) as event_date,
-        timestamp_micros(event_timestamp) as event_ts,
         event_name,
         user_id,
         user_pseudo_id,
         geo.city as geo_city,
         device.category as device_category,
         traffic_source.source as traffic_source,
+        parse_date('%Y%m%d', event_date) as event_date,
+        timestamp_micros(event_timestamp) as event_ts,
         (
             select ep.value.string_value
             from unnest(event_params) as ep
