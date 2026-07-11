@@ -78,6 +78,10 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
+      # A job-level permissions block REPLACES the workflow defaults: without an
+      # explicit contents:read the checkout of this private repo 401s as
+      # "Repository not found".
+      contents: read
       pull-requests: read
     steps:
       - name: Validate PR title (Conventional Commits)
