@@ -29,3 +29,9 @@ models:
     marts:
       +materialized: table
       +schema: marts
+      # REQUIRED for column-level security: dbt-bigquery applies policy_tags in the
+      # same column-metadata update as descriptions, which only runs when
+      # persist_docs.columns is true. Without this the tags silently do not attach
+      # (verified live 2026-07-11: tags absent, high column readable).
+      +persist_docs:
+        columns: true
