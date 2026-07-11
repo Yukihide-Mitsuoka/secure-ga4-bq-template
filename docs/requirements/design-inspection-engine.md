@@ -1,13 +1,20 @@
 ---
 id: design-inspection-engine
 title: Implementation design — Inspection engine (FR-4 deterministic checkpoints)
-status: draft-v0.1
-updated: 2026-07-11
+status: implemented-v1.0
+updated: 2026-07-12
 ---
 
-# Implementation design (draft): Inspection engine
+# Implementation design: Inspection engine
 
-- Status: v0.2 — ADR-0003 **accepted** 2026-07-11; implementation may proceed (GR-022 gate passed)
+- Status: **v1.0 — implemented** (2026-07-12). The §8 series landed on main as
+  PRs #13/#14/#15/#19/#22/#23/#24/#25/#26/#27/#28: 11 checkpoints + registry,
+  collection adapters, YAML config, use cases, `make inspect` CLI, JSON/Markdown
+  reports. 140 unit tests, 98% coverage; the worst-case registry test proves
+  all 11 checkpoints fire (B bar ≥10, requirements §8, at unit scale). One
+  documented deviation from §6: the CLI ships as `make inspect` / `python -m`
+  instead of a console script (non-packaged repo; make is the canonical entry).
+  Remaining evidence step: a live run against the FR-8 verification environment.
 - Requirements: [requirements-secure-asset.md](requirements-secure-asset.md) FR-4 (11
   deterministic checkpoints), FR-5 (report output — machine-readable part only), FR-6 /
   [design-modules-wif-wiring.md](design-modules-wif-wiring.md) A-5 (inspector
