@@ -1,0 +1,5 @@
+# Dataform credentials (created by `dataform init-creds`; ADC-mode holds no secret,
+# key-mode would — never commit either, GR-001) and local caches.
+.df-credentials.json
+.dataform/
+node_modules/

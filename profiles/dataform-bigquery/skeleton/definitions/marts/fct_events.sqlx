@@ -1,0 +1,48 @@
+config {
+  type: "table",
+  schema: "marts",
+  description: "Event fact table; the consumer-facing, policy-tagged surface.",
+  bigquery: {
+    partitionBy: "event_date",
+    clusterBy: ["event_name"],
+    requirePartitionFilter: true
+  },
+  columns: {
+    event_date: "Partition column; queries MUST filter on it (requirePartitionFilter).",
+    event_name: "Sensitivity low.",
+    user_id: {
+      description: "Sensitivity high.",
+      bigqueryPolicyTags: [dataform.projectConfig.vars.policy_tag_high]
+    },
+    page_location: {
+      description: "Sensitivity high (query-string PII risk).",
+      bigqueryPolicyTags: [dataform.projectConfig.vars.policy_tag_high]
+    },
+    user_pseudo_id: {
+      description: "Sensitivity medium.",
+      bigqueryPolicyTags: [dataform.projectConfig.vars.policy_tag_medium]
+    },
+    geo_city: {
+      description: "Sensitivity medium.",
+      bigqueryPolicyTags: [dataform.projectConfig.vars.policy_tag_medium]
+    }
+  }
+}
+
+-- Exemplar mart (rail FR-2): every governance control is declared in config, none
+-- retrofitted by hand — partitioning, clustering, mandatory partition filter
+-- (cost checkpoints #8/#9), and column policy tags (bigqueryPolicyTags above; full
+-- taxonomy resource names come from Terraform via workflow_settings vars, one tag
+-- per column - BigQuery constraint). The executing SA needs
+-- datacatalog.taxonomies.get + bigquery.tables.setCategory to attach them.
+select
+    event_date,
+    event_ts,
+    event_name,
+    user_id,
+    user_pseudo_id,
+    geo_city,
+    device_category,
+    traffic_source,
+    page_location
+from ${ref("stg_ga4__events")}
