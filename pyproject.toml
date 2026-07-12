@@ -13,6 +13,9 @@ dependencies = [
     "google-auth>=2.23,<3",
     # Catalog + engagement-parameter files are YAML (catalog/ga4-sensitivity.yml).
     "pyyaml>=6.0,<7",
+    # ADR-0004: official Vertex AI client, isolated in reporting infrastructure.
+    # Major upgrades require an explicit external-contract review.
+    "google-genai>=2.10,<3",
 ]
 
 [dependency-groups]

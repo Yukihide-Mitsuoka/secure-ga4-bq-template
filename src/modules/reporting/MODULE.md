@@ -14,6 +14,7 @@ Architecture decision: [ADR-0004](../../../docs/adr/0004-isolate-ai-report-gener
 |-------------|-------|-------------|
 | `InspectionArtifact`, `GeneratedNarrative` | domain | Validated input and provider-output vocabulary |
 | `GenerateAiReport.handle(input_path, out_dir)` | application | Read, pseudonymize, generate, validate, and write |
+| `make report-ai FINDINGS=<json>` | interface | Opt-in Vertex AI CLI; writes `ai-report.md` |
 
 ## Owned data
 
@@ -22,9 +23,9 @@ No persistent state. It reads one inspection artifact and owns only the generate
 
 ## Invariants
 
-1. The model receives aliases, check metadata, expected state, and remediation hints only;
-   never project/resource identifiers, observed values, rows, credentials, or skipped
-   error details.
+1. The model receives aliases, check enums, coverage counts, and approved static guidance
+   only; never artifact free text, project/resource identifiers, observed values, rows,
+   credentials, or skipped error details.
 2. Provider output cannot add, remove, reclassify, or resolve findings. Every expected
    finding reference appears exactly once.
 3. `findings.json` and `summary.md` are never changed.
@@ -37,6 +38,7 @@ No persistent state. It reads one inspection artifact and owns only the generate
 | Uses | Via | Why |
 |------|-----|-----|
 | Inspection module | serialized `findings.json` contract only | Preserve bounded-context isolation |
+| Vertex AI | `TextGenerator` application port | Replaceable provider adapter |
 
 ## Layout
 
@@ -45,5 +47,7 @@ domain/model.py
 application/ports.py
 application/generate_ai_report.py
 infrastructure/json_artifact_reader.py
+infrastructure/vertex_ai_generator.py
 infrastructure/markdown_report_writer.py
+interface/cli.py
 ```
