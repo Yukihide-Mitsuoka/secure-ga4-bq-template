@@ -136,7 +136,7 @@ metadata. Every input finding ID must appear exactly once; unknown IDs are rejec
 | 3 | use case, prompt framing, output validator/writer, CLI | security tests green |
 | 4 | approved provider adapter and dependency | lint/test/security scan green |
 | 5 | live opt-in generation from synthetic findings | verified 2026-07-12 |
-| 6 | Terraform/policy draft design and implementation | owner approval of proposed [ADR-0005](../adr/0005-render-remediation-drafts-from-recipes.md) |
+| 6 | Terraform/policy draft design and implementation | accepted [ADR-0005](../adr/0005-render-remediation-drafts-from-recipes.md) |
 | 7 | reusable workflow integration | local CLI stable |
 
 ## 8. Owner rulings
