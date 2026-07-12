@@ -7,6 +7,8 @@ from pathlib import Path
 
 from src.modules.reporting.domain.model import GeneratedNarrative, InspectionArtifact
 
+_MARKDOWN_SPECIALS = frozenset("\\`*_{}[]()#+-.!|>")
+
 
 class MarkdownReportWriter:
     def write(
@@ -59,6 +61,10 @@ def _render(artifact: InspectionArtifact, narrative: GeneratedNarrative) -> str:
                 f"- Rule: {_code(finding.rule_ref)}",
                 "",
                 "### Explanation",
+                "### Deterministic remediation hint",
+                "",
+                _prose(finding.remediation_hint),
+                "",
                 "",
                 _prose(generated.explanation),
                 "",
@@ -80,7 +86,8 @@ def _render(artifact: InspectionArtifact, narrative: GeneratedNarrative) -> str:
 
 
 def _prose(value: str) -> str:
-    return html.escape(value, quote=True)
+    escaped = html.escape(value, quote=True)
+    return "".join(f"\\{char}" if char in _MARKDOWN_SPECIALS else char for char in escaped)
 
 
 def _code(value: str) -> str:

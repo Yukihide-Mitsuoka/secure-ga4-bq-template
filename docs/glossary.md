@@ -32,3 +32,5 @@ confusable. Keep alphabetical.
 
 | Term | Definition | Context | Not to be confused with |
 |------|------------|---------|--------------------------|
+| AI-generated report | Advisory Markdown narrative rendered from a deterministic finding frame and requiring human review | reporting | deterministic `summary.md` |
+| Deterministic finding frame | Authoritative inspection JSON whose finding IDs, severities, coverage, and remediation hints bound AI prose | inspection/reporting | model-generated findings |

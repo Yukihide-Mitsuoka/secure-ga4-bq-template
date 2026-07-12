@@ -4,7 +4,7 @@
 # The heavier layered-foundations reference stays available in profiles/terraform-gcp/.
 
 .PHONY: setup format lint test test-unit test-integration coverage build run \
-        security-scan sbom clean help doctor plan inspect
+        security-scan sbom clean help doctor plan inspect report-ai
 
 FILE ?=
 ENV ?= dev
@@ -76,6 +76,12 @@ OUT ?= reports
 inspect: ## Run the FR-4 inspection (PARAMS=<engagement yaml> [OUT=reports] [FAIL_ON=HIGH])
 	uv run python -m src.modules.inspection.interface.cli \
 		--params "$(PARAMS)" --out-dir "$(OUT)" $(if $(FAIL_ON),--fail-on $(FAIL_ON))
+
+FINDINGS ?= findings.json
+
+report-ai: ## Generate advisory AI Markdown (FINDINGS=<findings.json> [OUT=<dir>])
+	uv run python -m src.modules.reporting.interface.cli \
+		--input "$(FINDINGS)" $(if $(filter command line environment,$(origin OUT)),--out-dir "$(OUT)")
 
 security-scan: ## Local sweep: secrets + IaC misconfig + python dependency vulns
 	@if command -v gitleaks >/dev/null 2>&1; then gitleaks detect --no-banner; else echo "gitleaks not installed — CI still enforces SEC-002"; fi

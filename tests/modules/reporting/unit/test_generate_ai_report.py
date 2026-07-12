@@ -22,7 +22,9 @@ class FakeGenerator:
         return ProviderText(json.dumps(self.response), "fake", "fake-model", "req-1")
 
 
-def _response(ref: str = "F001", explanation: str = "Broad access increases impact.") -> dict:
+def _response(
+    ref: str = "F001", explanation: str = "See ![remote](https://example.invalid)."
+) -> dict:
     return {
         "executive_summary": "One high-severity access issue requires review.",
         "findings": [{"ref": ref, "explanation": explanation, "next_action": "Narrow the role."}],
@@ -42,8 +44,12 @@ def test_generation_pseudonymizes_provider_input_and_renders_local_identifiers(t
     assert "private@example.com" not in generator.payload
     assert "RESOURCE_001" in generator.payload
     report = output.read_text(encoding="utf-8")
+    assert "Dataset-scoped access" not in generator.payload
+    assert "Replace the broad role" not in generator.payload
     assert "projects/secret-project/datasets/customer_mart" in report
     assert "F001: CHK-03" in report
+    assert "![remote](" not in report
+    assert "\\!\\[remote\\]\\(https://example\\.invalid\\)" in report
 
 
 @pytest.mark.parametrize(
