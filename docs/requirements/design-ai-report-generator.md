@@ -1,14 +1,12 @@
 ---
 id: design-ai-report-generator
 title: Implementation design - A-level AI inspection report generator
-status: implemented-local-v1
+status: approved
 updated: 2026-07-12
 ---
 
 # Implementation design: A-level AI inspection report generator
 
-- Status: slices 1-4 implemented; the live synthetic Vertex AI evidence run remains.
-- Public entry point: `make report-ai FINDINGS=<findings.json> [OUT=<directory>]`.
 - Requirements: `requirements-secure-asset.md` FR-5, section 4.2, section 7.1, and
   acceptance level A in section 8.
 - Architecture gate: [ADR-0004](../adr/0004-isolate-ai-report-generation.md).
