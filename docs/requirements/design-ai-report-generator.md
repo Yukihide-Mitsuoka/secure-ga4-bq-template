@@ -1,13 +1,14 @@
 ---
 id: design-ai-report-generator
 title: Implementation design - A-level AI inspection report generator
-status: implemented-local-v1
+status: implemented-live-v1
 updated: 2026-07-12
 ---
 
 # Implementation design: A-level AI inspection report generator
 
-- Status: slices 1-4 implemented; the live synthetic Vertex AI evidence run remains.
+- Status: slices 1-5 implemented and verified; evidence:
+  [live Vertex AI evidence](../verification/2026-07-12-ai-report-live-evidence.md).
 - Public entry point: `make report-ai FINDINGS=<findings.json> [OUT=<directory>]`.
 - Requirements: `requirements-secure-asset.md` FR-5, section 4.2, section 7.1, and
   acceptance level A in section 8.
@@ -134,7 +135,7 @@ metadata. Every input finding ID must appear exactly once; unknown IDs are rejec
 | 2 | skeleton, input domain/schema validation, fake provider, tests | unit suite green |
 | 3 | use case, prompt framing, output validator/writer, CLI | security tests green |
 | 4 | approved provider adapter and dependency | lint/test/security scan green |
-| 5 | live opt-in generation from synthetic findings | evidence recorded |
+| 5 | live opt-in generation from synthetic findings | verified 2026-07-12 |
 | 6 | Terraform/policy draft design and implementation | separate review |
 | 7 | reusable workflow integration | local CLI stable |
 

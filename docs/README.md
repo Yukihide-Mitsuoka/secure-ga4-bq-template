@@ -19,6 +19,7 @@ in `.ai/`; decisions in `docs/adr/`. Writing rules: `.ai/documentation.md`.
 | [operations/](operations/) | Monitoring, alerts, SLOs, maintenance | keep it running |
 | [runbook/](runbook/) | Step-by-step incident/ops procedures | 3am emergency |
 | [troubleshooting/](troubleshooting/) | Known failure modes → diagnosis → fix | "it's broken, what now?" |
+| [verification/](verification/) | Dated live-execution evidence for acceptance criteria | verify claims against recorded runs |
 | [templates/](templates/) | Reusable document templates (requirements, ...) | start a standard document |
 | [roadmap.md](roadmap.md) | Direction and planned milestones | prioritize work |
 | [glossary.md](glossary.md) | Ubiquitous language dictionary | name things correctly |
