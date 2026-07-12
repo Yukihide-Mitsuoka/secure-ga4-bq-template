@@ -26,5 +26,6 @@ architectural change (definition: ARC-020 "Architectural" scope). Process:
 | [0002](0002-ai-facing-docs-in-english.md) | AI-facing docs are written in English | accepted | 2026-07-02 |
 | [0003](0003-inspection-engine-python-module.md) | Build the FR-4 inspection engine as a Python module using REST metadata only | accepted | 2026-07-11 |
 | [0004](0004-isolate-ai-report-generation.md) | Isolate AI report generation behind a reporting boundary | accepted | 2026-07-12 |
+| [0005](0005-render-remediation-drafts-from-recipes.md) | Render remediation drafts from deterministic recipes | accepted | 2026-07-13 |
 
 <!-- Append new ADRs to this table (newest last). -->
