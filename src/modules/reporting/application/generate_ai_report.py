@@ -18,6 +18,20 @@ from src.modules.reporting.domain.model import (
     ProviderText,
 )
 
+_CHECK_GUIDANCE = {
+    "CHK-01": "Replace project or dataset basic roles with least-privilege roles.",
+    "CHK-02": "Remove public principals and use authenticated groups or service accounts.",
+    "CHK-03": "Move broad project data access to dataset or table scope.",
+    "CHK-04": "Apply the catalog-required policy tag to the sensitive column.",
+    "CHK-05": "Repair taxonomy references, locations, or orphaned policy tags.",
+    "CHK-06": "Limit Data Access logging to the approved high-sensitivity scope.",
+    "CHK-07": "Configure an audit sink, bounded retention, and noise exclusions.",
+    "CHK-08": "Partition or cluster large tables using workload-relevant keys.",
+    "CHK-09": "Require partition filters on partitioned tables.",
+    "CHK-10": "Set expiration for long-lived tables where retention allows.",
+    "CHK-11": "Align dataset location, expiration, and CMEK with engagement policy.",
+}
+
 _MAX_GENERATED_TEXT = 8_000
 
 
@@ -51,9 +65,7 @@ def _provider_payload(artifact: InspectionArtifact) -> str:
                 "check_id": finding.check_id,
                 "severity": finding.severity,
                 "resource": finding.resource_alias,
-                "expected": finding.expected,
-                "rule_ref": finding.rule_ref,
-                "remediation_hint": finding.remediation_hint,
+                "guidance": _CHECK_GUIDANCE[finding.check_id],
             }
             for finding in artifact.findings
         ],

@@ -13,9 +13,10 @@ an ADR justifies it.
 
 | Field | Value |
 |-------|-------|
-| Language / runtime | Terraform ≥1.5 (IaC, modules by tag) + Python 3.12 via uv (inspection engine — ADR-0003) |
+| Language / runtime | Terraform >=1.5 + Python 3.12 via uv (inspection: ADR-0003; AI reporting: ADR-0004) |
 | Persistence | BigQuery (governed mart datasets); the engine itself persists nothing |
 | Deployment target | GCP, WIF-authenticated GitHub Actions (design-modules-wif-wiring.md) |
+| External AI | Gemini on Vertex AI via `google-genai` v2, stable API v1, ADC/WIF; provider input pseudonymized |
 | Architecture docs | `docs/architecture/`, `docs/adr/` |
 
 ## ARC-001: Canonical directory layout

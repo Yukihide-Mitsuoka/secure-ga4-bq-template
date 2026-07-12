@@ -36,13 +36,30 @@ ai-dev-foundation ─sync▶ terraform-gcp-template ─sync▶ secure-ga4-bq-tem
 | GA4 sensitivity catalog + `event_params` unnest examples | [`catalog/ga4-sensitivity.yml`](catalog/README.md) + exemplar in [`profiles/dbt-bigquery/skeleton/`](profiles/dbt-bigquery/skeleton/) | imported |
 | dbt / Dataform engine profiles (profile-copy selection) | dbt: [`profiles/dbt-bigquery/`](profiles/dbt-bigquery/README.md); Dataform planned | partial |
 | WIF wiring (deployer SA + read-only inspector SA) | planned — design in [design-modules-wif-wiring.md](docs/requirements/design-modules-wif-wiring.md) | — |
-| Inspection engine (INFORMATION_SCHEMA / IAM / Logging collectors) | planned | — |
+| Inspection engine (11 deterministic checks; JSON/Markdown output) | [src/modules/inspection/](src/modules/inspection/MODULE.md) | implemented |
+| AI inspection narrative (Vertex AI; pseudonymized provider input) | [src/modules/reporting/](src/modules/reporting/MODULE.md) | implemented |
 
 The Terraform building blocks themselves (`bigquery-dataset`, `bigquery-policy-tags`,
 `bigquery-data-policy`, `log-router-sink`, `bq-inspector-role`) are **not** in this repo:
 they will be added to terraform-gcp-modules and referenced by tag.
 
 ## Visibility
+## Inspection and AI reporting
+
+Run the deterministic, read-only inspection first:
+
+```bash
+make inspect PARAMS=inspection-params.yml OUT=reports
+```
+
+AI reporting is optional. Configure ADC plus the variables in `.env.example`, then point
+it at the generated artifact:
+
+```bash
+make report-ai FINDINGS=reports/<project>/<timestamp>/findings.json
+```
+
+`ai-report.md` is a human-review draft; `findings.json` and `summary.md` are authoritative.
 
 This repo is **private**: the requirement docs carry engagement pricing and internal
 organization details. Sanitize those before ever flipping visibility.

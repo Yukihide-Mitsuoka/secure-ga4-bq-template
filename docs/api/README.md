@@ -30,5 +30,6 @@ command, or error contract. Breaking contract changes additionally require the
 |------|---------|
 | `openapi.yaml` | HTTP API contract (source of truth) |
 | `events.md` / `asyncapi.yaml` | Published/consumed events |
+| [`report-ai-cli.md`](report-ai-cli.md) | `make report-ai` inputs, outputs, auth, and exit codes |
 | `errors.md` | Error catalog: code → meaning → caller action |
 | `changelog.md` | Contract-level changes and deprecation schedule |
