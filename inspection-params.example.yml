@@ -1,6 +1,8 @@
 # Engagement parameters for the inspection engine (FR-7, design section 2.2).
 # Copy to inspection-params.yml (or any path), fill in your project, then:
 #   make inspect PARAMS=inspection-params.yml
+# The scheduled BQ Inspect workflow remains disabled until the repository variable
+# BQ_INSPECT_ENABLED=true; complete and test this file manually before enabling it.
 # Everything except project_id/expected_location is optional - absent keys use
 # the template's recommended defaults (override the file, never the code).
 version: 1

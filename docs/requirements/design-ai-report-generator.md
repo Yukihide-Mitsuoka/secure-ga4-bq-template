@@ -140,7 +140,7 @@ metadata. Every input finding ID must appear exactly once; unknown IDs are rejec
 | 4 | approved provider adapter and dependency | lint/test/security scan green |
 | 5 | live opt-in generation from synthetic findings | verified 2026-07-12 |
 | 6 | Terraform/policy draft design and implementation | implemented per [ADR-0005](../adr/0005-render-remediation-drafts-from-recipes.md) |
-| 7 | reusable workflow integration | local CLI stable |
+| 7 | reusable workflow integration | implemented via `gcp-cicd-workflows@v1` and the opt-in `bq-inspect.yml` caller |
 
 ## 8. Owner rulings
 
