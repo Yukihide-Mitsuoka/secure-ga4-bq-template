@@ -45,8 +45,10 @@ purpose-separated identities: the **deployer SA** (github-oidc module; terraform
 plan/apply) and the **inspector SA** (plain resources + `bqInspector` custom role per
 design §A-5; read-only, FR-6). After apply, set the GitHub repo variables from the
 outputs: `WIF_PROVIDER`, `DEPLOYER_SA`, `INSPECTOR_SA`. Caller workflows that consume
-them (`tf-plan`/`tf-apply`/`bq-inspect` from gcp-cicd-workflows) are wired separately
-once those shared workflows exist.
+them (`tf-plan`/`tf-apply`/`bq-inspect` from gcp-cicd-workflows) are wired separately.
+The inspection caller is [`.github/workflows/bq-inspect.yml`](../.github/workflows/bq-inspect.yml):
+run it manually after setting the variables and `inspection-params.yml`, then set
+`BQ_INSPECT_ENABLED=true` to opt in to its weekly schedule.
 
 Update triggers: new env → new `envs/<env>/`; new module reference → bump/pin note in the
 PR; backend change → `versions.tf` + `docs/deployment/`.
