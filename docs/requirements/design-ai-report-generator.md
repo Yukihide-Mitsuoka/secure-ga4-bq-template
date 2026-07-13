@@ -12,7 +12,7 @@ updated: 2026-07-12
 - Public entry point: `make report-ai FINDINGS=<findings.json> [OUT=<directory>]`.
 - Requirements: `requirements-secure-asset.md` FR-5, section 4.2, section 7.1, and
   acceptance level A in section 8.
-- Architecture gate: [ADR-0004](../adr/0004-isolate-ai-report-generation.md).
+- Architecture gates: [ADR-0004](../adr/0004-isolate-ai-report-generation.md) and [ADR-0005](../adr/0005-render-remediation-drafts-from-recipes.md).
 - Input: the B-level inspection engine's deterministic `findings.json`.
 - First slice: a customer-readable Markdown narrative. Terraform and policy drafts are
   deferred and remain non-applying artifacts.
@@ -61,7 +61,7 @@ Out of scope:
 - PII value scanning and scheduled Cloud Run execution (A+).
 - Sending BigQuery rows or raw GA4 event values to an LLM.
 
-## 3. Proposed module boundary
+## 3. Module boundary
 
 ```
 src/modules/reporting/
@@ -69,6 +69,7 @@ src/modules/reporting/
   domain/
     inspection_artifact.py
     generated_report.py
+    remediation.py
   application/
     ports.py
     generate_ai_report.py
@@ -146,3 +147,17 @@ metadata. Every input finding ID must appear exactly once; unknown IDs are rejec
 3. Provider-bound project/resource identifiers: deterministic pseudonyms.
 4. Existing `ai-report.md`: fail closed; no overwrite option in slice 1.
 
+
+## 9. Slice 6 remediation contract
+
+- Input: the same complete, validated inspection artifact used by `report-ai`.
+- Selection: every CHK-01 through CHK-11 value maps to one immutable v1 local recipe.
+- Trusted fields: recipe selection uses `check_id`; the report displays escaped local
+  resource and rule identifiers. `observed`, `expected`, and `remediation_hint` never
+  select or populate code.
+- Output: one atomic, byte-deterministic `remediation-draft.md`. Existing output fails
+  closed. The file is Markdown so Terraform and policy tooling cannot discover it.
+- Content: human-review warning, recipe ID/version, required inputs, explicit
+  `REPLACE_ME_*` values, a Terraform/policy example when safe, and validation steps.
+- Side effects: no provider call, cloud mutation, Terraform execution, apply command, or
+  pull-request creation.

@@ -30,3 +30,7 @@ class ReportWriter(Protocol):
     def write(
         self, artifact: InspectionArtifact, narrative: GeneratedNarrative, out_dir: Path
     ) -> Path: ...
+
+
+class RemediationWriter(Protocol):
+    def write(self, artifact: InspectionArtifact, out_dir: Path) -> Path: ...
