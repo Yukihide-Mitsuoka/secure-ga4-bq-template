@@ -35,9 +35,10 @@ ai-dev-foundation ─sync▶ terraform-gcp-template ─sync▶ secure-ga4-bq-tem
 | Normative requirements (2 modes: build / inspect; 11 deterministic inspection checkpoints; GA4 sensitive-column catalog; dbt/Dataform rail) | [`docs/requirements/`](docs/requirements/README.md) | imported |
 | GA4 sensitivity catalog + `event_params` unnest examples | [`catalog/ga4-sensitivity.yml`](catalog/README.md) + exemplar in [`profiles/dbt-bigquery/skeleton/`](profiles/dbt-bigquery/skeleton/) | imported |
 | dbt / Dataform engine profiles (profile-copy selection) | dbt: [`profiles/dbt-bigquery/`](profiles/dbt-bigquery/README.md); Dataform planned | partial |
-| WIF wiring (deployer SA + read-only inspector SA) | planned — design in [design-modules-wif-wiring.md](docs/requirements/design-modules-wif-wiring.md) | — |
+| WIF wiring (deployer SA + read-only inspector SA) | [infra/envs/dev/wif.tf](infra/envs/dev/wif.tf) + [bq-inspect caller](.github/workflows/bq-inspect.yml) | implemented |
 | Inspection engine (11 deterministic checks; JSON/Markdown output) | [src/modules/inspection/](src/modules/inspection/MODULE.md) | implemented |
 | AI inspection narrative (Vertex AI; pseudonymized provider input) | [src/modules/reporting/](src/modules/reporting/MODULE.md) | implemented |
+| Reusable scheduled/on-demand inspection + remediation artifact | [.github/workflows/bq-inspect.yml](.github/workflows/bq-inspect.yml) via `gcp-cicd-workflows@v1` | implemented, opt-in |
 
 The Terraform building blocks themselves (`bigquery-dataset`, `bigquery-policy-tags`,
 `bigquery-data-policy`, `log-router-sink`, `bq-inspector-role`) are **not** in this repo:
@@ -69,6 +70,12 @@ make remediation-draft FINDINGS=reports/<project>/<timestamp>/findings.json
 
 `remediation-draft.md` uses deterministic local recipes and explicit placeholders. It is
 review material, not an apply-ready Terraform file.
+
+For GitHub Actions, copy `inspection-params.example.yml` to `inspection-params.yml`, set
+the repository variables `WIF_PROVIDER` and `INSPECTOR_SA`, then run **BQ Inspect**
+manually. Set `BQ_INSPECT_ENABLED=true` only after that run succeeds to enable the weekly
+schedule. The workflow uploads `findings.json`, `summary.md`, and
+`remediation-draft.md`; it never applies remediation.
 
 This repo is **private**: the requirement docs carry engagement pricing and internal
 organization details. Sanitize those before ever flipping visibility.

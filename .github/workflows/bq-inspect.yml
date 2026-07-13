@@ -1,0 +1,34 @@
+# On-demand and opt-in scheduled read-only governance inspection.
+# The reusable workflow authenticates as the dedicated inspector SA, runs the caller's
+# deterministic inspection engine, renders a non-applying remediation draft, and uploads
+# the complete report package. It never uses the deployer SA or applies a change.
+name: BQ Inspect
+
+on:
+  workflow_dispatch:
+    inputs:
+      fail_on:
+        description: "Optional severity floor; empty keeps the run report-only"
+        required: false
+        default: ""
+  schedule:
+    - cron: "17 3 * * 1"
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: bq-inspect-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  inspect:
+    if: github.event_name == 'workflow_dispatch' || vars.BQ_INSPECT_ENABLED == 'true'
+    uses: Yukihide-Mitsuoka/gcp-cicd-workflows/.github/workflows/bq-inspect.yml@v1
+    with:
+      wif_provider: ${{ vars.WIF_PROVIDER }}
+      service_account: ${{ vars.INSPECTOR_SA }}
+      params_file: inspection-params.yml
+      out_dir: reports
+      fail_on: ${{ inputs.fail_on }}
