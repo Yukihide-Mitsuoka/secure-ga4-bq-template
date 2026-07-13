@@ -55,7 +55,9 @@ caller is wired separately and must use the same immutable workflow release reco
 `cost_gate_workflow_ref`; a mismatch rejects authentication.
 
 Caller workflows that consume these identities (`tf-plan`/`tf-apply`/`bq-inspect` and
-the cost gate from gcp-cicd-workflows) are wired separately.
+the cost gate from gcp-cicd-workflows) are wired separately. The opt-in cost-gate caller
+is [`.github/workflows/bq-cost-gate.yml`](../.github/workflows/bq-cost-gate.yml); configure
+its compile/glob/budget variables before setting `BQ_COST_GATE_ENABLED=true`.
 The inspection caller is [`.github/workflows/bq-inspect.yml`](../.github/workflows/bq-inspect.yml):
 run it manually after setting the variables and `inspection-params.yml`, then set
 `BQ_INSPECT_ENABLED=true` to opt in to its weekly schedule.

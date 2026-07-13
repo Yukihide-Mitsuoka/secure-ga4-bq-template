@@ -48,12 +48,29 @@ both deployment and inspection. Configure these Terraform inputs before apply:
 | `cost_gate_workflow_ref` | yes when upgrading | Exact released reusable-workflow ref accepted by WIF; defaults to `bq-cost-gate.yml@refs/tags/v2.0.0` |
 | `cost_gate_source_datasets` | when SQL references external sources | Project/dataset pairs for raw GA4 and cross-project tables; managed layer datasets are included automatically |
 
-After apply, set the following repository variables for the future cost-gate caller:
+After apply, set the following repository variables for the cost-gate caller:
 
 | Variable | Source | Purpose |
 |----------|--------|---------|
 | `COST_GATE_WIF_PROVIDER` | Terraform output `cost_gate_workload_identity_provider` | Provider restricted to the caller repository ID and trusted reusable workflow |
 | `COST_GATE_SA` | Terraform output `cost_gate_sa_email` | Dedicated dry-run identity with project Job User and dataset-scoped Data Viewer |
+
+The caller is [`.github/workflows/bq-cost-gate.yml`](../../.github/workflows/bq-cost-gate.yml).
+Keep it disabled until every required value below is configured:
+
+| Repository variable | Required | Purpose |
+|---------------------|----------|---------|
+| `GCP_PROJECT_ID` | yes | Project billed for BigQuery dry-run jobs |
+| `BQ_COST_GATE_SQL_GLOB` | yes | Relative glob of regular compiled SQL files produced inside the checkout |
+| `BQ_COST_GATE_COMPILE_COMMAND` | when SQL is generated | Credential-free command backed by a checked-in target and lockfile-pinned tooling |
+| `BQ_COST_GATE_DEFAULT_MAX_BYTES` | no | Per-file byte ceiling; unset uses 100 GB |
+| `BQ_COST_GATE_BUDGETS_FILE` | no | Relative YAML file containing reviewed path-specific overrides and reasons |
+| `BQ_COST_GATE_ENABLED` | last | Set to `true` only after the other values and dataset grants are ready |
+
+Run the compile command on a clean runner without ADC before enabling the gate. It must
+produce the configured SQL glob without downloading unpinned tools, reading secrets, or
+using cloud credentials. Leaving a required value empty fails closed once the gate is
+enabled. Add the resulting cost-gate check to branch protection after its first green run.
 
 Do not substitute `WIF_PROVIDER`, `DEPLOYER_SA`, or `INSPECTOR_SA`. Compilation must be
 credential-free. When upgrading gcp-cicd-workflows, update the caller's immutable release
