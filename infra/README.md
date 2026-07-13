@@ -38,14 +38,24 @@ whole catalog: `user_id`/planted emails (high), `user_pseudo_id`/`geo.city` (med
 `?email=` query-string row for the A+ value-scan demo. Idempotent; point the dbt vars
 `ga4_export_project`/`ga4_export_dataset` at the seeded dataset.
 
-### WIF wiring (deployer / inspector SA)
+### WIF wiring (deployer / inspector / cost-gate SAs)
 
-`wif.tf` wires keyless GitHub Actions auth (design-modules-wif-wiring.md §B) with two
-purpose-separated identities: the **deployer SA** (github-oidc module; terraform
-plan/apply) and the **inspector SA** (plain resources + `bqInspector` custom role per
-design §A-5; read-only, FR-6). After apply, set the GitHub repo variables from the
-outputs: `WIF_PROVIDER`, `DEPLOYER_SA`, `INSPECTOR_SA`. Caller workflows that consume
-them (`tf-plan`/`tf-apply`/`bq-inspect` from gcp-cicd-workflows) are wired separately.
+`wif.tf` wires the **deployer SA** (terraform plan/apply) and **inspector SA**
+(metadata-only inspection). `cost_gate_wif.tf` adds the ADR-0006 boundary: a dedicated
+provider accepts only the configured numeric caller repository ID and exact released
+`bq-cost-gate.yml` ref, then lets the **cost-gate SA** create dry-run jobs. That SA has
+BigQuery Data Viewer only on the managed layers and datasets listed in
+`cost_gate_source_datasets`; it has no write role or project-wide data access.
+
+After apply, set GitHub repository variables from the outputs:
+`WIF_PROVIDER` / `DEPLOYER_SA` / `INSPECTOR_SA` plus
+`COST_GATE_WIF_PROVIDER` / `COST_GATE_SA`. Raw `analytics_*` or cross-project datasets
+referenced by compiled SQL must be listed in `cost_gate_source_datasets`. The cost-gate
+caller is wired separately and must use the same immutable workflow release recorded in
+`cost_gate_workflow_ref`; a mismatch rejects authentication.
+
+Caller workflows that consume these identities (`tf-plan`/`tf-apply`/`bq-inspect` and
+the cost gate from gcp-cicd-workflows) are wired separately.
 The inspection caller is [`.github/workflows/bq-inspect.yml`](../.github/workflows/bq-inspect.yml):
 run it manually after setting the variables and `inspection-params.yml`, then set
 `BQ_INSPECT_ENABLED=true` to opt in to its weekly schedule.

@@ -36,3 +36,25 @@ scope and threshold before the first manual run. The workflow uses the inspector
 never `DEPLOYER_SA`, and uploads `findings.json`, `summary.md`, and the deterministic
 `remediation-draft.md`. Findings only fail a manually dispatched run when the operator
 sets `fail_on`; scheduled runs remain report-only.
+
+## Cost-gate infrastructure
+
+ADR-0006 gives the BigQuery dry-run gate a provider and service account separate from
+both deployment and inspection. Configure these Terraform inputs before apply:
+
+| Terraform input | Required | Purpose |
+|-----------------|----------|---------|
+| `github_repository_id` | yes per engagement | Immutable numeric ID of the caller repository; names are not accepted as the security boundary |
+| `cost_gate_workflow_ref` | yes when upgrading | Exact released reusable-workflow ref accepted by WIF; defaults to `bq-cost-gate.yml@refs/tags/v2.0.0` |
+| `cost_gate_source_datasets` | when SQL references external sources | Project/dataset pairs for raw GA4 and cross-project tables; managed layer datasets are included automatically |
+
+After apply, set the following repository variables for the future cost-gate caller:
+
+| Variable | Source | Purpose |
+|----------|--------|---------|
+| `COST_GATE_WIF_PROVIDER` | Terraform output `cost_gate_workload_identity_provider` | Provider restricted to the caller repository ID and trusted reusable workflow |
+| `COST_GATE_SA` | Terraform output `cost_gate_sa_email` | Dedicated dry-run identity with project Job User and dataset-scoped Data Viewer |
+
+Do not substitute `WIF_PROVIDER`, `DEPLOYER_SA`, or `INSPECTOR_SA`. Compilation must be
+credential-free. When upgrading gcp-cicd-workflows, update the caller's immutable release
+and `cost_gate_workflow_ref` together; a mismatch intentionally fails WIF authentication.
