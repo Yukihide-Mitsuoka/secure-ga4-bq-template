@@ -7,15 +7,14 @@ updated: 2026-07-12
 
 # Implementation design: A-level AI inspection report generator
 
-- Status: slices 1-5 implemented and verified; evidence:
+- Status: slices 1-6 implemented; slice 5 live evidence:
   [live Vertex AI evidence](../verification/2026-07-12-ai-report-live-evidence.md).
-- Public entry point: `make report-ai FINDINGS=<findings.json> [OUT=<directory>]`.
+- Public entry points: `make report-ai FINDINGS=<findings.json> [OUT=<directory>]` and `make remediation-draft FINDINGS=<findings.json> [OUT=<directory>]`.
 - Requirements: `requirements-secure-asset.md` FR-5, section 4.2, section 7.1, and
   acceptance level A in section 8.
 - Architecture gates: [ADR-0004](../adr/0004-isolate-ai-report-generation.md) and [ADR-0005](../adr/0005-render-remediation-drafts-from-recipes.md).
 - Input: the B-level inspection engine's deterministic `findings.json`.
-- First slice: a customer-readable Markdown narrative. Terraform and policy drafts are
-  deferred and remain non-applying artifacts.
+- Outputs: a customer-readable AI narrative and a separate deterministic, non-applying remediation draft. Machine-readable remediation actions remain deferred.
 
 ## 1. Acceptance criteria
 
@@ -51,7 +50,7 @@ Included in slice 1:
 
 Deferred:
 
-- Terraform/IAM/policy remediation drafts and machine-readable remediation actions.
+- Machine-readable remediation actions.
 - Reusable workflow integration and artifact upload.
 
 Out of scope:
@@ -73,12 +72,15 @@ src/modules/reporting/
   application/
     ports.py
     generate_ai_report.py
+    generate_remediation_draft.py
   infrastructure/
     json_artifact_reader.py
     <provider>_generator.py
     markdown_report_writer.py
+    markdown_remediation_writer.py
   interface/
     cli.py
+    remediation_cli.py
 ```
 
 The module consumes the serialized public artifact, not
@@ -137,7 +139,7 @@ metadata. Every input finding ID must appear exactly once; unknown IDs are rejec
 | 3 | use case, prompt framing, output validator/writer, CLI | security tests green |
 | 4 | approved provider adapter and dependency | lint/test/security scan green |
 | 5 | live opt-in generation from synthetic findings | verified 2026-07-12 |
-| 6 | Terraform/policy draft design and implementation | accepted [ADR-0005](../adr/0005-render-remediation-drafts-from-recipes.md) |
+| 6 | Terraform/policy draft design and implementation | implemented per [ADR-0005](../adr/0005-render-remediation-drafts-from-recipes.md) |
 | 7 | reusable workflow integration | local CLI stable |
 
 ## 8. Owner rulings

@@ -61,6 +61,15 @@ make report-ai FINDINGS=reports/<project>/<timestamp>/findings.json
 
 `ai-report.md` is a human-review draft; `findings.json` and `summary.md` are authoritative.
 
+Render the separate non-applying remediation attachment without cloud credentials:
+
+```bash
+make remediation-draft FINDINGS=reports/<project>/<timestamp>/findings.json
+```
+
+`remediation-draft.md` uses deterministic local recipes and explicit placeholders. It is
+review material, not an apply-ready Terraform file.
+
 This repo is **private**: the requirement docs carry engagement pricing and internal
 organization details. Sanitize those before ever flipping visibility.
 
