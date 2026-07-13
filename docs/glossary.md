@@ -1,7 +1,7 @@
 ---
 id: glossary
 title: Glossary — Ubiquitous Language
-updated: 2026-07-02
+updated: 2026-07-13
 ---
 
 # Glossary
@@ -34,3 +34,4 @@ confusable. Keep alphabetical.
 |------|------------|---------|--------------------------|
 | AI-generated report | Advisory Markdown narrative rendered from a deterministic finding frame and requiring human review | reporting | deterministic `summary.md` |
 | Deterministic finding frame | Authoritative inspection JSON whose finding IDs, severities, coverage, and remediation hints bound AI prose | inspection/reporting | model-generated findings |
+| Remediation recipe | Versioned local mapping from an FR-4 check ID to non-applying Terraform, policy, or manual review guidance | reporting | model-generated code |
