@@ -17,6 +17,7 @@ old one. One line per entry. AI agents append entries in the same PR as the chan
 
 | Date | ID | Decision | Link |
 |------|----|----------|------|
+| 2026-07-13 | ADR-0006 accepted | Owner approved the dedicated cost-gate provider/SA boundary in PR #44; implementation may proceed under the exact workflow-claim and dataset-scoped IAM constraints | [ADR-0006](../docs/adr/0006-bind-cost-gate-wif-to-trusted-workflow.md) |
 | 2026-07-13 | ADR-0006 (proposed) | Bind a dedicated cost-gate SA to a dedicated WIF provider that verifies the numeric caller repository ID and exact trusted reusable-workflow ref; grant only project job creation and dataset-scoped reads | [ADR-0006](../docs/adr/0006-bind-cost-gate-wif-to-trusted-workflow.md) |
 | 2026-07-13 | ADR-0005 | Render non-applying remediation Markdown from versioned deterministic recipes; the model never emits code, all FR-4 checks map to a recipe, and missing engagement details remain explicit placeholders or manual steps | [ADR-0005](../docs/adr/0005-render-remediation-drafts-from-recipes.md) |
 | 2026-07-12 | ADR-0004 | A-level AI reporting is a separate `reporting` context consuming pseudonymized `findings.json`; Gemini on Vertex AI uses official `google-genai` with ADC/WIF and stable v1, returns alias-keyed structured JSON, and local code renders a fail-closed `ai-report.md` without changing deterministic artifacts | [ADR-0004](../docs/adr/0004-isolate-ai-report-generation.md) |
