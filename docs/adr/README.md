@@ -27,5 +27,6 @@ architectural change (definition: ARC-020 "Architectural" scope). Process:
 | [0003](0003-inspection-engine-python-module.md) | Build the FR-4 inspection engine as a Python module using REST metadata only | accepted | 2026-07-11 |
 | [0004](0004-isolate-ai-report-generation.md) | Isolate AI report generation behind a reporting boundary | accepted | 2026-07-12 |
 | [0005](0005-render-remediation-drafts-from-recipes.md) | Render remediation drafts from deterministic recipes | accepted | 2026-07-13 |
+| [0006](0006-bind-cost-gate-wif-to-trusted-workflow.md) | Bind cost-gate WIF to the trusted reusable workflow | proposed | 2026-07-13 |
 
 <!-- Append new ADRs to this table (newest last). -->
