@@ -15,10 +15,10 @@ Keep `updated:` current; stale roadmaps mislead agents (DOC-040).
 
 ## Now (current milestone)
 
-- Complete the live BigQuery cost-gate proof: durable state decision, dedicated WIF
-  apply, repository variables, manual dry-run, dated evidence, and approved teardown.
 - Run the acceptance-A flow against an approved real or production-equivalent scope:
   100% inspection coverage, remediation draft, and opt-in AI narrative report.
+- Extend the completed zero-byte cost-gate infrastructure proof to credential-free
+  Dataform compilation and GA4 model estimates inside that approved scope.
 
 ## Next (1-2 milestones out)
 
