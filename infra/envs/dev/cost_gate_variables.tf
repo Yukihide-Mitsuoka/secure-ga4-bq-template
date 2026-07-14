@@ -34,7 +34,7 @@ variable "cost_gate_service_account_id" {
 variable "cost_gate_workflow_ref" {
   description = "Exact job_workflow_ref accepted for WIF; must match the immutable bq-cost-gate caller release."
   type        = string
-  default     = "Yukihide-Mitsuoka/gcp-cicd-workflows/.github/workflows/bq-cost-gate.yml@refs/tags/v2.0.0"
+  default     = "Yukihide-Mitsuoka/gcp-cicd-workflows/.github/workflows/bq-cost-gate.yml@refs/tags/v2.0.1"
 
   validation {
     condition = can(regex(
