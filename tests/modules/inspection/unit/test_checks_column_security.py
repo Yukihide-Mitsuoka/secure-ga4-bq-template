@@ -85,6 +85,21 @@ def test_chk05_location_mismatch_is_high() -> None:
     assert "location" in findings[0].observed
 
 
+def test_chk05_location_comparison_is_case_insensitive() -> None:
+    tag = "projects/verify-project/locations/us/taxonomies/1/policyTags/9"
+    table = a_table("t", schema_fields=(SchemaField("user_id", "STRING", (tag,)),))
+    dataset = a_dataset("marts", location="US", tables=(table,))
+    taxonomy = Taxonomy(
+        name="projects/verify-project/locations/us/taxonomies/1",
+        display_name="ga4-sensitivity",
+        location="us",
+        policy_tags=(PolicyTag(tag, "high"),),
+    )
+    snapshot = a_snapshot(datasets=(dataset,), taxonomies=(taxonomy,))
+
+    assert check_chk05_taxonomy_consistency(snapshot, params(), a_catalog()) == []
+
+
 def test_chk05_orphan_tag_is_info() -> None:
     snapshot = a_snapshot(taxonomies=(_taxonomy(),))
     findings = check_chk05_taxonomy_consistency(snapshot, params(), a_catalog())
