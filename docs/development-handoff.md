@@ -27,8 +27,8 @@ state; requirements, decisions, and evidence remain authoritative in the linked 
 | Acceptance S | Not started; requires two engagements or department-standard adoption | [Main requirements section 8](requirements/requirements-secure-asset.md) |
 | Cloud residue | The 2026-07-12 verification resources were fully torn down; PRs #44-#48 did not apply Terraform | [B evidence teardown](verification/2026-07-12-inspection-engine-b-evidence.md#teardown-back-to-pre-run-state) |
 
-`gcp-cicd-workflows` v2 is the external reusable-workflow dependency. Its cost-gate
-release was integrated in that repository before this repository pinned `v2.0.0`.
+`gcp-cicd-workflows` v2 is the external reusable-workflow dependency. The cost-gate
+caller and its WIF condition are pinned together to the fixed `v2.0.1` release.
 
 ## Next work
 

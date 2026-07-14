@@ -16,7 +16,7 @@ concurrency:
 jobs:
   cost-gate:
     if: vars.BQ_COST_GATE_ENABLED == 'true'
-    uses: Yukihide-Mitsuoka/gcp-cicd-workflows/.github/workflows/bq-cost-gate.yml@v2.0.0
+    uses: Yukihide-Mitsuoka/gcp-cicd-workflows/.github/workflows/bq-cost-gate.yml@v2.0.1
     with:
       sql_glob: ${{ vars.BQ_COST_GATE_SQL_GLOB }}
       compile_command: ${{ vars.BQ_COST_GATE_COMPILE_COMMAND }}
