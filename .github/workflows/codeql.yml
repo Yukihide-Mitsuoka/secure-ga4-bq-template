@@ -23,9 +23,8 @@ jobs:
       fail-fast: false
       matrix:
         # TEMPLATE: set your language(s): javascript-typescript, python, go, java-kotlin,
-        # csharp, cpp, ruby, swift. Empty matrix = workflow skipped until configured.
-        language: []
-        # language: [javascript-typescript]
+        # csharp, cpp, ruby, swift. This repository's primary language is Python.
+        language: [python]
     steps:
       - uses: actions/checkout@v4
       - uses: github/codeql-action/init@v3
