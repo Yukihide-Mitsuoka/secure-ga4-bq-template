@@ -25,6 +25,15 @@ def test_layer_dataset_ids_are_configurable_validated_and_used_by_cost_gate() ->
     assert "for dataset_id in keys(local.layers)" not in terraform
 
 
+def test_deployer_service_account_id_is_configurable_for_shared_projects() -> None:
+    terraform = _terraform()
+
+    assert 'variable "deployer_service_account_id"' in terraform
+    assert 'default     = "github-deployer"' in terraform
+    assert "deployer_service_account_id must be 6-30 lowercase letters" in terraform
+    assert "service_account_id = var.deployer_service_account_id" in terraform
+
+
 def test_dataform_profile_routes_models_to_configured_layer_datasets() -> None:
     settings = (SKELETON / "workflow_settings.yaml").read_text(encoding="utf-8")
     staging = (SKELETON / "definitions" / "staging" / "stg_ga4__events.sqlx").read_text(
