@@ -28,7 +28,7 @@ state; requirements, decisions, and evidence remain authoritative in the linked 
 | Cloud residue | The 2026-07-12 verification resources were fully torn down; PRs #44-#48 did not apply Terraform | [B evidence teardown](verification/2026-07-12-inspection-engine-b-evidence.md#teardown-back-to-pre-run-state) |
 
 `gcp-cicd-workflows` v2 is the external reusable-workflow dependency. The cost-gate
-caller and its WIF condition are pinned together to the fixed `v2.0.1` release.
+caller and its WIF condition are pinned together to the fixed `v2.0.2` release.
 
 ## Next work
 

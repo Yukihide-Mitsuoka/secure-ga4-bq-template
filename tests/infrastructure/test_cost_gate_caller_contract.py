@@ -16,8 +16,8 @@ def test_cost_gate_caller_is_opt_in_and_uses_the_trusted_release() -> None:
 
     assert "on:\n  pull_request:" in workflow
     assert "if: vars.BQ_COST_GATE_ENABLED == 'true'" in workflow
-    assert "bq-cost-gate.yml@v2.0.1" in workflow
-    assert "bq-cost-gate.yml@refs/tags/v2.0.1" in terraform
+    assert "bq-cost-gate.yml@v2.0.2" in workflow
+    assert "bq-cost-gate.yml@refs/tags/v2.0.2" in terraform
     assert "contents: read" in workflow
     assert "id-token: write" in workflow
 
