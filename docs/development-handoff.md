@@ -15,15 +15,17 @@ state; requirements, decisions, and evidence remain authoritative in the linked 
 
 | Item | State on 2026-07-14 | Evidence or source |
 |------|---------------------|--------------------|
-| Default branch | `main`; live cost-gate proof is under review in PR #51 | GitHub pull-request history |
-| Open GitHub issues | #50 tracks the live cost-gate proof | GitHub issue list checked 2026-07-14 |
+| Default branch | `main`; live cost-gate proof and subsequent CI security maintenance are merged through PR #55 | [PR #51](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/51), [PR #53](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/53), and [PR #55](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/55) |
+| Implementation queue | No open implementation issue; issue #56 tracks this handoff refresh | GitHub issue list checked 2026-07-14 |
+| Repository visibility | Public after repository-history sanitization and a full gitleaks scan | [PR #53](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/53) |
+| Security workflows | CodeQL, Scorecard, and Sync Labels passed after PR #55 | [CodeQL run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29336554245), [Scorecard run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29336554092), and [Sync Labels run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29336661438) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | AI narrative report | Implemented and live-verified with synthetic input | [AI evidence](verification/2026-07-12-ai-report-live-evidence.md) |
 | Remediation draft | Implemented as deterministic, non-applying Markdown | [ADR-0005](adr/0005-render-remediation-drafts-from-recipes.md) |
 | Reusable inspection workflow | Wired by PR #43 and disabled until engagement variables are set | [Runtime configuration](deployment/configuration.md) |
 | BigQuery cost gate | WIF boundary, caller, and credential-free Dataform compile path are merged | [ADR-0006](adr/0006-bind-cost-gate-wif-to-trusted-workflow.md) |
 | Live cost-gate proof | Complete for the zero-byte infrastructure smoke path; the caller remains opt-in | [Live evidence](verification/2026-07-14-bq-cost-gate-live-evidence.md) |
-| Acceptance A | Supporting features exist; a real engagement or production-equivalent 100% coverage run remains | [Main requirements section 8](requirements/requirements-secure-asset.md) |
+| Acceptance A | Supporting features exist; execution is blocked until an approved real or production-equivalent GA4 source dataset is available | [Main requirements section 8](requirements/requirements-secure-asset.md) |
 | Acceptance S | Not started; requires two engagements or department-standard adoption | [Main requirements section 8](requirements/requirements-secure-asset.md) |
 | Cloud residue | All 2026-07-14 managed resources, state, bucket, and temporary variables were removed; BigQuery API remains enabled to avoid force-disabling its active BigQuery Storage dependency | [Cost-gate teardown](verification/2026-07-14-bq-cost-gate-live-evidence.md#teardown-and-residual-state) |
 
@@ -32,7 +34,11 @@ caller and its WIF condition are pinned together to the fixed `v2.0.2` release.
 
 ## Next work
 
-Run the full acceptance-A flow against an approved real or production-equivalent scope:
+No approved real or production-equivalent GA4 source dataset is currently available.
+Do not create cloud resources or begin acceptance-A execution until the decisions in the
+next section have named owners and an approved source scope.
+
+After those prerequisites are approved, run the full acceptance-A flow:
 
 1. Supply the engagement's approved GA4 source dataset allow-list and byte budgets.
 2. Prove credential-free Dataform compilation and gate the compiled models; the
@@ -98,7 +104,8 @@ the Dataform profile. Optional local scanners may be absent, but CI remains auth
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
 > `docs/development-handoff.md`. Confirm `main` is current and the worktree has no
-> tracked changes. Continue from "Next work": prepare acceptance A against an approved
-> real or production-equivalent GA4 scope. Treat the zero-byte cost-gate proof as
+> tracked changes. There is no open implementation issue and no approved GA4 source
+> dataset. Continue from "Next work" only after an owner approves a real or
+> production-equivalent source scope. Treat the zero-byte cost-gate proof as
 > infrastructure evidence only, and stop before cloud changes until ownership, source
 > datasets, budgets, state, and teardown are approved.
