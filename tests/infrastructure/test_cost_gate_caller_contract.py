@@ -3,6 +3,7 @@ from pathlib import Path
 ROOT = Path(__file__).parents[2]
 WORKFLOW = ROOT / ".github" / "workflows" / "bq-cost-gate.yml"
 TERRAFORM_VARIABLES = ROOT / "infra" / "envs" / "dev" / "cost_gate_variables.tf"
+SMOKE_SQL = ROOT / "tests" / "fixtures" / "bq-cost-gate" / "smoke.sql"
 
 
 def _read(path: Path) -> str:
@@ -15,8 +16,8 @@ def test_cost_gate_caller_is_opt_in_and_uses_the_trusted_release() -> None:
 
     assert "on:\n  pull_request:" in workflow
     assert "if: vars.BQ_COST_GATE_ENABLED == 'true'" in workflow
-    assert "bq-cost-gate.yml@v2.0.0" in workflow
-    assert "bq-cost-gate.yml@refs/tags/v2.0.0" in terraform
+    assert "bq-cost-gate.yml@v2.0.2" in workflow
+    assert "bq-cost-gate.yml@refs/tags/v2.0.2" in terraform
     assert "contents: read" in workflow
     assert "id-token: write" in workflow
 
@@ -42,3 +43,9 @@ def test_cost_gate_caller_exposes_compile_and_budget_inputs() -> None:
         in workflow
     )
     assert "budgets_file: ${{ vars.BQ_COST_GATE_BUDGETS_FILE }}" in workflow
+
+
+def test_cost_gate_smoke_query_needs_no_source_dataset() -> None:
+    sql = _read(SMOKE_SQL)
+
+    assert sql.strip() == "SELECT 1 AS cost_gate_smoke;"

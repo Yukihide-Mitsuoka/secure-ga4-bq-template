@@ -8,11 +8,9 @@ terraform {
     }
   }
 
-  # TEMPLATE: configure your state backend, e.g.
-  # backend "gcs" {
-  #   bucket = "{{STATE_BUCKET}}"
-  #   prefix = "envs/dev"
-  # }
+  # The template selects the backend type but leaves the globally unique bucket to
+  # each engagement: pass it with `terraform init -backend-config=...`.
+  backend "gcs" {}
 }
 
 provider "google" {

@@ -36,6 +36,7 @@ def test_cost_gate_configuration_and_outputs_are_separate() -> None:
 
     for name in (
         "github_repository_id",
+        "github_workload_identity_pool_id",
         "cost_gate_provider_id",
         "cost_gate_service_account_id",
         "cost_gate_workflow_ref",
@@ -43,5 +44,6 @@ def test_cost_gate_configuration_and_outputs_are_separate() -> None:
     ):
         assert f'variable "{name}"' in terraform
 
+    assert "pool_id = var.github_workload_identity_pool_id" in terraform
     assert 'output "cost_gate_workload_identity_provider"' in terraform
     assert 'output "cost_gate_sa_email"' in terraform

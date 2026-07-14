@@ -93,9 +93,10 @@ alone (`datasets.get` / `tables.get` return partitioning, clustering, expiration
 
 - Inspection scan cost is **zero bytes billed** — stronger than the NFR "prefer
   INFORMATION_SCHEMA" (§6).
-- `bigquery.jobs.create` is **not needed for the B path**. It stays in the A-5 role
-  because the A+ value scan genuinely queries data — record this in the A-5 permission
-  review (design-modules-wif-wiring §D-3).
+- `bigquery.jobs.create` is **not needed for the B path** and the B environment
+  explicitly omits it from the inspector role. The shared A-5 module keeps an
+  INFORMATION_SCHEMA-ready default for future A+ consumers; those consumers require a
+  separate permission review (design-modules-wif-wiring §D-3).
 - Trade-off: one `tables.get` per table instead of one `INFORMATION_SCHEMA` query per
   dataset. Acceptable at ICP scale (hundreds of tables); if a future engagement has
   thousands, add an INFORMATION_SCHEMA-backed adapter behind the same port — the domain
