@@ -100,7 +100,7 @@ jobs:
           # hand-reviews them line-by-line, and a routine Renovate lockfile bump
           # must not hard-fail the guard. Everything else still counts.
           STATS=$(git diff --numstat "$BASE_SHA" "$HEAD_SHA" -- . \
-            ':(exclude)*.lock' ':(exclude)package-lock.json' ':(exclude)pnpm-lock.yaml' \
+            ':(exclude)*.lock' ':(exclude)**/package-lock.json' ':(exclude)**/pnpm-lock.yaml' \
             ':(exclude)*.lock.hcl')
           TOTAL=$(echo "$STATS" | awk '{a+=$1+$2} END {print a+0}')
           FILES=$(echo "$STATS" | grep -c . || true)
