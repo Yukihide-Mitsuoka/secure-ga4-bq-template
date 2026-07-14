@@ -1,7 +1,7 @@
 ---
 id: roadmap
 title: Roadmap
-updated: 2026-07-14
+updated: 2026-07-15
 ---
 
 # Roadmap
@@ -15,10 +15,10 @@ Keep `updated:` current; stale roadmaps mislead agents (DOC-040).
 
 ## Now (current milestone)
 
-- Run the acceptance-A flow against an approved real or production-equivalent scope:
-  100% inspection coverage, remediation draft, and opt-in AI narrative report.
-- Extend the completed zero-byte cost-gate infrastructure proof to credential-free
-  Dataform compilation and GA4 model estimates inside that approved scope.
+- Review the completed public-GA4 Acceptance A technical candidate and record the human
+  decision. The candidate includes materialization, a dedicated WIF cost gate, 100%
+  inspection, remediation/AI reports, and complete teardown; see
+  [the dated evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md).
 
 ## Next (1-2 milestones out)
 
