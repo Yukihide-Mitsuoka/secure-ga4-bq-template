@@ -16,12 +16,12 @@ def _job(path: Path, name: str) -> dict[str, Any]:
     return document["jobs"][name]
 
 
-def _action_versions(action_pattern: str) -> list[str]:
-    pattern = re.compile(rf"uses:\s*{action_pattern}@([^\s#]+)")
-    versions: list[str] = []
+def _action_refs(action_pattern: str) -> list[tuple[str, str]]:
+    pattern = re.compile(rf"uses:\s*{action_pattern}@([^\s#]+)(?:\s+#\s+(v\d+\.\d+\.\d+))?")
+    refs: list[tuple[str, str]] = []
     for path in sorted(WORKFLOWS.glob("*.yml")):
-        versions.extend(pattern.findall(path.read_text(encoding="utf-8")))
-    return versions
+        refs.extend(pattern.findall(path.read_text(encoding="utf-8")))
+    return refs
 
 
 def test_scorecard_job_can_read_the_private_repository() -> None:
@@ -46,10 +46,12 @@ def test_labels_sync_job_can_read_the_private_repository() -> None:
 
 
 def test_workflows_use_supported_github_action_runtimes() -> None:
-    checkout_versions = _action_versions("actions/checkout")
-    codeql_versions = _action_versions(r"github/codeql-action/[^@\s]+")
+    checkout_refs = _action_refs("actions/checkout")
+    codeql_refs = _action_refs(r"github/codeql-action/[^@\s]+")
 
-    assert checkout_versions
-    assert set(checkout_versions) == {"v7"}
-    assert codeql_versions
-    assert set(codeql_versions) == {"v4"}
+    assert checkout_refs
+    assert all(re.fullmatch(r"[0-9a-f]{40}", ref) for ref, _ in checkout_refs)
+    assert {version.split(".")[0] for _, version in checkout_refs} == {"v7"}
+    assert codeql_refs
+    assert all(re.fullmatch(r"[0-9a-f]{40}", ref) for ref, _ in codeql_refs)
+    assert {version.split(".")[0] for _, version in codeql_refs} == {"v4"}
