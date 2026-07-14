@@ -41,8 +41,9 @@ compile against Google's obfuscated ecommerce export without copying or changing
 source dataset. The source is in `US`, so the temporary Terraform datasets, taxonomy,
 and Dataform `defaultLocation` MUST also use `US`.
 
-1. Give all three Terraform `layer_dataset_ids` unique values; do not use the default
-   global names in a shared project. Set a unique `taxonomy_display_name` as well.
+1. Give all three Terraform `layer_dataset_ids`, `github_workload_identity_pool_id`,
+   and `deployer_service_account_id` unique values; do not use global default names in
+   a shared project. Set a unique `taxonomy_display_name` as well.
 2. Activate the profile, then replace `transform/workflow_settings.yaml` with the
    example. Change `defaultProject` and the three dataset IDs to match Terraform.
 3. Keep `cost_gate_source_datasets` empty for this source. That input creates IAM

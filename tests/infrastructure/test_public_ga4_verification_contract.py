@@ -29,7 +29,7 @@ def test_deployer_service_account_id_is_configurable_for_shared_projects() -> No
     terraform = _terraform()
 
     assert 'variable "deployer_service_account_id"' in terraform
-    assert 'default     = "github-deployer"' in terraform
+    assert 'default = "github-deployer"' in terraform
     assert "deployer_service_account_id must be 6-30 lowercase letters" in terraform
     assert "service_account_id = var.deployer_service_account_id" in terraform
 
