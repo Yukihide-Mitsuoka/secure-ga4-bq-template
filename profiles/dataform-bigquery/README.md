@@ -100,8 +100,10 @@ the deployer/transformer SA — see design-modules-wif-wiring.md.
   marts can tag them; promoted keys are an engagement parameter.
 - Assertions on `requirePartitionFilter` tables are **manual with a partition window**
   (`fct_events_event_name_not_null.sqlx`) — the built-in `nonNull` generates an
-  unfiltered query that BigQuery rejects. Assertions materialize into the IAM-locked
-  `staging` dataset (`defaultAssertionDataset`), not an unmanaged one.
+  unfiltered query that BigQuery rejects. The assertion projects only a constant
+  failure marker so unrelated policy-tagged columns do not require fine-grained reader
+  access. Assertions materialize into the IAM-locked `staging` dataset
+  (`defaultAssertionDataset`), not an unmanaged one.
 - Lint: `dataform format` has no check-only mode, so `make lint` enforces the rail
   naming conventions (`stg_*`/`int_*`/`fct_*`/`dim_*`) instead; formatting remains
   `make format`'s job. The CI dry-run cost gate uses the separate, engine-independent
