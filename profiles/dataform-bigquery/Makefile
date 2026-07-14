@@ -5,30 +5,33 @@
 # conventions instead (rail FR-4) and formatting stays format's job.
 
 .PHONY: setup format lint test test-unit test-integration coverage build run \
-        security-scan sbom clean help doctor plan naming-check dataform-run dataform-test
+        security-scan sbom clean help doctor plan naming-check compile-cost-gate dataform-run dataform-test
 
 FILE ?=
 ENV ?= dev
 TRANSFORM_DIR ?= transform
-DATAFORM = cd $(TRANSFORM_DIR) && dataform
+DATAFORM_BIN = $(TRANSFORM_DIR)/node_modules/.bin/dataform
+DATAFORM = cd $(TRANSFORM_DIR) && npx --no-install dataform
+COST_GATE_SQL_DIR ?= $(TRANSFORM_DIR)/target/compiled
 
 help: ## List available targets
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-18s %s\n", $$1, $$2}'
 
-setup: ## Install git hooks (terraform/tflint come from machine setup; dataform: npm i -g @dataform/cli)
+setup: ## Install git hooks and lockfile-pinned Dataform tooling
 	@if command -v pre-commit >/dev/null 2>&1; then pre-commit install --hook-type pre-commit --hook-type pre-push; else echo "pre-commit not installed — local hooks skipped (CI runs the same gates)"; fi
-	@if command -v dataform >/dev/null 2>&1; then $(DATAFORM) install; else echo "dataform CLI not installed (npm i -g @dataform/cli) — transform targets unavailable"; fi
+	@command -v npm >/dev/null 2>&1 || { echo "npm is required for the Dataform profile"; exit 1; }
+	cd $(TRANSFORM_DIR) && npm ci --ignore-scripts
 
 format: ## Auto-format terraform + SQLX (dataform format is project-wide)
 ifneq ($(FILE),)
 	@case "$(FILE)" in \
 		*.tf|*.tfvars) terraform fmt "$(FILE)" ;; \
-		*.sqlx) if command -v dataform >/dev/null 2>&1; then $(DATAFORM) format; fi ;; \
+		*.sqlx) if [ -x $(DATAFORM_BIN) ]; then $(DATAFORM) format; fi ;; \
 		*) : ;; \
 	esac
 else
 	terraform fmt -recursive infra
-	@if command -v dataform >/dev/null 2>&1; then $(DATAFORM) format; else echo "dataform not installed — SQLX left as-is"; fi
+	@if [ -x $(DATAFORM_BIN) ]; then $(DATAFORM) format; else echo "run make setup before formatting SQLX"; fi
 endif
 
 lint: naming-check ## Check-only, zero warnings (COD-001); never fixes
@@ -52,7 +55,7 @@ test-integration: ## terraform test dirs + dataform assertions (dataform part ne
 		echo "Testing $$dir..."; \
 		(cd "$$dir" && terraform init -backend=false -input=false >/dev/null && terraform test); \
 	done; true
-	@if command -v dataform >/dev/null 2>&1 && [ -f $(TRANSFORM_DIR)/.df-credentials.json ]; then $(DATAFORM) test; else echo "dataform or .df-credentials.json missing — dataform tests skipped (need warehouse credentials)"; fi
+	@if [ -x $(DATAFORM_BIN) ] && [ -f $(TRANSFORM_DIR)/.df-credentials.json ]; then $(DATAFORM) test; else echo "Dataform tooling or .df-credentials.json missing — warehouse tests skipped"; fi
 
 coverage: ## No line-coverage concept for IaC/SQLX; assertions above are the gate
 	@echo "coverage: no line-coverage concept for IaC/SQLX; dataform assertion results are the gate"
@@ -62,7 +65,8 @@ build: ## Credential-free gates: terraform validate every env + dataform compile
 		echo "Validating $$dir..."; \
 		(cd "$$dir" && terraform init -backend=false -input=false >/dev/null && terraform validate); \
 	done
-	@if command -v dataform >/dev/null 2>&1; then $(DATAFORM) compile; else echo "dataform not installed — compile gate skipped (CI still enforces it)"; fi
+	@test -x $(DATAFORM_BIN) || { echo "run make setup before make build"; exit 1; }
+	$(DATAFORM) compile
 
 run: plan ## For IaC, "run" shows the plan; transform runs are `make dataform-run`
 
@@ -70,6 +74,7 @@ plan: ## Plan the selected env (ENV=dev by default; needs credentials + backend)
 	cd infra/envs/$(ENV) && terraform init -input=false && terraform plan
 
 security-scan: ## Local sweep: secrets + IaC misconfig
+	cd $(TRANSFORM_DIR) && npm audit --audit-level=high
 	@if command -v gitleaks >/dev/null 2>&1; then gitleaks detect --no-banner; else echo "gitleaks not installed — CI still enforces SEC-002"; fi
 	@if command -v trivy >/dev/null 2>&1; then trivy config --exit-code 1 infra; else echo "trivy not installed — CI still enforces SEC-030"; fi
 
@@ -79,11 +84,19 @@ sbom: ## SBOM (SPDX + CycloneDX) into dist/ — REL-020
 
 clean: ## Remove caches/artifacts inside the workspace only (GR-031)
 	find infra -type d -name ".terraform" -exec rm -rf {} + 2>/dev/null || true
-	rm -rf $(TRANSFORM_DIR)/.dataform $(TRANSFORM_DIR)/node_modules dist
+	rm -rf $(TRANSFORM_DIR)/.dataform $(TRANSFORM_DIR)/node_modules $(TRANSFORM_DIR)/target dist
 
 doctor: ## Foundation self-check: metadata invariants + guard-hook tests
 	@bash scripts/template-check.sh
 	@bash .claude/hooks/tests/guard-bash.test.sh
+
+compile-cost-gate: ## Install locked tooling and export credential-free compiled SQL
+	@command -v npm >/dev/null 2>&1 || { echo "npm is required for compile-cost-gate"; exit 1; }
+	cd $(TRANSFORM_DIR) && npm ci --ignore-scripts
+	mkdir -p $(TRANSFORM_DIR)/target
+	cd $(TRANSFORM_DIR) && npx --no-install dataform compile --json > target/dataform-graph.json
+	python3 scripts/export_dataform_sql.py --input $(TRANSFORM_DIR)/target/dataform-graph.json \
+		--output-dir $(COST_GATE_SQL_DIR)
 
 # ---------------------------------------------------------------------------
 # Project extensions — Dataform workflow (need warehouse credentials)

@@ -17,6 +17,7 @@ old one. One line per entry. AI agents append entries in the same PR as the chan
 
 | Date | ID | Decision | Link |
 |------|----|----------|------|
+| 2026-07-13 | LOG-0017 | Cost-gate compilation defaults to the Dataform profile: dbt-bigquery 1.11.3 still initializes ADC with introspection/cache disabled, while Dataform compiles credential-free. Dataform CLI/Core 3.0.61 are lockfile-pinned; `parse-duration` is overridden to fixed 2.1.3 after npm audit found GHSA-hcrg-fc28-fcg5 | [profiles/dataform-bigquery/](../profiles/dataform-bigquery/README.md) |
 | 2026-07-13 | ADR-0006 accepted | Owner approved the dedicated cost-gate provider/SA boundary in PR #44; implementation may proceed under the exact workflow-claim and dataset-scoped IAM constraints | [ADR-0006](../docs/adr/0006-bind-cost-gate-wif-to-trusted-workflow.md) |
 | 2026-07-13 | ADR-0006 (proposed) | Bind a dedicated cost-gate SA to a dedicated WIF provider that verifies the numeric caller repository ID and exact trusted reusable-workflow ref; grant only project job creation and dataset-scoped reads | [ADR-0006](../docs/adr/0006-bind-cost-gate-wif-to-trusted-workflow.md) |
 | 2026-07-13 | ADR-0005 | Render non-applying remediation Markdown from versioned deterministic recipes; the model never emits code, all FR-4 checks map to a recipe, and missing engagement details remain explicit placeholders or manual steps | [ADR-0005](../docs/adr/0005-render-remediation-drafts-from-recipes.md) |

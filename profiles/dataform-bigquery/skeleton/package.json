@@ -1,0 +1,17 @@
+{
+  "name": "secure-ga4-dataform-profile",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=20 <25"
+  },
+  "dependencies": {
+    "@dataform/core": "3.0.61"
+  },
+  "devDependencies": {
+    "@dataform/cli": "3.0.61"
+  },
+  "overrides": {
+    "parse-duration": "2.1.3"
+  }
+}

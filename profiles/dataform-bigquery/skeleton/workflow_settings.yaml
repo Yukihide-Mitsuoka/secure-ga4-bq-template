@@ -1,7 +1,6 @@
 # GA4 secure-mart skeleton, Dataform engine (rail FR-1). Same layer conventions as
 # the dbt profile: staging (stg_ga4__*) -> intermediate (int_*) -> marts (fct_*/dim_*),
 # one dataset each, matching the datasets Terraform creates in infra/envs/<env>.
-dataformCoreVersion: "3.0.0"
 defaultProject: my-project # engagement parameter
 defaultLocation: asia-northeast1 # MUST equal the Terraform var.region (taxonomy location)
 defaultDataset: staging # per-layer datasets are set in each .sqlx config
