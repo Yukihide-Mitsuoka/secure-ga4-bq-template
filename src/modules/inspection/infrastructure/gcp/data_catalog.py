@@ -18,7 +18,8 @@ class DataCatalogTaxonomyAdapter:
 
     def list_taxonomies(self, project_id: str, location: str) -> tuple[Taxonomy, ...]:
         taxonomies_resource = self._service.projects().locations().taxonomies()
-        parent = f"projects/{project_id}/locations/{location}"
+        normalized_location = location.lower()
+        parent = f"projects/{project_id}/locations/{normalized_location}"
         result: list[Taxonomy] = []
         for page in paginate(
             lambda token: taxonomies_resource.list(parent=parent, pageToken=token)
@@ -29,7 +30,7 @@ class DataCatalogTaxonomyAdapter:
                     Taxonomy(
                         name=name,
                         display_name=str(entry.get("displayName", "")),
-                        location=location,
+                        location=normalized_location,
                         policy_tags=self._policy_tags(taxonomies_resource, name),
                     )
                 )

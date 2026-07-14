@@ -6,9 +6,10 @@
 # private export down with dataset-level IAM out of band (requirements §3.3). Public
 # verification sources remain externally managed and MUST NOT receive Terraform IAM.
 #
-# Both modules receive the SAME var.region: the taxonomy location must equal the
-# dataset location or column-level security silently fails (design doc, horizontal
-# constraint). Sharing one variable enforces that by construction.
+# Both modules derive location from the SAME var.region: the taxonomy location must
+# equal the dataset location or column-level security silently fails (design doc,
+# horizontal constraint). Data Catalog resource paths require lowercase location IDs,
+# while BigQuery reports multi-regions such as US in uppercase.
 
 locals {
   layers = {
@@ -34,7 +35,7 @@ module "sensitivity" {
   source = "git::https://github.com/Yukihide-Mitsuoka/terraform-gcp-modules.git//modules/bigquery-policy-tags?ref=v0.3.0"
 
   project_id            = var.project_id
-  location              = var.region
+  location              = lower(var.region)
   taxonomy_display_name = var.taxonomy_display_name
   fine_grained_readers  = var.fine_grained_readers
 }

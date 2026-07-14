@@ -88,7 +88,10 @@ def check_chk05_taxonomy_consistency(
                         )
                         continue
                     tag_location = _location_of(tag_id)
-                    if tag_location is not None and tag_location != dataset.location:
+                    if (
+                        tag_location is not None
+                        and tag_location.lower() != dataset.location.lower()
+                    ):
                         findings.append(
                             Finding(
                                 check_id="CHK-05",

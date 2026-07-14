@@ -5,6 +5,23 @@ title: Known issues
 
 # Known issues
 
+## Data Catalog returns `501 Operation is not implemented, or supported, or enabled` for `locations/US`
+
+**Affects:** revisions before issue #67 when `region` or `expected_location` is the `US`
+or `EU` BigQuery multi-region.
+
+**Cause:** Data Catalog resource paths require lowercase location identifiers even though
+BigQuery reports the multi-regions as uppercase `US` or `EU`.
+
+**Fix:** Update to a revision containing issue #67. Keep the canonical BigQuery location
+in `region` and `expected_location`; Terraform and the inspection adapter normalize only
+the Data Catalog API boundary.
+
+**Prevention:** Regression tests require lowercase Data Catalog requests and
+case-insensitive CHK-05 location comparisons.
+
+**Refs:** #67.
+
 ## ga4-bq-report: GOOGLE_CLOUD_PROJECT and GOOGLE_CLOUD_LOCATION are required
 
 **Cause:** Vertex AI routing configuration is incomplete.
