@@ -1,7 +1,7 @@
 ---
 id: roadmap
 title: Roadmap
-updated: 2026-07-02
+updated: 2026-07-14
 ---
 
 # Roadmap
@@ -15,18 +15,26 @@ Keep `updated:` current; stale roadmaps mislead agents (DOC-040).
 
 ## Now (current milestone)
 
-<!-- TEMPLATE: 1-3 outcomes being pursued right now, each linking a GitHub milestone.
-- Outcome: ... (milestone: ...)  -->
+- Complete the live BigQuery cost-gate proof: durable state decision, dedicated WIF
+  apply, repository variables, manual dry-run, dated evidence, and approved teardown.
+- Run the acceptance-A flow against an approved real or production-equivalent scope:
+  100% inspection coverage, remediation draft, and opt-in AI narrative report.
 
 ## Next (1-2 milestones out)
 
-<!-- Committed direction, not yet started. -->
+- Review and baseline the service-packaging draft: common core, customization axes,
+  presets, and evidence expected from an engagement.
+- Apply the asset to a second engagement and measure reuse effort for acceptance S.
 
 ## Later (intended, not committed)
 
-<!-- Direction only. Agents MUST NOT build ahead for "Later" items (COD-051). -->
+- Add A+ GA4 PII value detection only after its data-access and cost boundary is approved.
+- Add scheduled Cloud Run reconciliation only after a continuing owner and SLO exist.
 
 ## Explicitly not planned
 
-<!-- Rejected scope, with the reason or ADR link — prevents agents and contributors
-     from re-proposing settled questions. -->
+- Automatically applying remediation or opening remediation PRs; ADR-0005 requires a
+  deterministic, non-applying draft and human review.
+- Reusing deployer or inspector credentials for the cost gate; ADR-0006 requires a
+  dedicated provider and least-privilege service account.
+- Generalizing the shared OIDC module before a second consumer proves the pattern.
