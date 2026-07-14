@@ -68,9 +68,9 @@ updated: 2026-07-14
 
 ### A-5. `bq-inspector-role`（点検用・最小権限＝FR-6）
 **作るもの**: `google_project_iam_custom_role`（最小権限read-onlyロール）＋ 対象SAへのバインド。書き込み権限は付与しない。
-**含める権限（案・要精査）**:
+**共有モジュールの既定権限（案・要精査）**:
 - BQメタデータ/スキーマ: `bigquery.tables.get`, `bigquery.tables.list`, `bigquery.datasets.get`
-- INFORMATION_SCHEMA実行: `bigquery.jobs.create`（クエリjob実行に必要）
+- INFORMATION_SCHEMA実行: `bigquery.jobs.create`（クエリjob実行に必要。RESTメタデータのみを使うB環境は明示的に除外）
 - タクソノミー/タグ: `datacatalog.taxonomies.get`, `datacatalog.taxonomies.list`, `datacatalog.categories.getIamPolicy`
 - IAMポリシー閲覧: `resourcemanager.projects.getIamPolicy`（または `roles/iam.securityReviewer`）
 - Logging設定閲覧: `logging.sinks.get`, `logging.sinks.list`, `logging.exclusions.list`
