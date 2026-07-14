@@ -9,6 +9,35 @@ variable "region" {
   default     = "asia-northeast1"
 }
 
+variable "layer_dataset_ids" {
+  description = "BigQuery dataset IDs keyed by logical layer. Override all three with unique IDs when the target project is shared."
+  type = object({
+    staging      = string
+    intermediate = string
+    marts        = string
+  })
+  default = {
+    staging      = "staging"
+    intermediate = "intermediate"
+    marts        = "marts"
+  }
+
+  validation {
+    condition = alltrue([
+      for dataset_id in values(var.layer_dataset_ids) :
+      length(dataset_id) >= 1 &&
+      length(dataset_id) <= 1024 &&
+      can(regex("^[A-Za-z0-9_]+$", dataset_id))
+    ])
+    error_message = "Every layer dataset ID must contain only letters, numbers, or underscores and be 1-1024 characters long."
+  }
+
+  validation {
+    condition     = length(toset(values(var.layer_dataset_ids))) == 3
+    error_message = "Layer dataset IDs must be unique."
+  }
+}
+
 variable "taxonomy_display_name" {
   description = "Sensitivity taxonomy display name (unique per project + location)."
   type        = string

@@ -2,9 +2,9 @@
 # layer datasets + sensitivity taxonomy. Modules come from the shared library,
 # pinned by tag; bump ?ref= deliberately (never track a branch).
 #
-# The raw GA4 export dataset (analytics_*) is created by Google, not Terraform:
-# lock it down with dataset-level IAM out of band (requirements §3.3) — column-level
-# controls apply only to the self-built layers below.
+# The raw GA4 export dataset (analytics_*) is created by Google, not Terraform. Lock a
+# private export down with dataset-level IAM out of band (requirements §3.3). Public
+# verification sources remain externally managed and MUST NOT receive Terraform IAM.
 #
 # Both modules receive the SAME var.region: the taxonomy location must equal the
 # dataset location or column-level security silently fails (design doc, horizontal
@@ -23,7 +23,7 @@ module "layer_datasets" {
   for_each = local.layers
 
   project_id  = var.project_id
-  dataset_id  = each.key
+  dataset_id  = var.layer_dataset_ids[each.key]
   location    = var.region
   description = each.value
   labels      = { layer = each.key }

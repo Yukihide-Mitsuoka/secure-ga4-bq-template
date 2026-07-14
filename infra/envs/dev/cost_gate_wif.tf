@@ -43,7 +43,7 @@ resource "google_project_iam_member" "cost_gate_job_user" {
 
 locals {
   managed_cost_gate_datasets = {
-    for dataset_id in keys(local.layers) :
+    for dataset_id in values(var.layer_dataset_ids) :
     "${var.project_id}/${dataset_id}" => {
       project_id = var.project_id
       dataset_id = dataset_id

@@ -1,6 +1,6 @@
 config {
   type: "table",
-  schema: "marts",
+  schema: dataform.projectConfig.vars.marts_dataset,
   description: "Event fact table; the consumer-facing, policy-tagged surface.",
   bigquery: {
     partitionBy: "event_date",

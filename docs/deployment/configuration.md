@@ -44,10 +44,14 @@ both deployment and inspection. Configure these Terraform inputs before apply:
 
 | Terraform input | Required | Purpose |
 |-----------------|----------|---------|
+| `layer_dataset_ids` | shared target project | Explicit staging/intermediate/marts dataset IDs; use three unique values to prevent collisions with unrelated datasets |
 | `github_repository_id` | yes per engagement | Immutable numeric ID of the caller repository; names are not accepted as the security boundary |
 | `github_workload_identity_pool_id` | when `github` is unavailable | GitHub Actions WIF pool ID; override when the project already has or recently deleted the default pool |
 | `cost_gate_workflow_ref` | yes when upgrading | Exact released reusable-workflow ref accepted by WIF; defaults to `bq-cost-gate.yml@refs/tags/v2.0.2` |
-| `cost_gate_source_datasets` | when SQL references external sources | Project/dataset pairs for raw GA4 and cross-project tables; managed layer datasets are included automatically |
+| `cost_gate_source_datasets` | when SQL references private external sources | Project/dataset pairs on which Terraform may manage reader IAM; managed layers are automatic, and public datasets must be omitted |
+
+For the Google-managed public GA4 sample, use the isolated `US` configuration and
+teardown rules in the [Dataform profile](../../profiles/dataform-bigquery/README.md#public-ga4-verification-in-a-shared-project).
 
 After apply, set the following repository variables for the cost-gate caller:
 

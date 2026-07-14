@@ -9,11 +9,17 @@ defaultDataset: staging # per-layer datasets are set in each .sqlx config
 defaultAssertionDataset: staging
 
 vars:
+  # Layer dataset IDs must match Terraform output dataset_ids. Defaults preserve the
+  # original single-purpose-project behavior; shared projects override all three.
+  staging_dataset: staging
+  intermediate_dataset: intermediate
+  marts_dataset: marts
   # Engagement parameters (FR-7) — wire from Terraform outputs:
   #   terraform -chdir=infra/envs/dev output -json policy_tag_ids
   policy_tag_high: ""
   policy_tag_medium: ""
   policy_tag_low: ""
-  # The Google-created GA4 export (read-only source; locked down by dataset IAM):
+  # Externally managed GA4 source. Lock down private exports with dataset IAM; public
+  # verification data stays Google-managed and is never an IAM target for this stack.
   ga4_export_project: ""
   ga4_export_dataset: "" # e.g. analytics_123456789
