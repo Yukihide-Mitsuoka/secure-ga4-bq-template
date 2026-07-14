@@ -12,6 +12,7 @@ module "github_oidc" {
 
   project_id        = var.project_id
   github_repository = var.github_repository
+  pool_id           = var.github_workload_identity_pool_id
   roles             = var.deployer_roles
 }
 
@@ -33,14 +34,24 @@ resource "google_service_account_iam_member" "inspector_workload_identity_user" 
 }
 
 # Custom read-only role per design §A-5. No predefined role bundles exactly these
-# reads (sink config in particular), and every predefined candidate is broader —
-# a governance tool must not itself demand excess permissions (FR-6). Permissions
-# left at the module default (includes bigquery.jobs.create for INFORMATION_SCHEMA
-# queries); ADR-0003 proposes the B-path inspection engine skip query jobs entirely
-# (REST metadata only) — revisit this default once that ADR is accepted.
+# reads (sink config in particular), and every predefined candidate is broader.
+# ADR-0003 selected REST metadata only, so override the shared module's broader
+# INFORMATION_SCHEMA-ready default and omit bigquery.jobs.create.
 module "inspector_role" {
   source = "git::https://github.com/Yukihide-Mitsuoka/terraform-gcp-modules.git//modules/bq-inspector-role?ref=v0.4.0"
 
   project_id         = var.project_id
   inspector_sa_email = google_service_account.inspector.email
+  permissions = [
+    "bigquery.datasets.get",
+    "bigquery.tables.get",
+    "bigquery.tables.list",
+    "datacatalog.taxonomies.get",
+    "datacatalog.taxonomies.list",
+    "datacatalog.categories.getIamPolicy",
+    "resourcemanager.projects.getIamPolicy",
+    "logging.sinks.get",
+    "logging.sinks.list",
+    "logging.exclusions.list",
+  ]
 }

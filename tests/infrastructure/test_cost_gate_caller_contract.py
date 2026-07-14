@@ -3,6 +3,7 @@ from pathlib import Path
 ROOT = Path(__file__).parents[2]
 WORKFLOW = ROOT / ".github" / "workflows" / "bq-cost-gate.yml"
 TERRAFORM_VARIABLES = ROOT / "infra" / "envs" / "dev" / "cost_gate_variables.tf"
+SMOKE_SQL = ROOT / "tests" / "fixtures" / "bq-cost-gate" / "smoke.sql"
 
 
 def _read(path: Path) -> str:
@@ -42,3 +43,9 @@ def test_cost_gate_caller_exposes_compile_and_budget_inputs() -> None:
         in workflow
     )
     assert "budgets_file: ${{ vars.BQ_COST_GATE_BUDGETS_FILE }}" in workflow
+
+
+def test_cost_gate_smoke_query_needs_no_source_dataset() -> None:
+    sql = _read(SMOKE_SQL)
+
+    assert sql.strip() == "SELECT 1 AS cost_gate_smoke;"

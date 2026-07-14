@@ -40,6 +40,17 @@ variable "github_repository" {
   default     = "Yukihide-Mitsuoka/secure-ga4-bq-template"
 }
 
+variable "github_workload_identity_pool_id" {
+  description = "Workload Identity Pool ID used by GitHub Actions. Override it when the project already has or recently deleted the default github pool."
+  type        = string
+  default     = "github"
+
+  validation {
+    condition     = can(regex("^[a-z][a-z0-9-]{2,30}[a-z0-9]$", var.github_workload_identity_pool_id))
+    error_message = "github_workload_identity_pool_id must be 4-32 lowercase letters, digits, or hyphens, starting with a letter and ending with a letter or digit."
+  }
+}
+
 variable "deployer_roles" {
   description = "Project roles for the deployer SA. Candidate minimal set per design B-1 (open point D-1: refine against a real apply; bigquery.dataOwner because dataEditor lacks bigquery.datasets.update, needed to manage dataset access entries; projectIamAdmin deliberately absent — this env manages no project-level IAM)."
   type        = list(string)

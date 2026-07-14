@@ -45,6 +45,7 @@ both deployment and inspection. Configure these Terraform inputs before apply:
 | Terraform input | Required | Purpose |
 |-----------------|----------|---------|
 | `github_repository_id` | yes per engagement | Immutable numeric ID of the caller repository; names are not accepted as the security boundary |
+| `github_workload_identity_pool_id` | when `github` is unavailable | GitHub Actions WIF pool ID; override when the project already has or recently deleted the default pool |
 | `cost_gate_workflow_ref` | yes when upgrading | Exact released reusable-workflow ref accepted by WIF; defaults to `bq-cost-gate.yml@refs/tags/v2.0.0` |
 | `cost_gate_source_datasets` | when SQL references external sources | Project/dataset pairs for raw GA4 and cross-project tables; managed layer datasets are included automatically |
 
@@ -77,6 +78,11 @@ Run the compile command on a clean runner without ADC before enabling the gate. 
 produce the configured SQL glob without downloading unpinned tools, reading secrets, or
 using cloud credentials. Leaving a required value empty fails closed once the gate is
 enabled. Add the resulting cost-gate check to branch protection after its first green run.
+
+When no source dataset exists, an infrastructure-only live proof MAY use
+`tests/fixtures/bq-cost-gate/smoke.sql` with an empty compile command, a matching SQL
+glob, and a zero-byte budget. This proves the WIF and artifact boundaries but does not
+replace the Dataform compile proof or the acceptance-A run against an approved scope.
 
 Do not substitute `WIF_PROVIDER`, `DEPLOYER_SA`, or `INSPECTOR_SA`. Compilation must be
 credential-free. When upgrading gcp-cicd-workflows, update the caller's immutable release
