@@ -29,3 +29,30 @@ not describe a partial inspection as complete.
 
 **Cause:** The output directory already contains `ai-report.md`.
 **Fix:** Select a new `OUT` directory. Existing AI drafts are never overwritten.
+
+## `actions/checkout` fails with `Repository not found` in Scorecard or Labels Sync
+
+**Affects:** workflow revisions before issue #52.
+
+**Cause:** the job-level permissions block replaced workflow defaults without granting
+`contents: read` for the private repository.
+
+**Fix:** update to a revision containing issue #52, then rerun the affected workflow.
+
+**Prevention:** workflow contract tests require least-privilege checkout together with
+each workflow's required write permissions.
+
+**Refs:** #52, SEC-021.
+
+## CodeQL fails immediately with no jobs or logs
+
+**Affects:** workflow revisions before issue #52.
+
+**Cause:** an empty language matrix creates no analysis jobs and produces a failed run.
+
+**Fix:** update to a revision containing issue #52; this repository analyzes Python.
+
+**Prevention:** the workflow contract test requires the repository primary language in
+the CodeQL matrix.
+
+**Refs:** #52, SEC-030.
