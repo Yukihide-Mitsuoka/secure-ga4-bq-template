@@ -1,13 +1,14 @@
 ---
 id: design-modules-wif-wiring
 title: 実装設計 — 新規モジュールIFとWIF配線
-status: draft-v0.1
-updated: 2026-07-10
+status: implemented-baseline-v1
+updated: 2026-07-14
 ---
 
-# 実装設計（ドラフト）: 新規モジュールのインターフェース ＋ WIF配線
+# 実装設計: 新規モジュールのインターフェース ＋ WIF配線
 
-- ステータス: Draft v0.1
+- ステータス: ベースライン実装済み（deployer / inspector WIF、2026-07-14）
+- cost gate拡張: [ADR-0006](../adr/0006-bind-cost-gate-wif-to-trusted-workflow.md) が正準
 - 関連: [requirements-secure-asset.md](requirements-secure-asset.md) / [requirements-dbt-dataform-rail.md](requirements-dbt-dataform-rail.md)
 - 準拠規約（terraform-gcp-modules 実査）: 1モジュール=1ディレクトリ（`main/variables/outputs/versions.tf`＋`README.md`）、**provider宣言なし**（consumer所有）、`versions.tf` で `required_version >= 1.5`＋google `>= 5.0, < 8.0`、inputsは`validation`付き、outputsはID/名前のみ、参照は **tag固定 git source** `?ref=vX.Y.Z`。
 

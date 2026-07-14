@@ -1,7 +1,7 @@
 ---
 id: usage
 title: Usage — New Machine, New Account, New Project
-updated: 2026-07-02
+updated: 2026-07-14
 ---
 
 # Usage
@@ -94,15 +94,17 @@ self-check the template (frontmatter integrity + guard-hook tests).
 ## Scenario B — clone the foundation itself onto another machine
 
 ```bash
-git clone https://github.com/Yukihide-Mitsuoka/ai-dev-foundation.git
-cd ai-dev-foundation
-# The bare template's root Makefile is a no-op, so `make setup` does nothing here.
-# Install the git hooks directly (needs pre-commit — see prerequisites):
-pre-commit install --hook-type pre-commit --hook-type pre-push
-make doctor                            # verify the template is intact
+git clone https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template.git
+cd secure-ga4-bq-template
+make setup
+make doctor
+make format
+make lint
+make test
+make build
 ```
-That is genuinely "just clone" — but each new machine still needs the one-time
-**prerequisites** and **auth** below.
+The repository root is an active Terraform + Python profile. Each new machine needs the
+one-time **prerequisites** and **auth** below before all canonical targets can pass.
 
 ---
 
