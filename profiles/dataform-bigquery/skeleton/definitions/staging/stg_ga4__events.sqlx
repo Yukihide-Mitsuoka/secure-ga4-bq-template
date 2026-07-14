@@ -1,6 +1,6 @@
 config {
   type: "view",
-  schema: "staging",
+  schema: dataform.projectConfig.vars.staging_dataset,
   description: "Typed unnest of the GA4 export; one row per event. Staging materializes as VIEWS: BigQuery cannot attach policy tags to view columns, so this layer is protected by dataset IAM alone (deliberate - see profile README). Sensitivity is documented per column and ENFORCED in the marts layer.",
   columns: {
     event_ts: "Event timestamp (from event_timestamp micros).",

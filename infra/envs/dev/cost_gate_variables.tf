@@ -46,7 +46,7 @@ variable "cost_gate_workflow_ref" {
 }
 
 variable "cost_gate_source_datasets" {
-  description = "Additional source datasets the dry-run gate may read, including raw GA4 or cross-project sources. Managed staging/intermediate/marts datasets are included automatically."
+  description = "Additional non-public source datasets where Terraform may manage reader IAM. Managed layer datasets are included automatically. Public datasets are externally managed and MUST NOT be listed."
   type = list(object({
     project_id = string
     dataset_id = string

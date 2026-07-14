@@ -34,6 +34,46 @@ Compilation errors, empty queries, duplicate output paths, and unmarked output
 directories fail closed before WIF authentication. The package lock pins Dataform
 CLI/Core and overrides the vulnerable `parse-duration` transitive dependency.
 
+## Public GA4 verification in a shared project
+
+Use [the public GA4 settings example](public-ga4-workflow-settings.yaml.example) to
+compile against Google's obfuscated ecommerce export without copying or changing the
+source dataset. The source is in `US`, so the temporary Terraform datasets, taxonomy,
+and Dataform `defaultLocation` MUST also use `US`.
+
+1. Give all three Terraform `layer_dataset_ids` unique values; do not use the default
+   global names in a shared project. Set a unique `taxonomy_display_name` as well.
+2. Activate the profile, then replace `transform/workflow_settings.yaml` with the
+   example. Change `defaultProject` and the three dataset IDs to match Terraform.
+3. Keep `cost_gate_source_datasets` empty for this source. That input creates IAM
+   bindings and is only for private datasets whose IAM the caller is allowed to manage;
+   the public sample remains Google-managed.
+4. Run `make compile-cost-gate`. This installs only lockfile-pinned tooling, needs no
+   ADC, and emits regular SQL for a no-charge BigQuery dry run.
+5. Replace the example policy-tag paths with Terraform output only before a credentialed
+   Dataform run. Delete every temporary managed resource after live verification.
+
+Before any Terraform apply, validate the source-facing staging SQL and obtain its byte
+estimate. With the unchanged example names, run:
+
+```bash
+bq query \
+  --project_id=example-verification-project \
+  --location=US \
+  --use_legacy_sql=false \
+  --dry_run \
+  < transform/target/compiled/tables/example-verification-project__ga4_verify_example_staging__stg_ga4__events.sql
+```
+
+Replace only the billing project when using the unchanged example. If dataset IDs or the
+project in `workflow_settings.yaml` changed, use the matching generated filename. This
+dry run validates the public source query without executing it; it does not validate the
+downstream mart and assertion queries, which reference temporary managed datasets that do
+not exist until the separately approved apply.
+
+The public sample is suitable for development and a production-equivalent technical
+proof, but it is not evidence of applying the asset to a real customer engagement.
+
 ## Where protection applies (deliberate, not an omission)
 
 | Layer | Materialization | Protection |
