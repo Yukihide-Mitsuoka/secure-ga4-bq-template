@@ -39,8 +39,8 @@ not describe a partial inspection as complete.
 
 **Fix:** update to a revision containing issue #52, then rerun the affected workflow.
 
-**Prevention:** the workflow contract test requires least-privilege checkout and SARIF
-permissions together.
+**Prevention:** workflow contract tests require least-privilege checkout together with
+each workflow's required write permissions.
 
 **Refs:** #52, SEC-021.
 
