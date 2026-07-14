@@ -30,14 +30,14 @@ not describe a partial inspection as complete.
 **Cause:** The output directory already contains `ai-report.md`.
 **Fix:** Select a new `OUT` directory. Existing AI drafts are never overwritten.
 
-## `actions/checkout` fails with `Repository not found` in Scorecard
+## `actions/checkout` fails with `Repository not found` in Scorecard or Labels Sync
 
 **Affects:** workflow revisions before issue #52.
 
 **Cause:** the job-level permissions block replaced workflow defaults without granting
 `contents: read` for the private repository.
 
-**Fix:** update to a revision containing issue #52, then rerun Scorecard.
+**Fix:** update to a revision containing issue #52, then rerun the affected workflow.
 
 **Prevention:** the workflow contract test requires least-privilege checkout and SARIF
 permissions together.
