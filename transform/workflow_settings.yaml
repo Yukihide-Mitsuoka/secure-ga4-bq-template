@@ -1,0 +1,23 @@
+# Credential-free compilation example for Google's public, obfuscated GA4 ecommerce
+# sample. Copy over transform/workflow_settings.yaml after profile activation.
+defaultProject: adr-main-application
+defaultLocation: US
+defaultDataset: ga4v58_staging
+defaultAssertionDataset: ga4v58_staging
+
+vars:
+  staging_dataset: ga4v58_staging
+  intermediate_dataset: ga4v58_intermediate
+  marts_dataset: ga4v58_marts
+
+  # Compilation accepts these obvious placeholders. Replace them with Terraform
+  # output policy_tag_ids before any credentialed Dataform run.
+  policy_tag_high: projects/adr-main-application/locations/us/taxonomies/6472874081993357309/policyTags/8307018862989923436
+  policy_tag_medium: projects/adr-main-application/locations/us/taxonomies/6472874081993357309/policyTags/6007892156583295914
+  policy_tag_low: projects/adr-main-application/locations/us/taxonomies/6472874081993357309/policyTags/5888431520588819875
+
+  ga4_export_project: bigquery-public-data
+  ga4_export_dataset: ga4_obfuscated_sample_ecommerce
+
+# Do not add this public source to cost_gate_source_datasets. Google owns its IAM;
+# Terraform manages reader grants only for private source datasets and managed layers.
