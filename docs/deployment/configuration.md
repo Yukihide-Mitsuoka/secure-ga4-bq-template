@@ -67,6 +67,12 @@ Keep it disabled until every required value below is configured:
 | `BQ_COST_GATE_BUDGETS_FILE` | no | Relative YAML file containing reviewed path-specific overrides and reasons |
 | `BQ_COST_GATE_ENABLED` | last | Set to `true` only after the other values and dataset grants are ready |
 
+For the Dataform profile, use `make compile-cost-gate` and
+`transform/target/compiled/**/*.sql` for the compile command and SQL glob. The target
+installs only the lockfile, compiles without ADC, and exports executable queries from
+the Dataform graph. dbt `compile` is not the credential-free default because its
+BigQuery adapter initializes ADC even when introspection and cache population are off.
+
 Run the compile command on a clean runner without ADC before enabling the gate. It must
 produce the configured SQL glob without downloading unpinned tools, reading secrets, or
 using cloud credentials. Leaving a required value empty fails closed once the gate is

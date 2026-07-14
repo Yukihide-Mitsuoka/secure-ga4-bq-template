@@ -8,8 +8,8 @@ table); pick ONE engine per repository (rail constraint).
 ## Activation
 
 1. Copy [Makefile](Makefile) to the repo root (replaces the terraform-only one; all
-   terraform targets are preserved, Dataform targets are added). Requires the Dataform
-   CLI: `npm i -g @dataform/cli`.
+   terraform targets are preserved, Dataform targets are added). Requires Node.js
+   20-24 and npm; Dataform CLI/Core versions come only from the checked-in lockfile.
 2. `cp -r profiles/dataform-bigquery/skeleton transform`
 3. Edit `transform/workflow_settings.yaml`: set `defaultProject` / `defaultLocation`
    (MUST equal the Terraform `var.region` — taxonomy location match).
@@ -19,7 +19,20 @@ table); pick ONE engine per repository (rail constraint).
 5. Credentials for `dataform run/test`: `cd transform && dataform init-creds` and pick
    **application-default-credentials**. Never create a JSON key file (GR-001);
    `.df-credentials.json` is gitignored either way.
-6. `make build` — credential-free gate (terraform validate + `dataform compile`).
+6. `make setup && make build` — lockfile install plus credential-free validation.
+
+## Cost-gate compilation
+
+The profile provides `make compile-cost-gate`. It runs `npm ci --ignore-scripts`,
+compiles the Dataform graph without ADC, and exports table, assertion, and operation
+queries as regular SQL under `transform/target/compiled/`. Configure the caller with:
+
+- `BQ_COST_GATE_COMPILE_COMMAND=make compile-cost-gate`
+- `BQ_COST_GATE_SQL_GLOB=transform/target/compiled/**/*.sql`
+
+Compilation errors, empty queries, duplicate output paths, and unmarked output
+directories fail closed before WIF authentication. The package lock pins Dataform
+CLI/Core and overrides the vulnerable `parse-duration` transitive dependency.
 
 ## Where protection applies (deliberate, not an omission)
 
@@ -50,5 +63,5 @@ the deployer/transformer SA — see design-modules-wif-wiring.md.
   `staging` dataset (`defaultAssertionDataset`), not an unmanaged one.
 - Lint: `dataform format` has no check-only mode, so `make lint` enforces the rail
   naming conventions (`stg_*`/`int_*`/`fct_*`/`dim_*`) instead; formatting remains
-  `make format`'s job. The CI dry-run cost gate (`bq-cost-gate.yml`) is a separate,
-  engine-independent workflow — planned in gcp-cicd-workflows.
+  `make format`'s job. The CI dry-run cost gate uses the separate, engine-independent
+  `gcp-cicd-workflows` v2 workflow.
