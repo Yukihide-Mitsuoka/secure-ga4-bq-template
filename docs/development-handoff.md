@@ -2,7 +2,7 @@
 id: development-handoff
 title: Development Handoff
 status: active
-updated: 2026-07-14
+updated: 2026-07-15
 ---
 
 # Development Handoff
@@ -64,7 +64,7 @@ removed during teardown.
 | Managed datasets | `ga4v58_staging`, `ga4v58_intermediate`, `ga4v58_marts` in `US` | Terraform destroy |
 | Taxonomy | `ga4-verify-58` plus high/medium/low policy tags in `US` | Terraform destroy |
 | WIF | Pool `github-ga4v58`; providers `github-oidc` and `ga4v58-cost-gate` | Terraform destroy; expect a provider soft-delete tombstone |
-| Service accounts | `github-deployer`, `ga4v58-inspector`, `ga4v58-cost` | Terraform destroy |
+| Service accounts | `ga4v58-deployer`, `ga4v58-inspector`, `ga4v58-cost` | Terraform destroy |
 | Custom role | `bqInspector` bound only to the temporary inspector | Terraform destroy |
 | Temporary APIs | `datacatalog.googleapis.com`, `aiplatform.googleapis.com` | Disable only if this run enabled them; do not force-disable BigQuery |
 | GitHub variables | WIF, service-account, compile, SQL-glob, project, budget, and enable flags | Delete after evidence capture |

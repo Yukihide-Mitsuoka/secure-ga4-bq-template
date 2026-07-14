@@ -80,6 +80,17 @@ variable "github_workload_identity_pool_id" {
   }
 }
 
+variable "deployer_service_account_id" {
+  description = "Account ID of the deployer service account. Override it when the project already has or recently deleted the default account."
+  type        = string
+  default     = "github-deployer"
+
+  validation {
+    condition     = can(regex("^[a-z][a-z0-9-]{4,28}[a-z0-9]$", var.deployer_service_account_id))
+    error_message = "deployer_service_account_id must be 6-30 lowercase letters, digits, or hyphens, starting with a letter and ending with a letter or digit."
+  }
+}
+
 variable "deployer_roles" {
   description = "Project roles for the deployer SA. Candidate minimal set per design B-1 (open point D-1: refine against a real apply; bigquery.dataOwner because dataEditor lacks bigquery.datasets.update, needed to manage dataset access entries; projectIamAdmin deliberately absent — this env manages no project-level IAM)."
   type        = list(string)

@@ -10,10 +10,11 @@
 module "github_oidc" {
   source = "git::https://github.com/Yukihide-Mitsuoka/terraform-gcp-modules.git//modules/github-oidc?ref=v0.3.0"
 
-  project_id        = var.project_id
-  github_repository = var.github_repository
-  pool_id           = var.github_workload_identity_pool_id
-  roles             = var.deployer_roles
+  project_id         = var.project_id
+  github_repository  = var.github_repository
+  pool_id            = var.github_workload_identity_pool_id
+  service_account_id = var.deployer_service_account_id
+  roles              = var.deployer_roles
 }
 
 # --- Inspector SA (FR-6): federated read-only identity for bq-inspect runs ---

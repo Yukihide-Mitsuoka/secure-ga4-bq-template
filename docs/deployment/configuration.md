@@ -47,6 +47,7 @@ both deployment and inspection. Configure these Terraform inputs before apply:
 | `layer_dataset_ids` | shared target project | Explicit staging/intermediate/marts dataset IDs; use three unique values to prevent collisions with unrelated datasets |
 | `github_repository_id` | yes per engagement | Immutable numeric ID of the caller repository; names are not accepted as the security boundary |
 | `github_workload_identity_pool_id` | when `github` is unavailable | GitHub Actions WIF pool ID; override when the project already has or recently deleted the default pool |
+| `deployer_service_account_id` | shared target project | Deployer account ID; override when the default account exists or was recently deleted |
 | `cost_gate_workflow_ref` | yes when upgrading | Exact released reusable-workflow ref accepted by WIF; defaults to `bq-cost-gate.yml@refs/tags/v2.0.2` |
 | `cost_gate_source_datasets` | when SQL references private external sources | Project/dataset pairs on which Terraform may manage reader IAM; managed layers are automatic, and public datasets must be omitted |
 
