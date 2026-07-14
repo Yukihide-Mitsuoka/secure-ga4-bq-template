@@ -10,8 +10,8 @@ vars:
   intermediate_dataset: ga4v58_intermediate
   marts_dataset: ga4v58_marts
 
-  # Compilation accepts these obvious placeholders. Replace them with Terraform
-  # output policy_tag_ids before any credentialed Dataform run.
+  # Temporary Acceptance A runtime values copied from Terraform output. This activation
+  # is removed after the cost-gate proof; the reusable profile keeps placeholders.
   policy_tag_high: projects/adr-main-application/locations/us/taxonomies/6472874081993357309/policyTags/8307018862989923436
   policy_tag_medium: projects/adr-main-application/locations/us/taxonomies/6472874081993357309/policyTags/6007892156583295914
   policy_tag_low: projects/adr-main-application/locations/us/taxonomies/6472874081993357309/policyTags/5888431520588819875
