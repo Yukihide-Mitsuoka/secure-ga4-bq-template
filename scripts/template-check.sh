@@ -8,6 +8,7 @@
 #      (`---` ... `---`) — the metadata the routing/authority system depends on.
 #   2. No file carries the "collapsed frontmatter" signature a non-frontmatter-aware
 #      formatter produces (guards against the LOG-0007 regression recurring).
+#   3. The PR size guard excludes generated package-manager lockfiles at any depth.
 
 set -u
 cd "$(dirname "$0")/.." || exit 9
@@ -33,6 +34,14 @@ done < <(find .ai .skills -type f -name '*.md' 2>/dev/null | sort)
 if grep -rlnE '^## (id|name): .+ (title|description): ' .ai .skills docs CLAUDE.md AGENTS.md 2>/dev/null; then
   err "^ file(s) above contain collapsed YAML frontmatter — run mdformat with mdformat-frontmatter (see LOG-0007)"
 fi
+
+# 3. Profiles keep their lockfiles below the repository root. The GR-020 size guard
+# must use recursive pathspecs or generated lockfiles can hard-fail an otherwise small PR.
+for lockfile in package-lock.json pnpm-lock.yaml; do
+  if ! grep -qF "':(exclude)**/$lockfile'" .github/workflows/ci.yml; then
+    err ".github/workflows/ci.yml: PR size guard does not exclude nested $lockfile files"
+  fi
+done
 
 if [ "$errors" -eq 0 ]; then
   echo "doctor: OK — template invariants hold"
