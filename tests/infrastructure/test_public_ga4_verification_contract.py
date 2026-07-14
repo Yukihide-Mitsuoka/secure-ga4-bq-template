@@ -47,6 +47,17 @@ def test_dataform_profile_routes_models_to_configured_layer_datasets() -> None:
     assert "schema: dataform.projectConfig.vars.marts_dataset" in marts
 
 
+def test_dataform_assertion_does_not_project_policy_tagged_columns() -> None:
+    assertion = (
+        SKELETON / "definitions" / "marts" / "fct_events_event_name_not_null.sqlx"
+    ).read_text(encoding="utf-8")
+
+    assert "select 1 as assertion_failure" in assertion
+    assert "select *" not in assertion
+    assert "event_date >= date_sub(current_date(), interval 3 day)" in assertion
+    assert "event_name is null" in assertion
+
+
 def test_public_ga4_example_is_us_scoped_and_externally_managed() -> None:
     settings = (PROFILE / "public-ga4-workflow-settings.yaml.example").read_text(encoding="utf-8")
 
