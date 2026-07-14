@@ -30,8 +30,10 @@ class FakeTaxonomiesResource:
     ) -> None:
         self._taxonomy_pages = taxonomy_pages
         self._policy_tags = FakePolicyTagsResource(tag_pages_by_parent)
+        self.listed_parents: list[str] = []
 
     def list(self, parent: str, pageToken: str | None = None) -> FakeRequest:  # noqa: N803
+        self.listed_parents.append(parent)
         return FakeRequest(self._taxonomy_pages[0 if pageToken is None else int(pageToken)])
 
     def policyTags(self) -> FakePolicyTagsResource:  # noqa: N802
@@ -88,6 +90,14 @@ def test_location_without_taxonomies_yields_empty() -> None:
     taxonomies = FakeTaxonomiesResource(taxonomy_pages=[{}], tag_pages_by_parent={})
     adapter = DataCatalogTaxonomyAdapter(FakeDataCatalogService(taxonomies))
     assert adapter.list_taxonomies("p", "asia-northeast1") == ()
+
+
+def test_us_multiregion_is_lowercased_for_data_catalog_api() -> None:
+    taxonomies = FakeTaxonomiesResource(taxonomy_pages=[{}], tag_pages_by_parent={})
+    adapter = DataCatalogTaxonomyAdapter(FakeDataCatalogService(taxonomies))
+
+    assert adapter.list_taxonomies("p", "US") == ()
+    assert taxonomies.listed_parents == ["projects/p/locations/us"]
 
 
 def test_taxonomy_with_no_tags_still_appears() -> None:

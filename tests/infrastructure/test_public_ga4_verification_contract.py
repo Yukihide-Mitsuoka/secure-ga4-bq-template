@@ -34,6 +34,12 @@ def test_deployer_service_account_id_is_configurable_for_shared_projects() -> No
     assert "service_account_id = var.deployer_service_account_id" in terraform
 
 
+def test_taxonomy_location_is_normalized_for_data_catalog_api() -> None:
+    terraform = _terraform()
+
+    assert "location = lower(var.region)" in terraform
+
+
 def test_dataform_profile_routes_models_to_configured_layer_datasets() -> None:
     settings = (SKELETON / "workflow_settings.yaml").read_text(encoding="utf-8")
     staging = (SKELETON / "definitions" / "staging" / "stg_ga4__events.sqlx").read_text(
