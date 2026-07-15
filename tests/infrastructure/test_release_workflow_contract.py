@@ -11,6 +11,8 @@ SBOM_ACTION = "anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610"
 TRIVY_ACTION = "aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25"
 ATTEST_ACTION = "actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373"
 CHECKOUT_ACTION = "actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0"
+TERRAFORM_SETUP_ACTION = "hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd"
+UV_SETUP_ACTION = "astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e"
 
 
 def _workflow() -> dict[str, Any]:
@@ -74,3 +76,19 @@ def test_manual_dispatch_preflights_release_gates_without_a_tag() -> None:
     assert checkout_step["with"]["ref"] == (
         "${{ needs.release-please.outputs.tag_name || github.sha }}"
     )
+
+
+def test_release_gate_provisions_toolchains_before_make_setup() -> None:
+    steps = _workflow()["jobs"]["release-gates"]["steps"]
+    action_refs = [step.get("uses") for step in steps]
+    make_setup_index = next(
+        index for index, step in enumerate(steps) if step.get("run") == "make setup"
+    )
+
+    assert TERRAFORM_SETUP_ACTION in action_refs
+    assert UV_SETUP_ACTION in action_refs
+    assert action_refs.index(TERRAFORM_SETUP_ACTION) < make_setup_index
+    assert action_refs.index(UV_SETUP_ACTION) < make_setup_index
+
+    terraform_step = steps[action_refs.index(TERRAFORM_SETUP_ACTION)]
+    assert terraform_step["with"]["terraform_wrapper"] == "false"
