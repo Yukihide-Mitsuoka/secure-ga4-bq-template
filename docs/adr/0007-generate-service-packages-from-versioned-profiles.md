@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| Status | proposed |
+| Status | accepted (2026-07-15, repository owner via merged PR #80) |
 | Date | 2026-07-15 |
 | Deciders | repository owner |
 | Author | Codex (AI agent) |
