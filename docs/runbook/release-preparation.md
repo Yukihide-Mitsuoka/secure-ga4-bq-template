@@ -165,8 +165,9 @@ merging the Release PR because REL-010 reserves release approval for a human.
    - Expect: a non-draft, non-prerelease tag with `sbom.spdx.json` and `sbom.cdx.json`
      assets; the run also contains successful test, vulnerability, build, and provenance
      steps.
-   - If not: retain the immutable release record, report the missing evidence, and fix
-     forward through a patch release.
+   - If not: retain the immutable release record and report the missing evidence. Do
+     not manually backfill assets, delete the release, or move its tag; fix forward
+     through a reviewed patch release and verify that release independently.
 
 ## Escalation
 
