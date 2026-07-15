@@ -28,5 +28,6 @@ architectural change (definition: ARC-020 "Architectural" scope). Process:
 | [0004](0004-isolate-ai-report-generation.md) | Isolate AI report generation behind a reporting boundary | accepted | 2026-07-12 |
 | [0005](0005-render-remediation-drafts-from-recipes.md) | Render remediation drafts from deterministic recipes | accepted | 2026-07-13 |
 | [0006](0006-bind-cost-gate-wif-to-trusted-workflow.md) | Bind cost-gate WIF to the trusted reusable workflow | accepted | 2026-07-13 |
+| [0007](0007-generate-service-packages-from-versioned-profiles.md) | Generate service packages from versioned profiles | proposed | 2026-07-15 |
 
 <!-- Append new ADRs to this table (newest last). -->
