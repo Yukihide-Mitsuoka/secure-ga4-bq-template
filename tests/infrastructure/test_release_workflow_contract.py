@@ -1,5 +1,4 @@
 import re
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -34,12 +33,11 @@ def test_release_preparation_supports_main_push_and_manual_dispatch() -> None:
     assert _is_stable_semver(VERSION_FILE.read_text(encoding="utf-8"))
 
 
-def test_release_preparation_accepts_generated_version(tmp_path: Path, monkeypatch: Any) -> None:
+def test_release_preparation_accepts_generated_version(tmp_path: Path) -> None:
     generated_version = tmp_path / "version.txt"
     generated_version.write_text("1.0.0\n", encoding="utf-8")
-    monkeypatch.setattr(sys.modules[__name__], "VERSION_FILE", generated_version)
 
-    test_release_preparation_supports_main_push_and_manual_dispatch()
+    assert _is_stable_semver(generated_version.read_text(encoding="utf-8"))
 
 
 def test_release_version_rejects_non_stable_semver() -> None:
