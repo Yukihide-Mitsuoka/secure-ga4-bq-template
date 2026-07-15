@@ -1,0 +1,36 @@
+version: 1
+profile_id: inspection-standard-v1
+display_name: BigQuery セキュリティ点検（標準）
+fee:
+  currency: JPY
+  minimum: 300000
+  maximum: 500000
+limits:
+  projects: 1
+  datasets: 10
+  table_resources: 200
+  leaf_columns: 2000
+checks: [CHK-01, CHK-02, CHK-03, CHK-04, CHK-05, CHK-06, CHK-07, CHK-08, CHK-09, CHK-10, CHK-11, CHK-12]
+deliverables:
+  - id: deterministic_report
+    label: 決定論点検レポート一式
+  - id: advisory_ai_report
+    label: 助言用AIレポート1回
+  - id: non_applying_remediation_draft
+    label: 非適用の是正案1回
+review_sessions: 1
+separate_estimate_conditions:
+  - id: multiple_projects
+    label: 複数GCPプロジェクト
+  - id: dataset_limit_exceeded
+    label: データセット上限の超過
+  - id: table_resource_limit_exceeded
+    label: テーブルリソース上限の超過
+  - id: leaf_column_limit_exceeded
+    label: 末端列上限の超過
+  - id: customer_wif_setup
+    label: 顧客環境のWIF設定
+  - id: query_jobs_required
+    label: BigQueryクエリ実行を伴う作業
+  - id: row_value_inspection_required
+    label: 行データまたは値の点検
