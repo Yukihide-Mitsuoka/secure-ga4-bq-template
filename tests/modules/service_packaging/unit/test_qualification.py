@@ -1,20 +1,28 @@
 from __future__ import annotations
 
+import json
+import os
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
+from unittest.mock import Mock
 
 import pytest
 import yaml
 
+from src.modules.service_packaging.application.qualify_engagement import QualifyEngagement
 from src.modules.service_packaging.domain.menu import LabeledItem
 from src.modules.service_packaging.domain.qualification import evaluate_scope
+from src.modules.service_packaging.infrastructure.qualification_artifact_writer import (
+    QualificationArtifactWriter,
+)
 from src.modules.service_packaging.infrastructure.yaml_profile_repository import (
     YamlMenuProfileRepository,
 )
 from src.modules.service_packaging.infrastructure.yaml_scope_repository import (
     YamlEngagementScopeRepository,
 )
+from src.modules.service_packaging.interface.qualify_cli import main
 
 PROFILE_PATH = Path("service-packages/inspection-standard.yml")
 SCOPE_PATH = Path("engagement-scope.example.yml")
@@ -152,6 +160,110 @@ def test_missing_and_unknown_scope_fields_have_path_qualified_errors(tmp_path: P
     raw["special_conditions"]["unknown"] = False
     with pytest.raises(ValueError, match="unsupported=.*unknown"):
         YamlEngagementScopeRepository().load(_write(tmp_path, raw))
+
+
+def test_qualification_use_case_loads_evaluates_and_writes(tmp_path: Path) -> None:
+    profile_reader = Mock()
+    profile_reader.load.return_value = _profile()
+    scope_reader = Mock()
+    scope_reader.load.return_value = _scope()
+    writer = Mock()
+    writer.write.return_value = (tmp_path / "qualification.json", tmp_path / "qualification.md")
+    paths = QualifyEngagement(
+        profile_reader=profile_reader, scope_reader=scope_reader, writer=writer
+    ).handle(PROFILE_PATH, SCOPE_PATH, tmp_path)
+
+    assert paths == (tmp_path / "qualification.json", tmp_path / "qualification.md")
+    profile_reader.load.assert_called_once_with(PROFILE_PATH)
+    scope_reader.load.assert_called_once_with(SCOPE_PATH)
+    assert writer.write.call_args.args[0].standard_package_eligible
+    assert writer.write.call_args.args[1] == tmp_path
+
+
+def test_writer_outputs_deterministic_matching_json_and_markdown(tmp_path: Path) -> None:
+    scope = replace(
+        _scope(),
+        counts=replace(_scope().counts, projects=2, datasets=11),
+        query_jobs_required=True,
+    )
+    result = evaluate_scope(_profile(), scope)
+    injected = "複数\n## [link](target)"
+    result = replace(
+        result, reasons=(replace(result.reasons[0], label=injected), *result.reasons[1:])
+    )
+
+    first = QualificationArtifactWriter().write(result, tmp_path / "first")
+    second = QualificationArtifactWriter().write(result, tmp_path / "second")
+    payload = json.loads(first[0].read_text(encoding="utf-8"))
+    markdown = first[1].read_text(encoding="utf-8")
+
+    assert tuple(path.read_bytes() for path in first) == tuple(path.read_bytes() for path in second)
+    assert payload["standard_package_eligible"] is False
+    assert payload["scope"]["counts"]["datasets"] == 11
+    assert [reason["condition_id"] for reason in payload["reasons"]] == [
+        "multiple_projects",
+        "dataset_limit_exceeded",
+        "query_jobs_required",
+    ]
+    assert payload["reasons"][0]["label"] == injected
+    assert "\n## [link]" not in markdown
+    assert all(reason["label"] in markdown for reason in payload["reasons"][1:])
+    assert "**別途見積もり**" in markdown
+
+
+@pytest.mark.parametrize("filename", ["qualification.json", "qualification.md"])
+def test_writer_refuses_to_overwrite_either_artifact(tmp_path: Path, filename: str) -> None:
+    target = tmp_path / filename
+    target.write_text("keep", encoding="utf-8")
+
+    with pytest.raises(FileExistsError, match=filename):
+        QualificationArtifactWriter().write(evaluate_scope(_profile(), _scope()), tmp_path)
+
+    assert target.read_text(encoding="utf-8") == "keep"
+    assert len(list(tmp_path.iterdir())) == 1
+
+
+def test_writer_rolls_back_pair_when_second_publish_fails(monkeypatch, tmp_path: Path) -> None:
+    real_link = os.link
+
+    def fail_markdown(source, target) -> None:
+        if Path(target).name == "qualification.md":
+            raise OSError("publish failed")
+        real_link(source, target)
+
+    monkeypatch.setattr(os, "link", fail_markdown)
+
+    with pytest.raises(OSError, match="publish failed"):
+        QualificationArtifactWriter().write(evaluate_scope(_profile(), _scope()), tmp_path)
+
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_qualification_cli_needs_no_cloud_configuration(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.delenv("GOOGLE_CLOUD_PROJECT", raising=False)
+    monkeypatch.delenv("GOOGLE_APPLICATION_CREDENTIALS", raising=False)
+
+    assert main(_cli_args(tmp_path, SCOPE_PATH)) == 0
+    payload = json.loads((tmp_path / "qualification.json").read_text(encoding="utf-8"))
+    markdown = (tmp_path / "qualification.md").read_text(encoding="utf-8")
+    assert payload["standard_package_eligible"] is True
+    assert payload["reasons"] == []
+    assert "**標準パッケージ適合**" in markdown and "- なし" in markdown
+
+
+def test_qualification_cli_rejects_missing_scope(tmp_path: Path) -> None:
+    assert main(_cli_args(tmp_path, tmp_path / "missing.yml")) == 2
+
+
+def _cli_args(out_dir: Path, scope_path: Path) -> list[str]:
+    return [
+        "--profile",
+        str(PROFILE_PATH),
+        "--scope",
+        str(scope_path),
+        "--out-dir",
+        str(out_dir),
+    ]
 
 
 def _scope_raw() -> dict[str, Any]:

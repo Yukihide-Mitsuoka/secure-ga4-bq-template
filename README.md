@@ -83,6 +83,18 @@ The command reads `service-packages/inspection-standard.yml` and writes
 values in the versioned profile rather than in the renderer. Existing output is never
 overwritten.
 
+Qualify the anonymous example scope against that same profile:
+
+```bash
+make qualify-inspection-scope
+```
+
+For an engagement, copy and edit `engagement-scope.example.yml`, then pass its path as
+`SCOPE=<yaml>`. The command writes deterministic `qualification.json` and
+`qualification.md` beside the menu output and never overwrites either artifact. It uses
+only declared counts and work flags; it does not access GCP, inspect row values, call AI,
+or calculate a final sales price.
+
 For GitHub Actions, copy `inspection-params.example.yml` to `inspection-params.yml`, set
 the repository variables `WIF_PROVIDER` and `INSPECTOR_SA`, then run **BQ Inspect**
 manually. Set `BQ_INSPECT_ENABLED=true` only after that run succeeds to enable the weekly
