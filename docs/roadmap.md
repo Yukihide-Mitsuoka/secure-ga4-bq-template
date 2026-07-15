@@ -15,18 +15,25 @@ Keep `updated:` current; stale roadmaps mislead agents (DOC-040).
 
 ## Now (current milestone)
 
-- Complete the approved public-GA4 technical Acceptance A record. The approval is
-  constrained to the public sample, interactive ADC inspection, and an inspector WIF
-  path that was not invoked; see
-  [the dated evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md).
+- Baseline the [service-packaging requirements draft](requirements/requirements-service-packaging.md):
+  define the deliverable boundary, common core, customization axes, presets, and evidence
+  expected from an engagement. Product assumptions that affect scope or sales promises
+  require owner approval before implementation issues are created.
 
 ## Next (1-2 milestones out)
 
-- Implement the additive, source-agnostic CHK-12 mart-description check specified by
-  Issue #70 and PR #71.
-- Review and baseline the service-packaging draft: common core, customization axes,
-  presets, and evidence expected from an engagement.
+- Deliver the approved service-packaging baseline through separate technical-template,
+  proposal-artifact, and engagement-evidence issues.
 - Apply the asset to a second engagement and measure reuse effort for acceptance S.
+
+## Completed on 2026-07-15
+
+- Technical Acceptance A was approved with the public-sample, interactive-ADC, and
+  uninvoked-inspector-WIF limitations recorded in the
+  [dated evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md).
+- Source-agnostic CHK-12 mart-description governance was specified and implemented
+  through [Issue #70](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/70)
+  without changing the historical Acceptance B denominator.
 
 ## Later (intended, not committed)
 

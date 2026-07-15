@@ -15,12 +15,13 @@ authoritative in their linked documents.
 
 | Item | State on 2026-07-15 | Evidence or source |
 |------|---------------------|--------------------|
-| Default branch | `main` at `6b6f9cc`, including the CHK-12 mart-description specification through PR #71 | [PR #71](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/71) |
-| Active work | PR #69 records approved technical Acceptance A evidence for Issue #62; its temporary Dataform activation has been removed | [PR #69](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/69) |
+| Default branch | `main` includes technical Acceptance A and the complete CHK-12 specification, reporting compatibility, and inspection implementation through PR #73 | [PR #69](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/69), [PR #72](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/72), [PR #73](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/73) |
+| Active work | No feature implementation is active; the next milestone is the service-packaging requirements baseline | [Roadmap](roadmap.md), [service-packaging draft](requirements/requirements-service-packaging.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
 | Acceptance boundary | Approval is constrained to the public sample, interactive ADC inspection, and an inspector WIF path that was not invoked; it is not customer-engagement evidence | [Evidence limitations](verification/2026-07-15-public-ga4-acceptance-a-evidence.md#limitations-and-human-decision) |
+| Mart-description governance | Complete: CHK-12 retains table/view and leaf-column descriptions and reports missing metadata without changing the historical Acceptance B denominator | [Issue #70](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/70), [inspection design](requirements/design-inspection-engine.md) |
 | Acceptance S | Not started; requires a second engagement or department-standard adoption | [Main requirements section 8](requirements/requirements-secure-asset.md) |
 | Cloud baseline | Restored: no namespaced datasets/SAs/active IAM/state bucket/temporary variables; BigQuery enabled; Data Catalog and Vertex AI disabled | [Teardown evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md#teardown-and-residual-state) |
 | Unrelated shared assets | `github-actions-pool` ACTIVE, `github-actions-deployer` enabled, and `TEMPLATE_SYNC_ENABLED=true` unchanged | Same teardown evidence |
@@ -30,12 +31,18 @@ caller and WIF condition are pinned together to `v2.0.2`.
 
 ## Next work
 
-No cloud action is required for Issue #62. Continue in this order:
+No cloud action is required for the current milestone. Continue in this order:
 
-1. Merge PR #69 after its refreshed checks pass; the merge closes Issue #62.
-2. Implement Issue #70's additive mart-description check in the documented slices.
-3. Continue with the service-packaging baseline or a second engagement; do not recreate
-   the deleted verification environment unless a new issue and approvals require it.
+1. Baseline the service-packaging draft: define the deliverable boundary, common core,
+   customization axes, presets, and engagement evidence. Resolve product decisions with
+   the owner before turning draft assumptions into commitments.
+2. Split the approved baseline into reviewable delivery issues; keep technical template
+   changes separate from sales and engagement artifacts.
+3. Apply the asset to a second engagement when an owner and customer scope exist, then
+   measure reuse effort for Acceptance S.
+
+Do not recreate the deleted verification environment unless a new issue and approvals
+require it.
 
 The `github-ga4v58` WIF pool ID remains reserved as a harmless DELETED tombstone during
 Google's undelete window. Do not reuse that ID during the window.
@@ -49,6 +56,7 @@ Google's undelete window. Do not reuse that ID during the window.
 | Dedicated WIF cost gate | Three SQL files passed the 2,000,000,000-byte per-file ceiling |
 | Inspection coverage | 3 datasets, 3 tables/views, 19 columns, 0 skipped |
 | Reporting | Deterministic summary/remediation plus one non-authoritative AI draft |
+| CHK-12 | Implemented through the specification, reporting, and inspection slices; no query jobs or additional cloud resources |
 | Teardown | 25 Terraform resources plus three Dataform objects, all state versions, bucket, variables, and two temporary APIs removed |
 
 Artifact hashes and exact run links live only in the dated evidence to avoid duplicate
@@ -94,9 +102,7 @@ may be absent; CI remains authoritative.
 ## Resume prompt
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
-> `docs/development-handoff.md`. Confirm `main` is current and tracked changes belong to
-> PR #69. The repository owner approved the public-GA4 run as technical Acceptance A
-> under the documented public-sample, interactive-ADC, and uninvoked-inspector-WIF
-> constraints; temporary GCP/GitHub resources were torn down. Complete PR #69, then
-> implement Issue #70 or move to service packaging. Do not recreate the deleted
-> environment without new approvals.
+> `docs/development-handoff.md`. Confirm `main` includes PR #73 and has no active feature
+> PR. Technical Acceptance A and CHK-12 are complete. Start the service-packaging
+> requirements baseline, resolving product decisions with the owner one at a time. Do
+> not recreate the deleted verification environment without a new issue and approvals.
