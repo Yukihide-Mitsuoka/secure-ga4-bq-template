@@ -1,0 +1,62 @@
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+ROOT = Path(__file__).parents[2]
+WORKFLOW = ROOT / ".github" / "workflows" / "release.yml"
+VERSION_FILE = ROOT / "version.txt"
+RELEASE_PLEASE_ACTION = "googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7"
+SBOM_ACTION = "anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610"
+TRIVY_ACTION = "aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25"
+ATTEST_ACTION = "actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373"
+
+
+def _workflow() -> dict[str, Any]:
+    return yaml.load(WORKFLOW.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+
+
+def test_release_preparation_supports_main_push_and_manual_dispatch() -> None:
+    triggers = _workflow()["on"]
+
+    assert triggers["push"]["branches"] == ["main"]
+    assert triggers["workflow_dispatch"] == {}
+    assert VERSION_FILE.read_text(encoding="utf-8") == "0.0.0\n"
+
+
+def test_release_please_can_prepare_but_not_merge_the_release_pr() -> None:
+    release_job = _workflow()["jobs"]["release-please"]
+    action_step = next(step for step in release_job["steps"] if "uses" in step)
+
+    assert release_job["permissions"] == {
+        "contents": "write",
+        "issues": "write",
+        "pull-requests": "write",
+    }
+    assert action_step["uses"] == RELEASE_PLEASE_ACTION
+    assert action_step["with"]["release-type"] == "simple"
+    assert "gh pr merge" not in WORKFLOW.read_text(encoding="utf-8")
+
+
+def test_release_gate_generates_both_required_sbom_formats() -> None:
+    gate_job = _workflow()["jobs"]["release-gates"]
+    sbom_steps = [step for step in gate_job["steps"] if step.get("uses") == SBOM_ACTION]
+    action_refs = {step["uses"] for step in gate_job["steps"] if "uses" in step}
+    run_steps = {step["run"] for step in gate_job["steps"] if "run" in step}
+
+    assert gate_job["permissions"] == {
+        "actions": "read",
+        "attestations": "write",
+        "contents": "write",
+        "id-token": "write",
+    }
+    assert [step["with"]["format"] for step in sbom_steps] == [
+        "spdx-json",
+        "cyclonedx-json",
+    ]
+    assert [step["with"]["output-file"] for step in sbom_steps] == [
+        "dist/sbom.spdx.json",
+        "dist/sbom.cdx.json",
+    ]
+    assert {TRIVY_ACTION, ATTEST_ACTION}.issubset(action_refs)
+    assert {"make test", "make sbom", "make build"}.issubset(run_steps)

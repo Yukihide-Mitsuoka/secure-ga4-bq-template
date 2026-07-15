@@ -21,6 +21,11 @@ Commits by release-please (`.github/workflows/release.yml`).
 Never hand-edit version numbers or CHANGELOG — both are generated. Fixing a wrong
 version means fixing the commit history convention, not the output.
 
+Before the first release only, the `simple` strategy requires a checked-in
+`version.txt`. Initialize it to the unreleased sentinel `0.0.0` in a reviewed
+release-automation setup PR. Release Please owns the first released version and every
+subsequent change to `version.txt` and `CHANGELOG.md`.
+
 ## REL-010: Release flow
 
 ```
