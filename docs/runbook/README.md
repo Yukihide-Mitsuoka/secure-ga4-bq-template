@@ -51,5 +51,6 @@ last-verified: YYYY-MM-DD
 
 ## Index
 
-<!-- | Runbook | Trigger | Severity | -->
-<!-- populate as runbooks are added -->
+| Runbook | Trigger | Severity |
+|---------|---------|----------|
+| [Prepare and verify a GitHub Release](release-preparation.md) | No current Release PR, or post-release verification | ticket |

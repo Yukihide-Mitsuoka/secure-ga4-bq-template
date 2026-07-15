@@ -5,6 +5,8 @@ name: Release
 on:
   push:
     branches: [main]
+  # Re-evaluate accumulated history after a template owner enables release automation.
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -14,12 +16,13 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      issues: write
       pull-requests: write
     outputs:
       release_created: ${{ steps.rp.outputs.release_created }}
       tag_name: ${{ steps.rp.outputs.tag_name }}
     steps:
-      - uses: googleapis/release-please-action@v4
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         id: rp
         with:
           # TEMPLATE: set release-type (node, python, go, rust, simple, ...)
@@ -31,6 +34,7 @@ jobs:
     if: needs.release-please.outputs.release_created == 'true'
     runs-on: ubuntu-latest
     permissions:
+      actions: read       # locate SBOM artifacts for release attachment
       contents: write      # attach assets to the release
       id-token: write      # SLSA provenance signing
       attestations: write  # SLSA provenance storage
@@ -42,25 +46,36 @@ jobs:
       - name: Full test suite (gate)
         run: make test
       - name: Vulnerability gate
-        uses: aquasecurity/trivy-action@v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: fs
           scanners: vuln
           severity: HIGH,CRITICAL
           exit-code: "1"
           ignore-unfixed: true
-      - name: Generate SBOM (SPDX + CycloneDX)
-        uses: anchore/sbom-action@v0
+      - name: Prepare SBOM output
+        run: make sbom
+      - name: Generate SPDX SBOM
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
         with:
           format: spdx-json
-          output-file: sbom.spdx.json
+          output-file: dist/sbom.spdx.json
+          artifact-name: sbom-spdx
+          upload-artifact: true
+          upload-release-assets: true
+      - name: Generate CycloneDX SBOM
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          format: cyclonedx-json
+          output-file: dist/sbom.cdx.json
+          artifact-name: sbom-cyclonedx
           upload-artifact: true
           upload-release-assets: true
       - name: Build release artifact
         run: make build
       - name: Attest build provenance (SLSA — SEC-031)
         if: hashFiles('dist/**') != ''
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
         with:
           subject-path: "dist/**"
       # TEMPLATE: add artifact publishing (registry push, package publish) here;
