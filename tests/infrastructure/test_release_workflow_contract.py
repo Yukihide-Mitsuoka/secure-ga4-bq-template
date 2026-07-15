@@ -98,6 +98,9 @@ def test_release_gate_explicitly_attaches_sboms_only_to_created_release() -> Non
     upload_step = upload_steps[0]
     upload_index = steps.index(upload_step)
     sbom_indexes = [index for index, step in enumerate(steps) if step.get("uses") == SBOM_ACTION]
+    attest_index = next(
+        index for index, step in enumerate(steps) if step.get("uses") == ATTEST_ACTION
+    )
 
     assert upload_step["if"] == ("needs.release-please.outputs.release_created == 'true'")
     assert upload_step["env"] == {
@@ -110,6 +113,7 @@ def test_release_gate_explicitly_attaches_sboms_only_to_created_release() -> Non
     )
     assert "--clobber" not in upload_step["run"]
     assert max(sbom_indexes) < upload_index
+    assert attest_index < upload_index
 
     sbom_steps = [step for step in steps if step.get("uses") == SBOM_ACTION]
     assert all(step["with"]["upload-release-assets"] == "false" for step in sbom_steps)

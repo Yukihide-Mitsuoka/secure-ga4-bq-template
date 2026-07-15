@@ -75,13 +75,6 @@ jobs:
           artifact-name: sbom-cyclonedx
           upload-artifact: true
           upload-release-assets: false
-      - name: Attach release SBOMs
-        if: needs.release-please.outputs.release_created == 'true'
-        env:
-          GH_REPO: ${{ github.repository }}
-          GH_TOKEN: ${{ github.token }}
-          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
-        run: gh release upload "$TAG_NAME" dist/sbom.spdx.json dist/sbom.cdx.json
       - name: Build release artifact
         run: make build
       - name: Attest build provenance (SLSA — SEC-031)
@@ -89,5 +82,12 @@ jobs:
         uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
         with:
           subject-path: "dist/**"
+      - name: Attach release SBOMs
+        if: needs.release-please.outputs.release_created == 'true'
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
+        run: gh release upload "$TAG_NAME" dist/sbom.spdx.json dist/sbom.cdx.json
       # TEMPLATE: add artifact publishing (registry push, package publish) here;
       # for container images, prefer cosign keyless signing — see docs/deployment/.
