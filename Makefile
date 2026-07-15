@@ -5,7 +5,7 @@
 
 .PHONY: setup format lint test test-unit test-integration coverage build run \
         security-scan sbom clean help doctor plan inspect report-ai remediation-draft \
-        render-inspection-menu
+        render-inspection-menu qualify-inspection-scope
 
 FILE ?=
 ENV ?= dev
@@ -94,6 +94,12 @@ MENU_OUT ?= reports/service-packaging
 render-inspection-menu: ## Render customer menu (MENU_PROFILE=<yaml> [MENU_OUT=<dir>])
 	uv run python -m src.modules.service_packaging.interface.render_menu_cli \
 		--profile "$(MENU_PROFILE)" --out-dir "$(MENU_OUT)"
+
+SCOPE ?= engagement-scope.example.yml
+
+qualify-inspection-scope: ## Qualify scope (SCOPE=<yaml> [MENU_PROFILE=<yaml>] [MENU_OUT=<dir>])
+	uv run python -m src.modules.service_packaging.interface.qualify_cli \
+		--profile "$(MENU_PROFILE)" --scope "$(SCOPE)" --out-dir "$(MENU_OUT)"
 
 security-scan: ## Local sweep: secrets + IaC misconfig + python dependency vulns
 	@if command -v gitleaks >/dev/null 2>&1; then gitleaks detect --no-banner; else echo "gitleaks not installed — CI still enforces SEC-002"; fi
