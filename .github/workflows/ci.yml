@@ -79,7 +79,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       # A job-level permissions block REPLACES the workflow defaults: without an
-      # explicit contents:read the checkout of this private repo 401s as
+      # explicit contents:read, checkout can fail with
       # "Repository not found".
       contents: read
       pull-requests: read
