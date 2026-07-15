@@ -90,6 +90,31 @@ def test_release_gate_generates_both_required_sbom_formats() -> None:
     assert {"make test", "make sbom", "make build"}.issubset(run_steps)
 
 
+def test_release_gate_explicitly_attaches_sboms_only_to_created_release() -> None:
+    steps = _workflow()["jobs"]["release-gates"]["steps"]
+    upload_steps = [step for step in steps if step.get("name") == "Attach release SBOMs"]
+
+    assert len(upload_steps) == 1
+    upload_step = upload_steps[0]
+    upload_index = steps.index(upload_step)
+    sbom_indexes = [index for index, step in enumerate(steps) if step.get("uses") == SBOM_ACTION]
+
+    assert upload_step["if"] == ("needs.release-please.outputs.release_created == 'true'")
+    assert upload_step["env"] == {
+        "GH_REPO": "${{ github.repository }}",
+        "GH_TOKEN": "${{ github.token }}",
+        "TAG_NAME": "${{ needs.release-please.outputs.tag_name }}",
+    }
+    assert upload_step["run"] == (
+        'gh release upload "$TAG_NAME" dist/sbom.spdx.json dist/sbom.cdx.json'
+    )
+    assert "--clobber" not in upload_step["run"]
+    assert max(sbom_indexes) < upload_index
+
+    sbom_steps = [step for step in steps if step.get("uses") == SBOM_ACTION]
+    assert all(step["with"]["upload-release-assets"] == "false" for step in sbom_steps)
+
+
 def test_manual_dispatch_preflights_release_gates_without_a_tag() -> None:
     gate_job = _workflow()["jobs"]["release-gates"]
     checkout_step = next(step for step in gate_job["steps"] if step.get("uses") == CHECKOUT_ACTION)
