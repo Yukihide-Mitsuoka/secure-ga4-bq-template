@@ -72,12 +72,29 @@ merging the Release PR because REL-010 reserves release approval for a human.
      --exit-status
    ```
 
-   - Expect: `release-please` succeeds and `release-gates` is skipped because no Release
-     PR has been merged.
+   - Expect: `release-please` succeeds and `release-gates` runs against the dispatched
+     `main` SHA. The gate must complete the full test suite, vulnerability scan, SPDX
+     and CycloneDX SBOM generation, build, and provenance attestation.
+   - The two SBOMs are workflow artifacts named `sbom-spdx` and `sbom-cyclonedx` during
+     preflight. They become GitHub Release assets only after a Release PR is merged.
+   - A manual dispatch may create or update the Release PR, but it must not merge that
+     PR, create a tag, or publish a GitHub Release.
    - If not: inspect `gh run view "$RUN_ID" --log-failed`; fix the workflow through a
      normal PR. Never hand-edit generated version or changelog content.
 
-4. Locate the generated Release PR:
+4. Confirm preflight did not publish a release:
+
+   ```bash
+   gh release list \
+     --repo Yukihide-Mitsuoka/secure-ga4-bq-template \
+     --limit 1
+   ```
+
+   - Expect before the initial release: no releases are listed.
+   - On later releases, expect the existing latest release to remain unchanged. Compare
+     its tag with the value recorded before dispatch.
+
+5. Locate the generated Release PR:
 
    ```bash
    gh pr list \
@@ -89,7 +106,7 @@ merging the Release PR because REL-010 reserves release approval for a human.
    - Expect: exactly one open Release PR.
    - If not: inspect the successful run summary before dispatching again.
 
-5. Audit the Release PR according to `.ai/release.md`:
+6. Audit the Release PR according to `.ai/release.md`:
 
    - Compare every generated changelog entry with the Conventional Commit history.
    - Confirm the SemVer bump accounts for all `feat`, `fix`, and breaking commits.
@@ -102,7 +119,7 @@ merging the Release PR because REL-010 reserves release approval for a human.
    - Summarize blast radius and rollback: before merge, close the Release PR; after
      release, use a reviewed `revert:` commit and prepare a patch release.
 
-6. Stop and request human approval. The agent must not merge the Release PR.
+7. Stop and request human approval. The agent must not merge the Release PR.
 
 ## Verify after human approval
 
