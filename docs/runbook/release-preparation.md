@@ -47,6 +47,16 @@ merging the Release PR because REL-010 reserves release approval for a human.
 
 2. Dispatch the workflow against the default branch:
 
+   Before dispatch, record the latest published release so a preflight cannot silently
+   change release state:
+
+   ```bash
+   gh release list \
+     --repo Yukihide-Mitsuoka/secure-ga4-bq-template \
+     --limit 1 \
+     --json tagName,publishedAt
+   ```
+
    ```bash
    gh workflow run Release \
      --repo Yukihide-Mitsuoka/secure-ga4-bq-template \
@@ -87,7 +97,8 @@ merging the Release PR because REL-010 reserves release approval for a human.
    ```bash
    gh release list \
      --repo Yukihide-Mitsuoka/secure-ga4-bq-template \
-     --limit 1
+     --limit 1 \
+     --json tagName,publishedAt
    ```
 
    - Expect before the initial release: no releases are listed.
