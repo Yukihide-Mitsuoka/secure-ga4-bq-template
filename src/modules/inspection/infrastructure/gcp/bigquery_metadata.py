@@ -97,6 +97,7 @@ class BigQueryMetadataAdapter:
                 str(f) for f in (data.get("clustering") or {}).get("fields") or []
             ),
             schema_fields=_flatten_schema((data.get("schema") or {}).get("fields") or []),
+            description=_optional_str(data.get("description")),
         )
 
     @staticmethod
@@ -147,6 +148,7 @@ def _flatten_schema(fields: list[dict[str, Any]], prefix: str = "") -> tuple[Sch
                 path=path,
                 field_type=str(field.get("type", "")),
                 policy_tag_ids=tuple(str(name) for name in tag_names),
+                description=_optional_str(field.get("description")),
             )
         )
     return tuple(out)

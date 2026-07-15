@@ -1,9 +1,10 @@
-"""Registry-level tests: the B acceptance bar at unit scale.
+"""Registry-level tests: the security and additive governance checks at unit scale.
 
 Requirements §8 (B criteria) demands the engine detect >= 10 of the 11
-checkpoints. `test_worst_case_project_triggers_all_eleven_checkpoints` builds a
-deliberately broken project and asserts every checkpoint fires — i.e. the
-registry detects 11/11 deterministically, without touching GCP.
+security checkpoints. `test_worst_case_project_triggers_every_supported_checkpoint`
+builds a deliberately broken project and asserts every checkpoint fires — i.e. the
+registry detects the historical 11/11 plus additive CHK-12 deterministically without
+touching GCP.
 """
 
 from datetime import timedelta
@@ -95,15 +96,15 @@ def worst_case_snapshot():  # type: ignore[no-untyped-def]
     )
 
 
-def test_registry_holds_exactly_the_eleven_fr4_checkpoints() -> None:
-    assert len(ALL_CHECKS) == 11
+def test_registry_holds_eleven_fr4_checks_plus_chk12() -> None:
+    assert len(ALL_CHECKS) == 12
 
 
-def test_worst_case_project_triggers_all_eleven_checkpoints() -> None:
+def test_worst_case_project_triggers_every_supported_checkpoint() -> None:
     snapshot, scoped, catalog = worst_case_snapshot(), params(), a_catalog()
     findings = [f for check in ALL_CHECKS for f in check(snapshot, scoped, catalog)]
     fired = {f.check_id for f in findings}
-    assert fired == {f"CHK-{i:02d}" for i in range(1, 12)}
+    assert fired == {f"CHK-{i:02d}" for i in range(1, 13)}
 
 
 def test_clean_project_triggers_almost_nothing() -> None:
