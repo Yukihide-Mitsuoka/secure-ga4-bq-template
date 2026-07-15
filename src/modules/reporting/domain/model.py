@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-CHECK_IDS = frozenset(f"CHK-{number:02d}" for number in range(1, 12))
+CHECK_IDS = frozenset(f"CHK-{number:02d}" for number in range(1, 13))
 SEVERITIES = frozenset({"CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"})
 PROMPT_VERSION = "v1"
 

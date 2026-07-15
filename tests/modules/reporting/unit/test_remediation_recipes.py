@@ -16,3 +16,11 @@ def test_recipes_require_review_inputs_and_never_apply_or_destroy() -> None:
         example = recipe.example or ""
         assert "terraform apply" not in example
         assert "terraform destroy" not in example
+
+
+def test_chk12_recipe_is_manual_and_non_applying() -> None:
+    recipe = REMEDIATION_RECIPES["CHK-12"]
+
+    assert recipe.recipe_id == "MART_DESCRIPTION_V1"
+    assert recipe.kind == "manual"
+    assert recipe.example is None

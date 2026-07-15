@@ -9,7 +9,7 @@ from src.modules.reporting.application.ports import GeneratedOutputError
 from src.modules.reporting.domain.model import ProviderText
 from src.modules.reporting.infrastructure.json_artifact_reader import JsonArtifactReader
 from src.modules.reporting.infrastructure.markdown_report_writer import MarkdownReportWriter
-from tests.modules.reporting.unit.builders import write_artifact
+from tests.modules.reporting.unit.builders import artifact_data, write_artifact
 
 
 class FakeGenerator:
@@ -50,6 +50,25 @@ def test_generation_pseudonymizes_provider_input_and_renders_local_identifiers(t
     assert "F001: CHK-03" in report
     assert "![remote](" not in report
     assert "\\!\\[remote\\]\\(https://example\\.invalid\\)" in report
+
+
+def test_chk12_uses_static_mart_description_guidance(tmp_path) -> None:
+    data = artifact_data()
+    data["findings"][0]["check_id"] = "CHK-12"
+    data["findings"][0]["severity"] = "LOW"
+    data["findings"][0]["rule_ref"] = "FR-9"
+    generator = FakeGenerator(_response())
+    use_case = GenerateAiReport(
+        reader=JsonArtifactReader(), generator=generator, writer=MarkdownReportWriter()
+    )
+
+    output = use_case.handle(write_artifact(tmp_path / "findings.json", data), tmp_path)
+
+    payload = json.loads(generator.payload)
+    assert payload["findings"][0]["guidance"] == (
+        "Add a BigQuery description to the undocumented mart table, view, or column."
+    )
+    assert "F001: CHK-12" in output.read_text(encoding="utf-8")
 
 
 @pytest.mark.parametrize(

@@ -157,6 +157,19 @@ default_encryption_configuration {
 }""",
         _TERRAFORM_VALIDATION,
     ),
+    "CHK-12": RemediationRecipe(
+        "MART_DESCRIPTION_V1",
+        "Add the missing mart metadata description",
+        "manual",
+        ("owning_model", "resource_name", "approved_description"),
+        None,
+        None,
+        (
+            "Identify the owning dbt, Dataform, Terraform, or DDL definition.",
+            "Add an approved non-empty description to the table, view, or leaf column.",
+            "Deploy through the reviewed workflow and rerun the inspection.",
+        ),
+    ),
 }
 
 

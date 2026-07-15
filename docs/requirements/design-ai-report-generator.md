@@ -2,7 +2,7 @@
 id: design-ai-report-generator
 title: Implementation design - A-level AI inspection report generator
 status: implemented-live-v1
-updated: 2026-07-12
+updated: 2026-07-15
 ---
 
 # Implementation design: A-level AI inspection report generator
@@ -153,7 +153,7 @@ metadata. Every input finding ID must appear exactly once; unknown IDs are rejec
 ## 9. Slice 6 remediation contract
 
 - Input: the same complete, validated inspection artifact used by `report-ai`.
-- Selection: every CHK-01 through CHK-11 value maps to one immutable v1 local recipe.
+- Selection: every CHK-01 through CHK-12 value maps to one immutable v1 local recipe.
 - Trusted fields: recipe selection uses `check_id`; the report displays escaped local
   resource and rule identifiers. `observed`, `expected`, and `remediation_hint` never
   select or populate code.
