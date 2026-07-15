@@ -1,0 +1,12 @@
+# Counts use the same denominator as inspection Report.coverage: non-excluded datasets,
+# walked table resources, and flattened leaf columns. No customer identifier is required.
+version: 1
+counts:
+  projects: 1
+  datasets: 10
+  table_resources: 200
+  leaf_columns: 2000
+special_conditions:
+  customer_wif_setup: false
+  query_jobs_required: false
+  row_value_inspection_required: false

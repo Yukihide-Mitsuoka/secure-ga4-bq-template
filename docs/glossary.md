@@ -34,6 +34,8 @@ confusable. Keep alphabetical.
 |------|------------|---------|--------------------------|
 | AI-generated report | Advisory Markdown narrative rendered from a deterministic finding frame and requiring human review | reporting | deterministic `summary.md` |
 | Deterministic finding frame | Authoritative inspection JSON whose finding IDs, severities, coverage, and remediation hints bound AI prose | inspection/reporting | model-generated findings |
+| Engagement scope | Anonymous preflight counts and work flags evaluated against one menu profile | service packaging | inspection parameters or collected customer metadata |
 | Menu profile | Versioned product-definition data containing a service package's fee range, capacity limits, checks, deliverables, and separate-estimate conditions | service packaging | deployment or customer configuration |
+| Qualification reason | A profile-defined condition requiring work outside the standard service package | service packaging | a security finding or final sales decision |
 | Remediation recipe | Versioned local mapping from an FR-4 check ID to non-applying Terraform, policy, or manual review guidance | reporting | model-generated code |
 | Service package | A reviewed commercial boundary rendered and qualified from one menu profile | service packaging | the technical inspection engine |
