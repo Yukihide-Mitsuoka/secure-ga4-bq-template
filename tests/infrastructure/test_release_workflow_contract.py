@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -25,6 +26,14 @@ def test_release_preparation_supports_main_push_and_manual_dispatch() -> None:
     assert triggers["push"]["branches"] == ["main"]
     assert triggers["workflow_dispatch"] == {}
     assert VERSION_FILE.read_text(encoding="utf-8") == "0.0.0\n"
+
+
+def test_release_preparation_accepts_generated_version(tmp_path: Path, monkeypatch: Any) -> None:
+    generated_version = tmp_path / "version.txt"
+    generated_version.write_text("1.0.0\n", encoding="utf-8")
+    monkeypatch.setattr(sys.modules[__name__], "VERSION_FILE", generated_version)
+
+    test_release_preparation_supports_main_push_and_manual_dispatch()
 
 
 def test_release_please_can_prepare_but_not_merge_the_release_pr() -> None:
