@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v1.0.0...v1.0.1) (2026-07-15)
+
+
+### Bug Fixes
+
+* **release:** attach SBOM assets explicitly ([#102](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/102)) ([8450d1a](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/8450d1aba531942de8f08e7d336e01717602d03b)), closes [#101](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/101)
+
 ## 1.0.0 (2026-07-15)
 
 
