@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from typing import Any
 
@@ -19,12 +20,36 @@ def _workflow() -> dict[str, Any]:
     return yaml.load(WORKFLOW.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
 
 
+def _is_stable_semver(value: str) -> bool:
+    number = r"(?:0|[1-9]\d*)"
+    return re.fullmatch(rf"{number}\.{number}\.{number}\n", value) is not None
+
+
 def test_release_preparation_supports_main_push_and_manual_dispatch() -> None:
     triggers = _workflow()["on"]
 
     assert triggers["push"]["branches"] == ["main"]
     assert triggers["workflow_dispatch"] == {}
-    assert VERSION_FILE.read_text(encoding="utf-8") == "0.0.0\n"
+    assert _is_stable_semver(VERSION_FILE.read_text(encoding="utf-8"))
+
+
+def test_release_preparation_accepts_generated_version(tmp_path: Path) -> None:
+    generated_version = tmp_path / "version.txt"
+    generated_version.write_text("1.0.0\n", encoding="utf-8")
+
+    assert _is_stable_semver(generated_version.read_text(encoding="utf-8"))
+
+
+def test_release_version_rejects_non_stable_semver() -> None:
+    invalid_versions = (
+        "v1.0.0\n",
+        "1.0\n",
+        "01.0.0\n",
+        "1.0.0",
+        "1.0.0-alpha\n",
+    )
+
+    assert all(not _is_stable_semver(version) for version in invalid_versions)
 
 
 def test_release_please_can_prepare_but_not_merge_the_release_pr() -> None:
