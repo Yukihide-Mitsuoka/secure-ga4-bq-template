@@ -14,6 +14,17 @@ def test_valid_artifact_is_parsed_with_deterministic_aliases(tmp_path) -> None:
     assert artifact.findings[0].resource_alias == "RESOURCE_001"
 
 
+def test_chk12_artifact_is_supported(tmp_path) -> None:
+    data = artifact_data()
+    data["findings"][0]["check_id"] = "CHK-12"
+    data["findings"][0]["severity"] = "LOW"
+    data["findings"][0]["rule_ref"] = "FR-9"
+
+    artifact = JsonArtifactReader().read(write_artifact(tmp_path / "findings.json", data))
+
+    assert artifact.findings[0].check_id == "CHK-12"
+
+
 @pytest.mark.parametrize(
     ("mutate", "message"),
     [
