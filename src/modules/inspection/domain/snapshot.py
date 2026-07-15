@@ -1,4 +1,4 @@
-"""ProjectSnapshot: everything the 11 checkpoints read, collected once, immutable.
+"""ProjectSnapshot: everything the inspection checks read, collected once, immutable.
 
 Checks are pure functions over this model (MODULE.md invariant #4), so the shape
 here is already normalized: adapters translate raw API responses (e.g. BigQuery
@@ -57,6 +57,7 @@ class SchemaField:
     path: str
     field_type: str
     policy_tag_ids: tuple[str, ...] = ()
+    description: str | None = None
 
 
 @dataclass(frozen=True)
@@ -71,6 +72,7 @@ class TableMeta:
     require_partition_filter: bool = False
     clustering_fields: tuple[str, ...] = ()
     schema_fields: tuple[SchemaField, ...] = ()
+    description: str | None = None
 
     @property
     def is_partitioned(self) -> bool:

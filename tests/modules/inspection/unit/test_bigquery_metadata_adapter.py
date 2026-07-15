@@ -157,6 +157,7 @@ def test_get_table_maps_governance_fields() -> None:
         tables_by_id={
             "fct_events": {
                 "type": "TABLE",
+                "description": " Fact events ",
                 "numBytes": "1024",
                 "creationTime": "1752192000000",
                 "expirationTime": "1783728000000",
@@ -164,7 +165,7 @@ def test_get_table_maps_governance_fields() -> None:
                 "clustering": {"fields": ["event_name"]},
                 "schema": {
                     "fields": [
-                        {"name": "event_date", "type": "DATE"},
+                        {"name": "event_date", "type": "DATE", "description": " Event date "},
                         {
                             "name": "user_id",
                             "type": "STRING",
@@ -173,7 +174,8 @@ def test_get_table_maps_governance_fields() -> None:
                         {
                             "name": "geo",
                             "type": "RECORD",
-                            "fields": [{"name": "city", "type": "STRING"}],
+                            "description": "Location record",
+                            "fields": [{"name": "city", "type": "STRING", "description": "   "}],
                         },
                     ]
                 },
@@ -182,16 +184,19 @@ def test_get_table_maps_governance_fields() -> None:
     )
     table = BigQueryMetadataAdapter(service).get_table("p", "d", "fct_events")
     assert table.table_type == "TABLE"
+    assert table.description == " Fact events "
     assert table.num_bytes == 1024
     assert table.creation_time == datetime.fromtimestamp(1752192000, tz=UTC)
     assert table.expiration_time == datetime.fromtimestamp(1783728000, tz=UTC)
     assert table.time_partitioning_field == "event_date"
     assert table.require_partition_filter is True  # legacy nested flag honored
     assert table.clustering_fields == ("event_name",)
-    assert [(f.path, f.field_type, f.policy_tag_ids) for f in table.schema_fields] == [
-        ("event_date", "DATE", ()),
-        ("user_id", "STRING", (tag,)),
-        ("geo.city", "STRING", ()),  # nested RECORD flattened to a dotted leaf path
+    assert [
+        (f.path, f.field_type, f.policy_tag_ids, f.description) for f in table.schema_fields
+    ] == [
+        ("event_date", "DATE", (), " Event date "),
+        ("user_id", "STRING", (tag,), None),
+        ("geo.city", "STRING", (), "   "),  # parent omitted; leaf text preserved exactly
     ]
 
 

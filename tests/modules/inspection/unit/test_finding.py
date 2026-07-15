@@ -22,12 +22,12 @@ def make_finding(check_id: str = "CHK-01", resource: str = "projects/p") -> Find
 
 
 def test_valid_check_ids_are_accepted_across_the_full_range() -> None:
-    for check_id in ("CHK-01", "CHK-09", "CHK-10", "CHK-11"):
+    for check_id in ("CHK-01", "CHK-09", "CHK-10", "CHK-11", "CHK-12"):
         assert make_finding(check_id=check_id).check_id == check_id
 
 
-def test_check_id_outside_chk01_to_chk11_is_rejected() -> None:
-    for bad in ("CHK-00", "CHK-12", "CHK-1", "chk-01", "FR-4", ""):
+def test_check_id_outside_chk01_to_chk12_is_rejected() -> None:
+    for bad in ("CHK-00", "CHK-13", "CHK-1", "chk-01", "FR-4", ""):
         with pytest.raises(ValueError):
             make_finding(check_id=bad)
 

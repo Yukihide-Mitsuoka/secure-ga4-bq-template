@@ -1,15 +1,15 @@
 ---
 id: design-inspection-engine
 title: Implementation design — Inspection engine (FR-4 and FR-9 deterministic checkpoints)
-status: implemented-v1.0-chk12-planned
+status: implemented-v1.1-chk12
 updated: 2026-07-15
 ---
 
 # Implementation design: Inspection engine
 
-- CHK-12 extension status: **specified for Issue #70** (2026-07-15). It adds generic
+- CHK-12 extension status: **implemented for Issue #70** (2026-07-15). It adds generic
   mart table/column description completeness without changing the implemented FR-4
-  registry or historical Acceptance B denominator. Implementation is split as described
+  security set or historical Acceptance B denominator. Delivery was split as described
   in §10.
 
 - Status: **v1.0 — implemented** (2026-07-12). The §8 series landed on main as

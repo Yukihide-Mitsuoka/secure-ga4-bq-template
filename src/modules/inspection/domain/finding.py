@@ -12,8 +12,8 @@ import re
 from dataclasses import dataclass
 from enum import Enum
 
-# CHK-01..CHK-11, mapping 1:1 to the FR-4 checkpoint table rows.
-_CHECK_ID_PATTERN = re.compile(r"^CHK-(0[1-9]|1[01])$")
+# CHK-01..CHK-11 map to FR-4; additive CHK-12 maps to FR-9.
+_CHECK_ID_PATTERN = re.compile(r"^CHK-(0[1-9]|1[0-2])$")
 
 
 class Severity(Enum):
@@ -43,7 +43,7 @@ class Finding:
         # Domain invariant, not input validation: a Finding with a bad check id
         # or no resource is a programming error in a check function (COD-011).
         if not _CHECK_ID_PATTERN.match(self.check_id):
-            raise ValueError(f"check_id must be CHK-01..CHK-11, got {self.check_id!r}")
+            raise ValueError(f"check_id must be CHK-01..CHK-12, got {self.check_id!r}")
         if not self.resource:
             raise ValueError("resource must be a non-empty canonical path")
 
