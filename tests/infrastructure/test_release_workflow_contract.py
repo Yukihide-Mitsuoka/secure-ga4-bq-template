@@ -10,6 +10,7 @@ RELEASE_PLEASE_ACTION = "googleapis/release-please-action@45996ed1f6d02564a971a2
 SBOM_ACTION = "anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610"
 TRIVY_ACTION = "aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25"
 ATTEST_ACTION = "actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373"
+CHECKOUT_ACTION = "actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0"
 
 
 def _workflow() -> dict[str, Any]:
@@ -60,3 +61,16 @@ def test_release_gate_generates_both_required_sbom_formats() -> None:
     ]
     assert {TRIVY_ACTION, ATTEST_ACTION}.issubset(action_refs)
     assert {"make test", "make sbom", "make build"}.issubset(run_steps)
+
+
+def test_manual_dispatch_preflights_release_gates_without_a_tag() -> None:
+    gate_job = _workflow()["jobs"]["release-gates"]
+    checkout_step = next(step for step in gate_job["steps"] if step.get("uses") == CHECKOUT_ACTION)
+
+    assert gate_job["if"] == (
+        "${{ github.event_name == 'workflow_dispatch' || "
+        "needs.release-please.outputs.release_created == 'true' }}"
+    )
+    assert checkout_step["with"]["ref"] == (
+        "${{ needs.release-please.outputs.tag_name || github.sha }}"
+    )
