@@ -15,16 +15,16 @@ Keep `updated:` current; stale roadmaps mislead agents (DOC-040).
 
 ## Now (current milestone)
 
-- Baseline the [service-packaging requirements draft](requirements/requirements-service-packaging.md):
-  define the deliverable boundary, common core, customization axes, presets, and evidence
-  expected from an engagement. Product assumptions that affect scope or sales promises
-  require owner approval before implementation issues are created.
+- Apply the asset to a second engagement or department standard when an owner and scope
+  exist, then measure reuse effort for Acceptance S. No cloud environment should be
+  created before that scope and its approvals exist.
 
 ## Next (1-2 milestones out)
 
-- Deliver the approved service-packaging baseline through separate technical-template,
-  proposal-artifact, and engagement-evidence issues.
-- Apply the asset to a second engagement and measure reuse effort for acceptance S.
+- Record customer-safe engagement evidence and compare actual reuse effort against the
+  baseline.
+- Revisit conditional service options only after engagement evidence establishes demand
+  and an approved data-access boundary.
 
 ## Completed on 2026-07-15
 
@@ -34,6 +34,9 @@ Keep `updated:` current; stale roadmaps mislead agents (DOC-040).
 - Source-agnostic CHK-12 mart-description governance was specified and implemented
   through [Issue #70](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/70)
   without changing the historical Acceptance B denominator.
+- The approved standard-inspection packaging baseline was delivered as a versioned
+  profile, deterministic menu renderer, scope evaluator, and rollback-safe JSON/Markdown
+  qualification artifact pair through [PR #90](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/90).
 
 ## Later (intended, not committed)
 

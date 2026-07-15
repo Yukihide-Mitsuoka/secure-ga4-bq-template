@@ -52,7 +52,7 @@ not describe a partial inspection as complete.
 **Affects:** workflow revisions before issue #52.
 
 **Cause:** the job-level permissions block replaced workflow defaults without granting
-`contents: read` for the private repository.
+`contents: read` for the repository.
 
 **Fix:** update to a revision containing issue #52, then rerun the affected workflow.
 

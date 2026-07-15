@@ -15,8 +15,8 @@ authoritative in their linked documents.
 
 | Item | State on 2026-07-15 | Evidence or source |
 |------|---------------------|--------------------|
-| Default branch | `main` includes technical Acceptance A and the complete CHK-12 specification, reporting compatibility, and inspection implementation through PR #73 | [PR #69](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/69), [PR #72](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/72), [PR #73](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/73) |
-| Active work | No feature implementation is active; the next milestone is the service-packaging requirements baseline | [Roadmap](roadmap.md), [service-packaging draft](requirements/requirements-service-packaging.md) |
+| Default branch | `main` includes technical Acceptance A, CHK-12, and the approved standard-inspection packaging slices through PR #90 | [PR #69](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/69), [PR #73](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/73), [PR #90](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/90) |
+| Active work | No feature implementation is active; the remaining milestone requires a second engagement or department-standard adoption | [Roadmap](roadmap.md), [main requirements section 8](requirements/requirements-secure-asset.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -33,13 +33,13 @@ caller and WIF condition are pinned together to `v2.0.2`.
 
 No cloud action is required for the current milestone. Continue in this order:
 
-1. Baseline the service-packaging draft: define the deliverable boundary, common core,
-   customization axes, presets, and engagement evidence. Resolve product decisions with
-   the owner before turning draft assumptions into commitments.
-2. Split the approved baseline into reviewable delivery issues; keep technical template
-   changes separate from sales and engagement artifacts.
-3. Apply the asset to a second engagement when an owner and customer scope exist, then
+1. Apply the asset to a second engagement when an owner and customer scope exist, then
    measure reuse effort for Acceptance S.
+2. Use the versioned standard-inspection profile, generated menu, and deterministic
+   qualification artifacts as the service-packaging baseline; change profile values in
+   a reviewed PR rather than editing generated material.
+3. Keep customer delivery evidence and raw inspection artifacts outside this public
+   repository because complete inspection artifacts remain Internal.
 
 Do not recreate the deleted verification environment unless a new issue and approvals
 require it.
@@ -57,6 +57,7 @@ Google's undelete window. Do not reuse that ID during the window.
 | Inspection coverage | 3 datasets, 3 tables/views, 19 columns, 0 skipped |
 | Reporting | Deterministic summary/remediation plus one non-authoritative AI draft |
 | CHK-12 | Implemented through the specification, reporting, and inspection slices; no query jobs or additional cloud resources |
+| Service packaging | Versioned standard profile, customer-menu renderer, deterministic scope evaluator, and rollback-safe JSON/Markdown qualification publication |
 | Teardown | 25 Terraform resources plus three Dataform objects, all state versions, bucket, variables, and two temporary APIs removed |
 
 Artifact hashes and exact run links live only in the dated evidence to avoid duplicate
@@ -102,7 +103,8 @@ may be absent; CI remains authoritative.
 ## Resume prompt
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
-> `docs/development-handoff.md`. Confirm `main` includes PR #73 and has no active feature
-> PR. Technical Acceptance A and CHK-12 are complete. Start the service-packaging
-> requirements baseline, resolving product decisions with the owner one at a time. Do
-> not recreate the deleted verification environment without a new issue and approvals.
+> `docs/development-handoff.md`. Confirm `main` includes PR #90 and has no active feature
+> PR. Technical Acceptance A, CHK-12, and the standard-inspection packaging slices are
+> complete. Continue toward Acceptance S only when a second engagement or
+> department-standard owner and scope exist. Do not recreate the deleted verification
+> environment without a new issue and approvals.
