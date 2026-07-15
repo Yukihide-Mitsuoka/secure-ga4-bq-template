@@ -15,13 +15,15 @@ Keep `updated:` current; stale roadmaps mislead agents (DOC-040).
 
 ## Now (current milestone)
 
-- Review the completed public-GA4 Acceptance A technical candidate and record the human
-  decision. The candidate includes materialization, a dedicated WIF cost gate, 100%
-  inspection, remediation/AI reports, and complete teardown; see
+- Complete the approved public-GA4 technical Acceptance A record. The approval is
+  constrained to the public sample, interactive ADC inspection, and an inspector WIF
+  path that was not invoked; see
   [the dated evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md).
 
 ## Next (1-2 milestones out)
 
+- Implement the additive, source-agnostic CHK-12 mart-description check specified by
+  Issue #70 and PR #71.
 - Review and baseline the service-packaging draft: common core, customization axes,
   presets, and evidence expected from an engagement.
 - Apply the asset to a second engagement and measure reuse effort for acceptance S.

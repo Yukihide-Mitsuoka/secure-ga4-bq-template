@@ -1,16 +1,20 @@
 ---
 id: verification-public-ga4-acceptance-a
-title: Live evidence - public GA4 Acceptance A technical candidate
-status: executed 2026-07-15
+title: Live evidence - approved public GA4 technical Acceptance A
+status: accepted 2026-07-15
 updated: 2026-07-15
 ---
 
-# Live evidence: public GA4 Acceptance A technical candidate
+# Live evidence: approved public GA4 technical Acceptance A
 
-The technical candidate passed materialization, the dedicated WIF cost gate, complete
+The repository owner approved this run as technical Acceptance A on 2026-07-15. The
+approval is constrained to a public obfuscated sample, interactive ADC inspection, and
+an inspector WIF path that was provisioned but not invoked. It confirms the tested
+technical path; it is not customer-engagement or Acceptance S evidence.
+
+The approved path passed materialization, the dedicated WIF cost gate, complete
 deterministic inspection, deterministic remediation rendering, one AI narrative request,
-and teardown. The repository owner's human Acceptance A decision remains pending because
-the source is a public obfuscated sample, not a customer engagement.
+and teardown.
 
 ## Execution boundary
 
@@ -142,5 +146,5 @@ pool ID during Google's undelete window but grants no active access.
 - Provider-boundary pseudonymization was verified through implementation/tests and output
   structure, not independent packet capture.
 
-**Technical candidate result: PASS. Human Acceptance A decision: pending repository-owner
-confirmation.**
+**Technical Acceptance A: APPROVED by the repository owner on 2026-07-15, with the
+public-sample, interactive-ADC, and uninvoked-inspector-WIF constraints above.**
