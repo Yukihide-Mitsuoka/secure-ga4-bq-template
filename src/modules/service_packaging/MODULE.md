@@ -16,8 +16,11 @@ local-only and remains separate from technical inspection and report generation 
 | Entry point | Layer | Description |
 |-------------|-------|-------------|
 | `MenuProfile`, `FeeRange`, `CapacityLimits`, `LabeledItem` | domain | Immutable service-menu vocabulary and validation |
+| `EngagementScope`, `ScopeCounts`, `QualificationResult`, `QualificationReason` | domain | Immutable preflight input and complete qualification result |
+| `evaluate_scope(profile, scope)` | domain | Decide standard-package eligibility and every separate-estimate reason |
 | `RenderInspectionMenu.handle(profile_path, out_dir)` | application | Coordinate profile loading and deterministic material generation |
 | `YamlMenuProfileRepository.load(path)` | infrastructure | Load and validate a schema-v1 product profile |
+| `YamlEngagementScopeRepository.load(path)` | infrastructure | Load and strictly validate a schema-v1 anonymous scope input |
 | `MarkdownMenuWriter.write(profile, out_dir)` | infrastructure | Atomically render a customer-facing menu without overwriting existing output |
 | `render_menu_cli.main(argv)` | interface | Local CLI used by `make render-inspection-menu` |
 
@@ -31,6 +34,8 @@ The context owns reviewed product-definition profiles under `service-packages/`.
 contain no credentials, customer identifiers, row values, or environment branches.
 Generated `inspection-menu.md` files are local artifacts under the selected output
 directory and are not committed product definitions.
+Engagement-scope inputs are supplied preflight facts; they contain counts and work flags,
+not customer names, project IDs, credentials, or row values.
 
 ## Invariants
 
@@ -42,6 +47,8 @@ directory and are not committed product definitions.
    and #79; conditional masking and PII value detection are not standard deliverables.
 5. Rendering is deterministic, escapes profile text, publishes atomically, and never
    overwrites an existing menu.
+6. Schema-v1 qualification returns every triggered profile-defined reason in profile
+   order; exact capacity limits remain eligible.
 
 ## Dependencies
 
