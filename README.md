@@ -71,6 +71,18 @@ make remediation-draft FINDINGS=reports/<project>/<timestamp>/findings.json
 `remediation-draft.md` uses deterministic local recipes and explicit placeholders. It is
 review material, not an apply-ready Terraform file.
 
+Render the customer-facing standard inspection menu without cloud credentials:
+
+```bash
+make render-inspection-menu
+```
+
+The command reads `service-packages/inspection-standard.yml` and writes
+`reports/service-packaging/inspection-menu.md`. Use `MENU_PROFILE=<yaml>` or
+`MENU_OUT=<dir>` to select another reviewed profile or output directory. Change product
+values in the versioned profile rather than in the renderer. Existing output is never
+overwritten.
+
 For GitHub Actions, copy `inspection-params.example.yml` to `inspection-params.yml`, set
 the repository variables `WIF_PROVIDER` and `INSPECTOR_SA`, then run **BQ Inspect**
 manually. Set `BQ_INSPECT_ENABLED=true` only after that run succeeds to enable the weekly
