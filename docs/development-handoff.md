@@ -15,9 +15,9 @@ authoritative in their linked documents.
 
 | Item | State on 2026-07-17 | Evidence or source |
 |------|---------------------|--------------------|
-| Default branch | `main` is release v1.1.0, includes six reviewed parent-lock advances through PR #123, and has the protected IaC adaptation from PR #125 | [Release v1.1.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v1.1.0), [PR #125](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/125) |
+| Default branch | `main` is release v1.1.0 and includes the inheritance lock through PR #123, protected IaC adaptation from PR #125, and layered policy data from PR #127 | [Release v1.1.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v1.1.0), [PR #127](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/127) |
 | IaC governance prerequisite | Complete: exact `iac-scan` succeeded on PR #125 and its merged-main push | [PR run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29517379947), [main run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29518413106) |
-| Active work | Issue #126 adds policy data only: inherited parent foundation plus a protected solo-friendly child override with additive `iac-scan` | [Issue #126](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/126), [ADR-0008](adr/0008-adopt-direct-parent-inheritance-contract.md) |
+| Active work | Issue #128 adds an offline `validate` resolver that rejects removal of foundation checks; no GitHub API or write command exists | [Issue #128](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/128), [ADR-0008](adr/0008-adopt-direct-parent-inheritance-contract.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -34,22 +34,20 @@ caller and WIF condition are pinned together to `v2.0.2`.
 
 No cloud action is required for the current milestone. Continue in this order:
 
-1. Merge the policy-only Issue #126 after confirming the inherited foundation blob is
-   byte-identical to accepted parent lock `5324852` and the child override is additive.
-2. Adapt the offline `validate` resolver in a separate issue; require it to reject any
-   child policy that removes foundation checks, and do not add profile or network behavior.
-3. Add GET-only governance discovery only after the resolver exists; deterministic tests
+1. Merge Issue #128 after `python3 scripts/github_governance.py validate --root .`
+   prints stable resolved JSON; the command performs no authentication or network access.
+2. Add GET-only governance discovery only after the resolver exists; deterministic tests
    must inject a fake runner and must not call the live GitHub API or expose `apply`.
-4. Review the next parent comparison commit `40a63a1` only after those protected-file
+3. Review the next parent comparison commit `40a63a1` only after those protected-file
    adaptations are complete.
-5. Continue advancing only one first-parent commit per reviewed PR; keep lock changes
+4. Continue advancing only one first-parent commit per reviewed PR; keep lock changes
    separate from protected-file adaptations.
-6. Apply the asset to a second engagement when an owner and customer scope exist, then
+5. Apply the asset to a second engagement when an owner and customer scope exist, then
    measure reuse effort for Acceptance S.
-7. Use the versioned standard-inspection profile, generated menu, and deterministic
+6. Use the versioned standard-inspection profile, generated menu, and deterministic
    qualification artifacts as the service-packaging baseline; change profile values in
    a reviewed PR rather than editing generated material.
-8. Keep customer delivery evidence and raw inspection artifacts outside this public
+7. Keep customer delivery evidence and raw inspection artifacts outside this public
    repository because complete inspection artifacts remain Internal.
 
 Do not recreate the deleted verification environment unless a new issue and approvals
@@ -114,10 +112,10 @@ may be absent; CI remains authoritative.
 ## Resume prompt
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
-> `docs/development-handoff.md`. Confirm `main` includes v1.1.0, PR #125, and accepted
+> `docs/development-handoff.md`. Confirm `main` includes v1.1.0, PR #127, and accepted
 > ADR-0008. The inheritance lock is `5324852`, and `iac-scan` has PR and merged-main
-> evidence. Complete the policy-only Issue #126, then adapt the offline resolver and
-> GET-only discovery in separate PRs. Review next
+> evidence. Complete the offline-only Issue #128, then adapt GET-only discovery in a
+> separate PR. Review next
 > parent candidate `40a63a1` only after those prerequisites, and retain legacy sync. Do not
 > materialize parent changes, run a governance `apply`, or mutate live GitHub/GCP state.
 > Technical Acceptance A, CHK-12,
