@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v1.2.0...v1.3.0) (2026-07-16)
+
+
+### Features
+
+* **governance:** add GET-only discovery boundary ([#132](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/132)) ([64bd8f6](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/64bd8f67f7cc62765b3fffb5bb675e4664a016b3)), closes [#131](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/131)
+* **governance:** add offline policy resolver ([#129](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/129)) ([ab2ff3e](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/ab2ff3edc5b86b2c631d6214a7f28db8e35f6eb5)), closes [#128](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/128)
+
 ## [1.2.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v1.1.0...v1.2.0) (2026-07-16)
 
 
