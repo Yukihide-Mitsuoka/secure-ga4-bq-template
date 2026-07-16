@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v1.1.0...v1.2.0) (2026-07-16)
+
+
+### Features
+
+* **inheritance:** add read-only parent planner ([#110](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/110)) ([3592b2b](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/3592b2badc0ad07b81f72710bb9bae13d3f9d1b5))
+
 ## [1.1.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v1.0.1...v1.1.0) (2026-07-16)
 
 
