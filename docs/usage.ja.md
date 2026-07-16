@@ -1,7 +1,7 @@
 ---
 id: usage-ja
 title: 使い方（日本語）— 新しいPC / 別アカウント / 新規プロジェクト
-updated: 2026-07-14
+updated: 2026-07-17
 ---
 
 # 使い方（日本語セットアップ手順書）
@@ -68,13 +68,22 @@ cp profiles/python-uv/Makefile ./Makefile      # または typescript-node / ter
 ```
 正準ターゲット契約は [profiles/README.md](../profiles/README.md) を参照。
 
-### 5. GitHub ガバナンスを設定
+### 5. GitHub ガバナンスを点検
 
 ```bash
-bash scripts/setup-github.sh          # ブランチ保護・secret scanning・マージ方針
+uv run python scripts/github_governance.py validate
+uv run python scripts/github_governance.py plan --repo OWNER/REPOSITORY
+uv run python scripts/github_governance.py audit --repo OWNER/REPOSITORY
 ```
-その後、出力される手動項目（Renovate app、Discussion カテゴリ、CodeQL言語）を実施。
-**ソロ開発の場合は下の「落とし穴」を読んでから**レビュー必須を有効にしてください。
+
+`validate` はオフラインです。`plan` と `audit` は認証済みGitHubへ30秒上限のGETだけを行い、
+同じ秘匿化済み比較結果を出力します。GitHub設定は変更しません。`plan` は比較完了時、差異や
+unknownがあっても0、`audit` は準拠時0・差異/unknown時1・入力/ポリシー/読取エラー時2です。
+[GitHubガバナンスのトラブルシューティング](troubleshooting/github-governance.md)も参照。
+
+従来の `scripts/setup-github.sh` は固定内容の初期設定として残っていますが、階層ポリシーの
+反映機能ではありません。書込内容を確認して意図的に使ってください。ポリシー駆動の `apply`
+は未提供です。
 
 ### 6. ローカルゲート導入 → エージェントに向ける
 
@@ -115,7 +124,7 @@ make build
 | ツール | 用途 | 備考 |
 |--------|------|------|
 | `git`, `make` | 全般 | — |
-| `gh`（GitHub CLI）| `scripts/setup-github.sh`・認証 | `gh auth login` |
+| `gh`（GitHub CLI）| GET専用ガバナンス点検・認証 | `gh auth login` |
 | `pre-commit` | ローカルコミットゲート | `make setup`（プロファイル導入後）または `pre-commit install` |
 | スタックのツールチェーン | build/test | uv(python) / pnpm+node(ts) / terraform(iac) |
 | `gitleaks`, `trivy`, `syft` | ローカルの `make security-scan` / `sbom` | ローカルは任意。**CIは常時強制** |
@@ -136,9 +145,10 @@ gh auth refresh -h github.com -s workflow
 ```
 これは**アカウント／マシンごと**の設定です。新環境ごとに一度実施する想定でいてください。
 
-### ソロ開発 × ブランチ保護 ＝ 自分のPRをマージできない
-`scripts/setup-github.sh` は「レビュー1件必須」を有効化し、admin にも強制します（GR-010〜012）。
-第二のレビュアーがいないと自分のPRを承認できず、何もマージできません。どちらか選択:
+### ソロ開発 × 従来の初期設定 ＝ 自分のPRをマージできない
+固定の `scripts/setup-github.sh` はレビュー1件をadminにも強制します。階層ポリシーの既定値は、
+PR・ステータスチェック・force push禁止を維持しつつ、ソロ開発向けに承認0件です。
+従来の初期設定を適用済みなら、どちらか選択:
 
 - **推奨（ガードレール維持）:** 共同開発者/レビュアーを1人追加、または AI レビュアー
   （[ai-review.yml](../.github/workflows/ai-review.yml)）を有効化。ただしAIのレビューコメントは

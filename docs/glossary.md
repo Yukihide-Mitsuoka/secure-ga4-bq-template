@@ -1,7 +1,7 @@
 ---
 id: glossary
 title: Glossary — Ubiquitous Language
-updated: 2026-07-15
+updated: 2026-07-17
 ---
 
 # Glossary
@@ -33,9 +33,13 @@ confusable. Keep alphabetical.
 | Term | Definition | Context | Not to be confused with |
 |------|------------|---------|--------------------------|
 | AI-generated report | Advisory Markdown narrative rendered from a deterministic finding frame and requiring human review | reporting | deterministic `summary.md` |
+| Audit | GET-only governance comparison used as a compliance gate; exits nonzero for drift or unknown state | governance | plan or apply |
 | Deterministic finding frame | Authoritative inspection JSON whose finding IDs, severities, coverage, and remediation hints bound AI prose | inspection/reporting | model-generated findings |
+| Drift | A governance control whose known current value differs from the resolved desired value | governance | unknown state |
 | Engagement scope | Anonymous preflight counts and work flags evaluated against one menu profile | service packaging | inspection parameters or collected customer metadata |
 | Menu profile | Versioned product-definition data containing a service package's fee range, capacity limits, checks, deliverables, and separate-estimate conditions | service packaging | deployment or customer configuration |
+| Plan | GET-only governance comparison that reports compliant, drift, or unknown state without acting as a compliance gate | governance | audit or apply |
 | Qualification reason | A profile-defined condition requiring work outside the standard service package | service packaging | a security finding or final sales decision |
 | Remediation recipe | Versioned local mapping from an FR-4 check ID to non-applying Terraform, policy, or manual review guidance | reporting | model-generated code |
 | Service package | A reviewed commercial boundary rendered and qualified from one menu profile | service packaging | the technical inspection engine |
+| Unknown | A governance state that cannot be determined from safely available GitHub reads and therefore never counts as compliant | governance | drift |

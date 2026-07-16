@@ -15,9 +15,9 @@ authoritative in their linked documents.
 
 | Item | State on 2026-07-17 | Evidence or source |
 |------|---------------------|--------------------|
-| Default branch | `main` is release v1.3.0 and includes protected IaC adaptation from PR #125, layered policy data from PR #127, offline resolver from PR #129, GET-only discovery from PR #132, and deterministic comparison from PR #136 | [Release v1.3.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v1.3.0), [PR #136](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/136) |
+| Default branch | `main` is release v1.3.0 and includes protected IaC adaptation from PR #125 through deterministic comparison from PR #136, plus parent-lock advance PR #139 | [Release v1.3.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v1.3.0), [PR #139](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/139) |
 | IaC governance prerequisite | Complete: exact `iac-scan` succeeded on PR #125 and its merged-main push | [PR run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29517379947), [main run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29518413106) |
-| Active work | Issue #138 advances the direct-parent lock from `40a63a1` to reviewed GET-only plan/audit merge `5ced34f`; no protected or unowned path is materialized | [Issue #138](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/138), [ADR-0008](adr/0008-adopt-direct-parent-inheritance-contract.md) |
+| Active work | Issue #140 adapts GET-only governance `plan`/`audit` and branch-head observed-check coverage; no `apply` or live setting change is authorized | [Issue #140](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/140), [ADR-0008](adr/0008-adopt-direct-parent-inheritance-contract.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -34,19 +34,17 @@ caller and WIF condition are pinned together to `v2.0.2`.
 
 No cloud action is required for the current milestone. Continue in this order:
 
-1. Merge Issue #138 after validation proves exact lock `5ced34f` and zero inherited
-   materialization.
-2. Adapt GET-only `plan`/`audit`, observed-check discovery, exit codes, and child documents
-   in a separate PR with explicit `iac-scan` coverage; keep `apply` absent.
-3. Review next parent candidate `586be91` only after that adaptation is complete.
-4. Continue advancing only one first-parent commit per reviewed PR; keep lock changes
+1. Merge Issue #140 after GET-only `plan`/`audit`, exit codes, redaction, and explicit
+   `iac-scan` observation pass review; keep `apply` absent.
+2. Review next parent candidate `586be91` only after that adaptation is complete.
+3. Continue advancing only one first-parent commit per reviewed PR; keep lock changes
    separate from protected-file adaptations.
-5. Apply the asset to a second engagement when an owner and customer scope exist, then
+4. Apply the asset to a second engagement when an owner and customer scope exist, then
    measure reuse effort for Acceptance S.
-6. Use the versioned standard-inspection profile, generated menu, and deterministic
+5. Use the versioned standard-inspection profile, generated menu, and deterministic
    qualification artifacts as the service-packaging baseline; change profile values in
    a reviewed PR rather than editing generated material.
-7. Keep customer delivery evidence and raw inspection artifacts outside this public
+6. Keep customer delivery evidence and raw inspection artifacts outside this public
    repository because complete inspection artifacts remain Internal.
 
 Do not recreate the deleted verification environment unless a new issue and approvals
@@ -111,7 +109,7 @@ may be absent; CI remains authoritative.
 ## Resume prompt
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
-> `docs/development-handoff.md`. Confirm `main` includes v1.3.0, PR #136, and accepted
+> `docs/development-handoff.md`. Confirm `main` includes v1.3.0, PR #139, and accepted
 > ADR-0008. The inheritance lock is `5ced34f`, and `iac-scan` has PR and merged-main
 > evidence. Adapt GET-only governance `plan`/`audit` with observed-check coverage for
 > child-required `iac-scan`; keep `apply` absent. Review next parent candidate `586be91`
