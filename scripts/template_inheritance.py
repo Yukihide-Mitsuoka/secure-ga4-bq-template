@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Validate the local template inheritance contract defined by ADR-0008."""
+"""Validate and plan local template inheritance defined by ADR-0008."""
 
 import argparse
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -11,6 +12,9 @@ SCHEMA_VERSION = 1
 MANIFEST_PATH = ".github/inheritance/manifest.json"
 MAX_CONTRACT_BYTES = 1_000_000
 MAX_OWNERSHIP_ROOTS = 1_000
+MAX_FIRST_PARENT_COMMITS = 100_000
+MAX_CHANGED_PATHS = 1_000
+DIFF_TREE_OPTIONS = ["diff-tree", "--no-commit-id", "--name-only", "-r", "-z", "--no-renames"]
 REPOSITORY_TARGET = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 COMMIT_ID = re.compile(r"^[0-9a-f]{40}$")
 REQUIRED_PROTECTED_PATHS = {
@@ -198,13 +202,186 @@ def validate_inheritance(root):
     }
 
 
+def _git(root, arguments, operation):
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(root), *arguments],
+            capture_output=True,
+            check=False,
+            text=True,
+            timeout=30,
+        )
+    except (OSError, subprocess.SubprocessError) as error:
+        raise InheritanceError(f"parent Git {operation} could not run") from error
+    if result.returncode != 0:
+        raise InheritanceError(f"parent Git {operation} failed; refresh the local parent checkout")
+    return result.stdout
+
+
+def _github_repository(remote_url):
+    for prefix in ("https://github.com/", "git@github.com:", "ssh://git@github.com/"):
+        if remote_url.startswith(prefix):
+            repository = remote_url[len(prefix) :]
+            if repository.endswith(".git"):
+                repository = repository[:-4]
+            if REPOSITORY_TARGET.fullmatch(repository):
+                return repository
+    raise InheritanceError("parent origin must be a credential-free GitHub repository URL")
+
+
+def _parent_root(parent_root):
+    try:
+        root = Path(parent_root).resolve(strict=True)
+    except OSError as error:
+        raise InheritanceError("parent root must exist") from error
+    if not root.is_dir():
+        raise InheritanceError("parent root must be a directory")
+    top_level = Path(
+        _git(root, ["rev-parse", "--show-toplevel"], "root discovery").strip()
+    ).resolve()
+    if top_level != root:
+        raise InheritanceError("parent root must be the Git worktree top level")
+    return root
+
+
+def _next_parent_commit(parent_root, contract):
+    remote = _git(parent_root, ["remote", "get-url", "origin"], "origin discovery").strip()
+    if _github_repository(remote).casefold() != contract["parent"]["repository"].casefold():
+        raise InheritanceError("parent origin does not match manifest.parent.repository")
+    branch = contract["parent"]["branch"]
+    target = _git(
+        parent_root,
+        ["rev-parse", "--verify", f"refs/remotes/origin/{branch}^{{commit}}"],
+        "remote branch resolution",
+    ).strip()
+    if not COMMIT_ID.fullmatch(target):
+        raise InheritanceError("parent remote branch did not resolve to a full commit ID")
+    history = _git(
+        parent_root,
+        ["rev-list", "--first-parent", f"--max-count={MAX_FIRST_PARENT_COMMITS + 1}", target],
+        "first-parent history read",
+    ).splitlines()
+    locked = contract["parent"]["commit"]
+    if locked not in history:
+        truncated = len(history) > MAX_FIRST_PARENT_COMMITS
+        suffix = " within the supported history window" if truncated else ""
+        message = "locked commit is not on the remote branch first-parent history"
+        raise InheritanceError(message + suffix)
+    index = history.index(locked)
+    return target, None if index == 0 else history[index - 1]
+
+
+def _changed_paths(parent_root, locked, candidate):
+    output = _git(
+        parent_root,
+        [*DIFF_TREE_OPTIONS, locked, candidate],
+        "candidate diff read",
+    )
+    paths = sorted(path for path in output.split("\0") if path)
+    if len(paths) > MAX_CHANGED_PATHS:
+        raise InheritanceError(f"candidate commit changes more than {MAX_CHANGED_PATHS} paths")
+    for index, path in enumerate(paths):
+        _ownership_root(path, f"parent changed path[{index}]", file_only=True)
+    return paths
+
+
+def _path_owner(path, ownership):
+    for owner in ("inherited", "protected"):
+        if any(
+            root == path or (root.endswith("/") and path.startswith(root))
+            for root in ownership[owner]
+        ):
+            return owner
+    return "unowned"
+
+
+def _parent_entry(parent_root, candidate, path):
+    output = _git(parent_root, ["ls-tree", "-z", candidate, "--", path], "candidate tree read")
+    if not output:
+        return None
+    try:
+        metadata, actual_path = output.rstrip("\0").split("\t", 1)
+        mode, object_type, object_id = metadata.split(" ")
+    except ValueError as error:
+        raise InheritanceError(f"parent path has an invalid tree entry: {path}") from error
+    if actual_path != path or object_type != "blob" or mode not in {"100644", "100755"}:
+        raise InheritanceError(f"parent path must be a regular file: {path}")
+    return object_id, mode == "100755"
+
+
+def _child_entry(child_root, parent_root, path):
+    current = child_root
+    for part in path.split("/"):
+        current /= part
+        if current.is_symlink():
+            raise InheritanceError(f"inherited child path must not use a symlink: {path}")
+        if not current.exists():
+            return None
+    if not current.is_file():
+        raise InheritanceError(f"inherited child path must be a regular file: {path}")
+    object_id = _git(
+        parent_root,
+        ["hash-object", "--no-filters", "--", str(current)],
+        "child hash",
+    ).strip()
+    return object_id, bool(current.stat().st_mode & 0o111)
+
+
+def plan_inheritance(root, parent_root):
+    """Plan one first-parent commit without modifying either worktree."""
+    contract = validate_inheritance(root)
+    child_root = Path(root).resolve(strict=True)
+    parent_root = _parent_root(parent_root)
+    target, candidate = _next_parent_commit(parent_root, contract)
+    changes = {name: [] for name in ("add", "modify", "candidate_delete", "already_current")}
+    skipped = {name: [] for name in ("protected", "unowned")}
+    if candidate:
+        for path in _changed_paths(parent_root, contract["parent"]["commit"], candidate):
+            owner = _path_owner(path, contract["ownership"])
+            if owner != "inherited":
+                skipped[owner].append(path)
+                continue
+            parent_entry = _parent_entry(parent_root, candidate, path)
+            child_entry = _child_entry(child_root, parent_root, path)
+            if parent_entry is None:
+                operation = "candidate_delete" if child_entry else "already_current"
+            elif child_entry is None:
+                operation = "add"
+            else:
+                operation = "already_current" if child_entry == parent_entry else "modify"
+            changes[operation].append(path)
+    counts = {name: len(paths) for name, paths in {**changes, **skipped}.items()}
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "status": "changes" if candidate else "up_to_date",
+        "parent": {
+            "repository": contract["parent"]["repository"],
+            "branch": contract["parent"]["branch"],
+            "locked_commit": contract["parent"]["commit"],
+            "target_commit": target,
+            "candidate_commit": candidate,
+        },
+        "changes": changes,
+        "skipped": skipped,
+        "summary": {**counts, "total": sum(counts.values())},
+    }
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    validate = parser.add_subparsers(required=True).add_parser("validate", help="validate contract")
+    commands = parser.add_subparsers(dest="command", required=True)
+    validate = commands.add_parser("validate", help="validate contract")
     validate.add_argument("--root", type=Path, default=Path("."), help="child repository root")
+    plan = commands.add_parser("plan", help="plan the next parent commit")
+    plan.add_argument("--root", type=Path, default=Path("."), help="child repository root")
+    plan.add_argument("--parent-root", type=Path, required=True, help="local parent Git worktree")
     args = parser.parse_args(argv)
     try:
-        report = validate_inheritance(args.root)
+        report = (
+            validate_inheritance(args.root)
+            if args.command == "validate"
+            else plan_inheritance(args.root, args.parent_root)
+        )
     except InheritanceError as error:
         print(f"inheritance error: {error}", file=sys.stderr)
         return 2
