@@ -29,5 +29,6 @@ architectural change (definition: ARC-020 "Architectural" scope). Process:
 | [0005](0005-render-remediation-drafts-from-recipes.md) | Render remediation drafts from deterministic recipes | accepted | 2026-07-13 |
 | [0006](0006-bind-cost-gate-wif-to-trusted-workflow.md) | Bind cost-gate WIF to the trusted reusable workflow | accepted | 2026-07-13 |
 | [0007](0007-generate-service-packages-from-versioned-profiles.md) | Generate service packages from versioned profiles | accepted | 2026-07-15 |
+| [0008](0008-adopt-direct-parent-inheritance-contract.md) | Adopt the direct-parent inheritance contract | proposed | 2026-07-16 |
 
 <!-- Append new ADRs to this table (newest last). -->
