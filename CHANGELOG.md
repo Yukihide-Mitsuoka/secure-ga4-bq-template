@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v1.0.1...v1.1.0) (2026-07-16)
+
+
+### Features
+
+* **inheritance:** add offline contract validator ([#109](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/109)) ([28475a7](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/28475a72d7d581e732613b9244c4e1e7e22a86e4)), closes [#104](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/104)
+* **inheritance:** bootstrap direct-parent contract ([#107](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/107)) ([269a2a3](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/269a2a3bef1cbf494f9e4270d4f1486a1a43ed77)), closes [#104](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/104)
+
 ## [1.0.1](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v1.0.0...v1.0.1) (2026-07-15)
 
 
