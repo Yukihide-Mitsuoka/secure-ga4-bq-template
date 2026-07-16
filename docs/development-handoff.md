@@ -15,8 +15,8 @@ authoritative in their linked documents.
 
 | Item | State on 2026-07-17 | Evidence or source |
 |------|---------------------|--------------------|
-| Default branch | `main` is release v1.1.0 and includes five reviewed parent-lock advances through PR #121 | [Release v1.1.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v1.1.0), [PR #121](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/121) |
-| Active work | Issue #122 advances the lock exactly one parent commit to `5324852`; its zero inherited changes, three protected discovery paths, and one unowned guide were reviewed but not materialized | [Issue #122](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/122), [ADR-0008](adr/0008-adopt-direct-parent-inheritance-contract.md) |
+| Default branch | `main` is release v1.1.0 and includes six reviewed parent-lock advances through PR #123 | [Release v1.1.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v1.1.0), [PR #123](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/123) |
+| Active work | Issue #124 adapts the protected IaC workflow to report `iac-scan` on every PR and `main` push before governance-profile enforcement | [Issue #124](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/124), [ADR-0008](adr/0008-adopt-direct-parent-inheritance-contract.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -33,19 +33,23 @@ caller and WIF condition are pinned together to `v2.0.2`.
 
 No cloud action is required for the current milestone. Continue in this order:
 
-1. Merge the isolated Issue #122 lock advance after review; do not materialize its
-   protected or unowned parent paths in that PR.
-2. Adapt the GET-only governance discovery to protected child paths in a separate issue
-   before considering the next parent comparison commit `40a63a1`; do not expose an
-   apply command or call the live GitHub API during deterministic tests.
-3. Continue advancing only one first-parent commit per reviewed PR; keep lock changes
+1. Merge Issue #124 after its exact `iac-scan` context succeeds on the PR, then verify
+   that the same context succeeds on the resulting `main` push.
+2. Add the parent governance resolver and policy layers in a separate protected-child
+   adaptation; this is a prerequisite because the child currently has neither policy
+   JSON layer nor `scripts/github_governance.py`.
+3. Add GET-only governance discovery only after the resolver exists; deterministic tests
+   must inject a fake runner and must not call the live GitHub API or expose `apply`.
+4. Review the next parent comparison commit `40a63a1` only after those protected-file
+   adaptations are complete.
+5. Continue advancing only one first-parent commit per reviewed PR; keep lock changes
    separate from protected-file adaptations.
-4. Apply the asset to a second engagement when an owner and customer scope exist, then
+6. Apply the asset to a second engagement when an owner and customer scope exist, then
    measure reuse effort for Acceptance S.
-5. Use the versioned standard-inspection profile, generated menu, and deterministic
+7. Use the versioned standard-inspection profile, generated menu, and deterministic
    qualification artifacts as the service-packaging baseline; change profile values in
    a reviewed PR rather than editing generated material.
-6. Keep customer delivery evidence and raw inspection artifacts outside this public
+8. Keep customer delivery evidence and raw inspection artifacts outside this public
    repository because complete inspection artifacts remain Internal.
 
 Do not recreate the deleted verification environment unless a new issue and approvals
@@ -110,11 +114,11 @@ may be absent; CI remains authoritative.
 ## Resume prompt
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
-> `docs/development-handoff.md`. Confirm `main` includes v1.1.0, PR #121, and accepted
-> ADR-0008. Issue #122 advances the inheritance lock to `5324852`; its protected
-> GET-only governance discovery paths and unowned guide were reviewed but not
-> materialized. Keep their child adaptation separate before reviewing next candidate
-> `40a63a1`, and retain legacy sync. Do not
+> `docs/development-handoff.md`. Confirm `main` includes v1.1.0, PR #123, and accepted
+> ADR-0008. The inheritance lock is `5324852`. Complete Issue #124 and verify the exact
+> `iac-scan` context on both its PR and merged `main` before adding the protected
+> governance resolver/policies, then adapt GET-only discovery separately. Review next
+> parent candidate `40a63a1` only after those prerequisites, and retain legacy sync. Do not
 > materialize parent changes, run a governance `apply`, or mutate live GitHub/GCP state.
 > Technical Acceptance A, CHK-12,
 > service packaging, and release hardening are complete. Continue toward Acceptance S
