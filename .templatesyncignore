@@ -1,20 +1,46 @@
-# Files the template-sync workflow must NEVER overwrite in downstream repos —
-# everything a project customizes. Rules/workflows/skills DO sync (that's the point).
+# Legacy Template Sync remains non-authoritative during manifest migration. Keep every
+# manifest-protected path out of that transport as well.
 src/**
 tests/**
 docs/**
 profiles/**
+catalog/**
+scripts/**
+service-packages/**
 CLAUDE.md
 README.md
 Makefile
+CHANGELOG.md
 .env.example
+.gitignore
+engagement-scope.example.yml
+inspection-params.example.yml
+pyproject.toml
+uv.lock
+version.txt
 .ai/mission.md
 .ai/decision-log.md
+.ai/architecture.md
+.ai/release.md
+.devcontainer/**
 .github/CODEOWNERS
+.github/governance/repository.json
+.github/inheritance/lock.json
+.github/inheritance/manifest.json
+.github/workflows/ai-review.yml
+.github/workflows/bq-cost-gate.yml
+.github/workflows/bq-inspect.yml
+.github/workflows/codeql.yml
+.github/workflows/container.yml
+.github/workflows/iac.yml
+.github/workflows/labels-sync.yml
+.github/workflows/release.yml
+.github/workflows/scorecard.yml
+.github/workflows/security.yml
 .templatesyncignore
 
-# terraform-gcp-template additions: never let the ai-dev-foundation sync touch the
-# Terraform layer this template adds on top of the foundation.
+# secure-ga4-bq-template additions: never let the terraform-gcp-template sync touch the
+# product Terraform layer or protected workflow adaptations.
 infra/**
 .github/workflows/template-sync.yml
 # ci.yml carries this stack's runtime setup (hashicorp/setup-terraform); port base CI
