@@ -319,16 +319,38 @@ def _ruleset_endpoint(source_type, source, ruleset_id):
     return None
 
 
-def _discover_rulesets(rules, runner):
+def _discover_rulesets(repository, rules, runner):
     references = {
-        (rule["source_type"], rule["source"], rule["ruleset_id"])
+        (rule["source_type"], rule["source"], rule["ruleset_id"]): UNKNOWN
         for rule in rules
         if type(rule["ruleset_id"]) is int
     }
+    summaries = _gh_get_json(
+        f"repos/{repository}/rulesets?includes_parents=false&per_page=100",
+        runner,
+        paginate=True,
+    )
+    for summary in summaries:
+        if (
+            type(summary) is not dict
+            or type(summary.get("id")) is not int
+            or type(summary.get("source")) is not str
+            or summary.get("source_type") != "Repository"
+            or summary["source"].casefold() != repository.casefold()
+        ):
+            raise PolicyError("GitHub repository rulesets response contains an invalid ruleset")
+        reference = (summary["source_type"], summary["source"], summary["id"])
+        references[reference] = _known(summary.get("name"), str)
     inventory = []
-    for source_type, source, ruleset_id in sorted(references, key=lambda item: str(item)):
+    for reference in sorted(references, key=lambda item: str(item)):
+        source_type, source, ruleset_id = reference
         endpoint = _ruleset_endpoint(source_type, source, ruleset_id)
-        detail = _gh_get_json(endpoint, runner, optional=True) if endpoint else None
+        name = references[reference]
+        detail = (
+            _gh_get_json(endpoint, runner, optional=True)
+            if endpoint and name in {UNKNOWN, MANAGED_RULESET_NAME}
+            else None
+        )
         if detail is not None and type(detail) is not dict:
             raise PolicyError(f"GitHub ruleset {ruleset_id} response must be an object")
         actors = detail.get("bypass_actors") if detail else None
@@ -336,7 +358,7 @@ def _discover_rulesets(rules, runner):
             {
                 "has_bypass_actors": bool(actors) if type(actors) is list else UNKNOWN,
                 "id": ruleset_id,
-                "name": _known(detail.get("name"), str) if detail else UNKNOWN,
+                "name": _known(detail.get("name"), str) if detail else references[reference],
                 "source": source,
                 "source_type": source_type,
             }
@@ -428,7 +450,7 @@ def discover_github(repository, branch, runner=None):
             "delete_branch_on_merge": _known(repository_data.get("delete_branch_on_merge"), bool),
             "full_name": repository,
         },
-        "rulesets": _discover_rulesets(rules, runner),
+        "rulesets": _discover_rulesets(repository, rules, runner),
         "security": _security_inventory(repository_data),
     }
 
@@ -478,23 +500,34 @@ def _branch_desired(policy):
     }
 
 
-def _ruleset_branch_controls(policy, inventory):
-    desired = _branch_desired(policy)
+def _managed_repository_ruleset(inventory):
+    repository = inventory["repository"].get("full_name")
     matches = [
-        ruleset for ruleset in inventory["rulesets"] if ruleset["name"] == MANAGED_RULESET_NAME
+        ruleset
+        for ruleset in inventory["rulesets"]
+        if ruleset["name"] == MANAGED_RULESET_NAME
+        and ruleset.get("source_type") == "Repository"
+        and type(ruleset.get("source")) is str
+        and type(repository) is str
+        and ruleset["source"].casefold() == repository.casefold()
     ]
     if len(matches) > 1:
-        raise PolicyError(f"multiple active rulesets use managed name {MANAGED_RULESET_NAME}")
+        raise PolicyError(f"multiple repository rulesets use managed name {MANAGED_RULESET_NAME}")
+    return matches[0] if matches else None
+
+
+def _ruleset_branch_controls(policy, inventory):
+    desired = _branch_desired(policy)
+    managed = _managed_repository_ruleset(inventory)
     uncertain = any(ruleset["name"] == UNKNOWN for ruleset in inventory["rulesets"])
     uncertain = uncertain or any(
         rule["ruleset_id"] == UNKNOWN for rule in inventory["effective_rules"]
     )
-    if not matches:
+    if not managed:
         current = UNKNOWN if uncertain else None
         values = {name: current for name in desired}
         managed_id = None
     else:
-        managed = matches[0]
         managed_id = managed["id"]
         rules = [rule for rule in inventory["effective_rules"] if rule["ruleset_id"] == managed_id]
         pull = _single_rule(rules, "pull_request")
