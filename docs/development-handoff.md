@@ -15,8 +15,8 @@ authoritative in their linked documents.
 
 | Item | State on 2026-07-16 | Evidence or source |
 |------|---------------------|--------------------|
-| Default branch | `main` includes technical Acceptance A, CHK-12, service packaging, release hardening, and accepted ADR-0008 through PR #105 | [PR #69](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/69), [PR #73](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/73), [PR #90](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/90), [PR #103](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/103), [PR #105](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/105) |
-| Active work | Issue #104 expand stage has a child-owned manifest and lock at exact tree-equivalent Terraform parent commit `157b3c2`; offline validation and planning remain pending | [Issue #104](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/104), [ADR-0008](adr/0008-adopt-direct-parent-inheritance-contract.md) |
+| Default branch | `main` includes technical Acceptance A, CHK-12, service packaging, release hardening, and the ADR-0008 contract bootstrap through PR #107 | [PR #69](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/69), [PR #73](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/73), [PR #90](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/90), [PR #103](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/103), [PR #106](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/106), [PR #107](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/107) |
+| Active work | Issue #104 expand stage has a manifest, exact `157b3c2` lock, and offline fail-closed validator; read-only planning remains pending | [Issue #104](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/104), [ADR-0008](adr/0008-adopt-direct-parent-inheritance-contract.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -33,10 +33,10 @@ caller and WIF condition are pinned together to `v2.0.2`.
 
 No cloud action is required for the current milestone. Continue in this order:
 
-1. Continue Issue #104 with the offline inheritance-contract validator and its boundary
-   tests; keep the lock at `157b3c2` and retain legacy sync.
-2. Add the read-only, one-first-parent planner in a separate small PR; do not materialize
+1. Add the read-only, one-first-parent planner for Issue #104; do not materialize
    parent files or delete child files.
+2. After the planner lands, advance only one first-parent commit per reviewed PR; keep
+   lock changes separate from protected-file adaptations.
 3. Apply the asset to a second engagement when an owner and customer scope exist, then
    measure reuse effort for Acceptance S.
 4. Use the versioned standard-inspection profile, generated menu, and deterministic
@@ -107,11 +107,11 @@ may be absent; CI remains authoritative.
 ## Resume prompt
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
-> `docs/development-handoff.md`. Confirm `main` includes PR #105 and accepted ADR-0008.
-> The Issue #104 expand-stage manifest and exact `157b3c2` bootstrap lock are present.
-> Add the offline validator next, then the read-only one-first-parent planner in a
-> separate small PR while retaining legacy sync. Do not materialize parent changes, run
-> a governance `apply`, or mutate live GitHub/GCP state. Technical Acceptance A, CHK-12,
+> `docs/development-handoff.md`. Confirm `main` includes PR #107 and accepted ADR-0008.
+> The Issue #104 manifest, exact `157b3c2` lock, and offline validator are present. Add
+> the read-only one-first-parent planner next while retaining legacy sync. Do not
+> materialize parent changes, run a governance `apply`, or mutate live GitHub/GCP state.
+> Technical Acceptance A, CHK-12,
 > service packaging, and release hardening are complete. Continue toward Acceptance S
 > only when a second engagement or department-standard owner and scope exist. Do not
 > recreate the deleted verification environment without a new issue and approvals.
