@@ -14,6 +14,7 @@ SCHEMA_VERSION = 1
 MANAGER = "ai-dev-foundation"
 API_VERSION = "2026-03-10"
 UNKNOWN = "unknown"
+MANAGED_RULESET_NAME = "ai-dev-foundation: branch-governance"
 MINIMUM_CONTRACT = {
     "pull_request_required": (True, {"GR-010"}),
     "status_checks_required": (True, {"GR-012"}),
@@ -34,6 +35,13 @@ SETTING_FIELDS = {
 RULE_ID = re.compile(r"^(?:GR|SEC)-\d{3}$")
 RULE_HEADING = re.compile(r"^### ((?:GR|SEC)-\d{3}):", re.MULTILINE)
 REPOSITORY_TARGET = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+BRANCH_CONTROL_IDS = {
+    "admin": "branch.admin_bypass_allowed",
+    "backend": "branch.enforcement_backend",
+    "checks": "branch.required_status_checks",
+    "force": "branch.force_pushes_allowed",
+    "pull": "branch.pull_request",
+}
 
 
 class PolicyError(ValueError):
@@ -387,6 +395,189 @@ def discover_github(repository, branch, runner=None):
         },
         "rulesets": _discover_rulesets(rules, runner),
         "security": _security_inventory(repository_data),
+    }
+
+
+def _has_unknown(value):
+    if value == UNKNOWN:
+        return True
+    return type(value) is dict and any(_has_unknown(item) for item in value.values())
+
+
+def _control(control_id, current, desired, rule_refs=()):
+    status = UNKNOWN if _has_unknown(current) else "compliant" if current == desired else "drift"
+    return {
+        "current": current,
+        "desired": desired,
+        "id": control_id,
+        "rule_refs": sorted(rule_refs),
+        "status": status,
+    }
+
+
+def _single_rule(rules, rule_type):
+    matches = [rule for rule in rules if rule["type"] == rule_type]
+    if len(matches) > 1:
+        raise PolicyError(f"managed ruleset contains multiple {rule_type} rules")
+    return matches[0] if matches else None
+
+
+def _branch_desired(policy):
+    settings = policy["settings"]
+    minimums = policy["minimums"]
+    return {
+        "admin": (False, minimums["admin_bypass_allowed"]["rule_refs"]),
+        "backend": (settings["enforcement_backend"], ()),
+        "force": (False, minimums["force_pushes_allowed"]["rule_refs"]),
+        "pull": (
+            {
+                "require_last_push_approval": settings["require_last_push_approval"],
+                "required_approvals": settings["required_approvals"],
+            },
+            minimums["pull_request_required"]["rule_refs"],
+        ),
+        "checks": (
+            sorted(settings["required_checks"]),
+            minimums["status_checks_required"]["rule_refs"],
+        ),
+    }
+
+
+def _ruleset_branch_controls(policy, inventory):
+    desired = _branch_desired(policy)
+    matches = [
+        ruleset for ruleset in inventory["rulesets"] if ruleset["name"] == MANAGED_RULESET_NAME
+    ]
+    if len(matches) > 1:
+        raise PolicyError(f"multiple active rulesets use managed name {MANAGED_RULESET_NAME}")
+    uncertain = any(ruleset["name"] == UNKNOWN for ruleset in inventory["rulesets"])
+    uncertain = uncertain or any(
+        rule["ruleset_id"] == UNKNOWN for rule in inventory["effective_rules"]
+    )
+    if not matches:
+        current = UNKNOWN if uncertain else None
+        values = {name: current for name in desired}
+        managed_id = None
+    else:
+        managed = matches[0]
+        managed_id = managed["id"]
+        rules = [rule for rule in inventory["effective_rules"] if rule["ruleset_id"] == managed_id]
+        pull = _single_rule(rules, "pull_request")
+        checks = _single_rule(rules, "required_status_checks")
+        no_force = _single_rule(rules, "non_fast_forward")
+        values = {
+            "admin": managed["has_bypass_actors"],
+            "backend": "ruleset",
+            "checks": checks["parameters"].get("contexts", UNKNOWN) if checks else None,
+            "force": not no_force,
+            "pull": (
+                {
+                    "require_last_push_approval": pull["parameters"].get(
+                        "require_last_push_approval", UNKNOWN
+                    ),
+                    "required_approvals": pull["parameters"].get(
+                        "required_approving_review_count", UNKNOWN
+                    ),
+                }
+                if pull
+                else None
+            ),
+        }
+    controls = [
+        _control(BRANCH_CONTROL_IDS[name], values[name], *desired[name]) for name in desired
+    ]
+    unmanaged = [rule for rule in inventory["effective_rules"] if rule["ruleset_id"] != managed_id]
+    legacy = inventory["legacy_branch_protection"]
+    return controls, unmanaged, None if legacy["status"] == "absent" else legacy
+
+
+def _legacy_branch_controls(policy, inventory):
+    desired = _branch_desired(policy)
+    legacy = inventory["legacy_branch_protection"]
+    if legacy["status"] != "configured":
+        current = UNKNOWN if legacy["status"] == UNKNOWN else None
+        values = {name: current for name in desired}
+    else:
+        reviews = legacy["required_pull_request_reviews"]
+        checks = legacy["required_status_checks"]
+        enforce_admins = legacy["enforce_admins"]
+        values = {
+            "admin": UNKNOWN if enforce_admins == UNKNOWN else not enforce_admins,
+            "backend": "legacy_branch_protection",
+            "checks": checks["contexts"] if checks else None,
+            "force": legacy["allow_force_pushes"],
+            "pull": reviews,
+        }
+    controls = [
+        _control(BRANCH_CONTROL_IDS[name], values[name], *desired[name]) for name in desired
+    ]
+    return controls, inventory["effective_rules"], None
+
+
+def compare_governance(policy, inventory):
+    """Return a deterministic, redacted current-versus-desired governance report."""
+    required = {
+        "branch",
+        "effective_rules",
+        "legacy_branch_protection",
+        "repository",
+        "rulesets",
+        "security",
+    }
+    if type(inventory) is not dict or not required <= set(inventory):
+        raise PolicyError("GitHub inventory is missing required governance fields")
+    settings = policy["settings"]
+    if inventory["branch"].get("name") != settings["target_branch"]:
+        raise PolicyError("GitHub inventory branch does not match resolved target_branch")
+    if settings["enforcement_backend"] == "ruleset":
+        controls, unmanaged_rules, unmanaged_legacy = _ruleset_branch_controls(policy, inventory)
+    else:
+        controls, unmanaged_rules, unmanaged_legacy = _legacy_branch_controls(policy, inventory)
+    minimums = policy["minimums"]
+    security = inventory["security"]
+    controls.extend(
+        [
+            _control(
+                "repository.delete_branch_on_merge",
+                inventory["repository"].get("delete_branch_on_merge", UNKNOWN),
+                settings["delete_branch_on_merge"],
+            ),
+            _control(
+                "security.dependabot_security_updates",
+                security.get("dependabot_security_updates", UNKNOWN),
+                "enabled" if settings["dependency_update_provider"] == "dependabot" else "disabled",
+            ),
+            _control(
+                "security.push_protection",
+                security.get("push_protection", UNKNOWN),
+                "enabled",
+                minimums["push_protection_enabled"]["rule_refs"],
+            ),
+            _control(
+                "security.secret_scanning",
+                security.get("secret_scanning", UNKNOWN),
+                "enabled",
+                minimums["secret_scanning_enabled"]["rule_refs"],
+            ),
+        ]
+    )
+    statuses = {control["status"] for control in controls}
+    if unmanaged_legacy and unmanaged_legacy["status"] == UNKNOWN:
+        statuses.add(UNKNOWN)
+    status = UNKNOWN if UNKNOWN in statuses else "drift" if "drift" in statuses else "compliant"
+    return {
+        "branch": settings["target_branch"],
+        "controls": sorted(controls, key=lambda control: control["id"]),
+        "managed_ruleset_name": MANAGED_RULESET_NAME,
+        "repository": inventory["repository"].get("full_name", UNKNOWN),
+        "schema_version": SCHEMA_VERSION,
+        "status": status,
+        "unmanaged": {
+            "effective_rules": sorted(
+                unmanaged_rules, key=lambda rule: json.dumps(rule, sort_keys=True)
+            ),
+            "legacy_branch_protection": unmanaged_legacy,
+        },
     }
 
 
