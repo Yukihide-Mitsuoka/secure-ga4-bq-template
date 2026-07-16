@@ -2,7 +2,7 @@
 id: development-handoff
 title: Development Handoff
 status: active
-updated: 2026-07-15
+updated: 2026-07-16
 ---
 
 # Development Handoff
@@ -13,10 +13,10 @@ authoritative in their linked documents.
 
 ## Snapshot
 
-| Item | State on 2026-07-15 | Evidence or source |
+| Item | State on 2026-07-16 | Evidence or source |
 |------|---------------------|--------------------|
-| Default branch | `main` includes technical Acceptance A, CHK-12, and the approved standard-inspection packaging slices through PR #90 | [PR #69](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/69), [PR #73](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/73), [PR #90](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/90) |
-| Active work | No feature implementation is active; the remaining milestone requires a second engagement or department-standard adoption | [Roadmap](roadmap.md), [main requirements section 8](requirements/requirements-secure-asset.md) |
+| Default branch | `main` includes technical Acceptance A, CHK-12, service packaging, and release hardening through PR #103 | [PR #69](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/69), [PR #73](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/73), [PR #90](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/90), [PR #103](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/103) |
+| Active work | Issue #104 proposes ADR-0008 for manifest-driven inheritance through the existing Terraform direct parent; implementation is blocked until owner approval | [Issue #104](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/104), [ADR-0008](adr/0008-adopt-direct-parent-inheritance-contract.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -33,12 +33,14 @@ caller and WIF condition are pinned together to `v2.0.2`.
 
 No cloud action is required for the current milestone. Continue in this order:
 
-1. Apply the asset to a second engagement when an owner and customer scope exist, then
+1. Review ADR-0008. If accepted, migrate inheritance through small, read-only-first PRs;
+   do not combine ADR approval with implementation and do not run governance `apply`.
+2. Apply the asset to a second engagement when an owner and customer scope exist, then
    measure reuse effort for Acceptance S.
-2. Use the versioned standard-inspection profile, generated menu, and deterministic
+3. Use the versioned standard-inspection profile, generated menu, and deterministic
    qualification artifacts as the service-packaging baseline; change profile values in
    a reviewed PR rather than editing generated material.
-3. Keep customer delivery evidence and raw inspection artifacts outside this public
+4. Keep customer delivery evidence and raw inspection artifacts outside this public
    repository because complete inspection artifacts remain Internal.
 
 Do not recreate the deleted verification environment unless a new issue and approvals
@@ -103,8 +105,9 @@ may be absent; CI remains authoritative.
 ## Resume prompt
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
-> `docs/development-handoff.md`. Confirm `main` includes PR #90 and has no active feature
-> PR. Technical Acceptance A, CHK-12, and the standard-inspection packaging slices are
-> complete. Continue toward Acceptance S only when a second engagement or
-> department-standard owner and scope exist. Do not recreate the deleted verification
-> environment without a new issue and approvals.
+> `docs/development-handoff.md`. Confirm `main` includes PR #103. ADR-0008 is proposed
+> under Issue #104; do not implement inheritance until the owner accepts it. Technical
+> Acceptance A, CHK-12, service packaging, and release hardening are complete. Continue
+> toward Acceptance S only when a second engagement or department-standard owner and
+> scope exist. Do not recreate the deleted verification environment without a new issue
+> and approvals.
