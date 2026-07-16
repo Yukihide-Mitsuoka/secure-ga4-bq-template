@@ -15,8 +15,8 @@ authoritative in their linked documents.
 
 | Item | State on 2026-07-17 | Evidence or source |
 |------|---------------------|--------------------|
-| Default branch | `main` is release v1.1.0 and includes four reviewed parent-lock advances through PR #119 | [Release v1.1.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v1.1.0), [PR #119](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/119) |
-| Active work | Issue #120 advances the lock exactly one parent commit to `48d3f38`; its zero inherited changes and four protected planner paths were reviewed but not materialized | [Issue #120](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/120), [ADR-0008](adr/0008-adopt-direct-parent-inheritance-contract.md) |
+| Default branch | `main` is release v1.1.0 and includes five reviewed parent-lock advances through PR #121 | [Release v1.1.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v1.1.0), [PR #121](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/121) |
+| Active work | Issue #122 advances the lock exactly one parent commit to `5324852`; its zero inherited changes, three protected discovery paths, and one unowned guide were reviewed but not materialized | [Issue #122](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/122), [ADR-0008](adr/0008-adopt-direct-parent-inheritance-contract.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -33,16 +33,19 @@ caller and WIF condition are pinned together to `v2.0.2`.
 
 No cloud action is required for the current milestone. Continue in this order:
 
-1. Review next parent candidate `5324852`; its current plan contains three protected
-   governance paths, one unowned governance guide, and no inherited changes.
-2. Continue advancing only one first-parent commit per reviewed PR; keep
-   lock changes separate from protected-file adaptations.
-3. Apply the asset to a second engagement when an owner and customer scope exist, then
+1. Merge the isolated Issue #122 lock advance after review; do not materialize its
+   protected or unowned parent paths in that PR.
+2. Adapt the GET-only governance discovery to protected child paths in a separate issue
+   before considering the next parent comparison commit `40a63a1`; do not expose an
+   apply command or call the live GitHub API during deterministic tests.
+3. Continue advancing only one first-parent commit per reviewed PR; keep lock changes
+   separate from protected-file adaptations.
+4. Apply the asset to a second engagement when an owner and customer scope exist, then
    measure reuse effort for Acceptance S.
-4. Use the versioned standard-inspection profile, generated menu, and deterministic
+5. Use the versioned standard-inspection profile, generated menu, and deterministic
    qualification artifacts as the service-packaging baseline; change profile values in
    a reviewed PR rather than editing generated material.
-5. Keep customer delivery evidence and raw inspection artifacts outside this public
+6. Keep customer delivery evidence and raw inspection artifacts outside this public
    repository because complete inspection artifacts remain Internal.
 
 Do not recreate the deleted verification environment unless a new issue and approvals
@@ -107,10 +110,11 @@ may be absent; CI remains authoritative.
 ## Resume prompt
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
-> `docs/development-handoff.md`. Confirm `main` includes v1.1.0, PR #119, and accepted
-> ADR-0008. The inheritance lock is `48d3f38`; the parent planner paths were reviewed
-> but not materialized. Inspect next candidate `5324852` while retaining
-> legacy sync. Do not
+> `docs/development-handoff.md`. Confirm `main` includes v1.1.0, PR #121, and accepted
+> ADR-0008. Issue #122 advances the inheritance lock to `5324852`; its protected
+> GET-only governance discovery paths and unowned guide were reviewed but not
+> materialized. Keep their child adaptation separate before reviewing next candidate
+> `40a63a1`, and retain legacy sync. Do not
 > materialize parent changes, run a governance `apply`, or mutate live GitHub/GCP state.
 > Technical Acceptance A, CHK-12,
 > service packaging, and release hardening are complete. Continue toward Acceptance S
