@@ -118,7 +118,9 @@ schedule. The workflow uploads `findings.json`, `summary.md`, and
 3. **Replace placeholders**: `grep -rn "{{" . --exclude-dir=.git` — engagement parameters
    (sensitivity-catalog overrides, unnest keys, IAM principals, audit-log scope) are the
    per-engagement input; the template body stays unchanged (FR-7).
-4. **Configure GitHub** (one-time): `bash scripts/setup-github.sh`.
+4. **Review GitHub governance** (GET-only; never changes settings):
+   `uv run python scripts/github_governance.py plan --repo OWNER/REPOSITORY`, then use
+   `audit` as the compliance gate. See [Usage](docs/usage.md#5-review-github-governance).
 5. **Install local gates**: `make setup`.
 6. **Verify**: `make doctor && make build`.
 

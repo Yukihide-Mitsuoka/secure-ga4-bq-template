@@ -1,7 +1,7 @@
 ---
 id: usage
 title: Usage — New Machine, New Account, New Project
-updated: 2026-07-14
+updated: 2026-07-17
 ---
 
 # Usage
@@ -68,13 +68,23 @@ cp profiles/python-uv/Makefile ./Makefile      # or typescript-node / terraform-
 ```
 See [profiles/README.md](../profiles/README.md) for the canonical target contract.
 
-### 5. Configure GitHub governance
+### 5. Review GitHub governance
 
 ```bash
-bash scripts/setup-github.sh          # branch protection, secret scanning, merge policy
+uv run python scripts/github_governance.py validate
+uv run python scripts/github_governance.py plan --repo OWNER/REPOSITORY
+uv run python scripts/github_governance.py audit --repo OWNER/REPOSITORY
 ```
-Then the manual items it prints (Renovate app, Discussion categories, CodeQL languages).
-See the **Gotchas** below before enabling required reviews on a solo repo.
+
+`validate` is offline. `plan` and `audit` make authenticated, 30-second-bounded GitHub
+GET requests and print the same redacted comparison; neither changes GitHub. `plan`
+returns 0 after a complete comparison even for drift or unknown state. `audit` returns 0
+only when compliant, 1 for drift/unknown, and 2 for input, policy, or read errors. See
+[GitHub governance troubleshooting](troubleshooting/github-governance.md).
+
+The legacy `scripts/setup-github.sh` remains a fixed one-time bootstrap, not an
+implementation of the resolved layered policy. Review its writes before intentionally
+using it; policy-driven `apply` is not provided.
 
 ### 6. Install local gates and point your agent at it
 
@@ -115,7 +125,7 @@ Install once on each new machine:
 | Tool | Needed for | Notes |
 |------|-----------|-------|
 | `git`, `make` | everything | — |
-| `gh` (GitHub CLI) | `scripts/setup-github.sh`, auth | `gh auth login` |
+| `gh` (GitHub CLI) | GET-only governance review, auth | `gh auth login` |
 | `pre-commit` | local commit gates | `make setup` (once a profile is wired) or `pre-commit install` |
 | Stack toolchain | build/test | uv (python), pnpm+node (ts), terraform (iac) — per your profile |
 | `gitleaks`, `trivy`, `syft` | local `make security-scan` / `sbom` | optional locally; **CI enforces them regardless** |
@@ -136,10 +146,10 @@ gh auth refresh -h github.com -s workflow
 ```
 This is a **per-account / per-machine** setting — expect to do it once on each new setup.
 
-### Solo developer + branch protection = you can't merge your own PRs
-`scripts/setup-github.sh` enables "require 1 approving review" **and** enforces it for
-admins (GR-010..012). On a repo with no second reviewer, you cannot approve your own PR,
-so nothing merges. Choose one:
+### Solo developer + the legacy bootstrap = you can't merge your own PRs
+The fixed `scripts/setup-github.sh` requires one approval and enforces it for admins.
+The layered policy defaults to zero approvals for solo development while retaining PRs,
+status checks, and no-force-push controls. If the legacy bootstrap was already applied:
 
 - **Recommended (keeps the guardrail):** add a second collaborator/reviewer, or enable
   the AI reviewer ([ai-review.yml](../.github/workflows/ai-review.yml)) — note an AI

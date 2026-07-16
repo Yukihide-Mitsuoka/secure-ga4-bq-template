@@ -66,6 +66,7 @@ def ruleset_inventory():
             {**rule_base, "type": "non_fast_forward", "parameters": {}},
         ],
         "legacy_branch_protection": {"status": "absent"},
+        "observed_checks": list(CHECKS),
         "repository": {"delete_branch_on_merge": True, "full_name": "acme/demo"},
         "rulesets": [
             {"has_bypass_actors": False, "id": 7, "name": governance.MANAGED_RULESET_NAME}
@@ -147,6 +148,18 @@ def test_admin_invisible_control_makes_report_unknown() -> None:
 
     assert report["status"] == "unknown"
     assert control(report, "branch.admin_bypass_allowed")["status"] == "unknown"
+
+
+def test_unobserved_iac_scan_is_drift_but_unrelated_checks_are_ignored() -> None:
+    inventory = ruleset_inventory()
+    inventory["observed_checks"].remove("iac-scan")
+    inventory["observed_checks"].append("unrelated")
+
+    report = governance.compare_governance(resolved_policy(), inventory)
+
+    observed = control(report, "branch.required_status_checks_observed")
+    assert observed["status"] == "drift"
+    assert "unrelated" not in observed["current"]
 
 
 def test_legacy_backend_can_be_compliant() -> None:

@@ -9,6 +9,7 @@ MODULE_PATH = ROOT / "scripts/github_governance.py"
 SPEC = importlib.util.spec_from_file_location("github_governance_discovery", MODULE_PATH)
 governance = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(governance)
+SHA = "a" * 40
 
 
 class Completed:
@@ -43,8 +44,16 @@ def fake_runner(*, rules=None, protected=True, security=True):
     return FakeRunner(
         {
             "repos/acme/demo": Completed(payload=repository_payload(security)),
-            "repos/acme/demo/branches/main": Completed(payload={"protected": protected}),
+            "repos/acme/demo/branches/main": Completed(
+                payload={"commit": {"sha": SHA}, "protected": protected}
+            ),
             "repos/acme/demo/rules/branches/main?per_page=100": Completed(payload=[rules or []]),
+            f"repos/acme/demo/commits/{SHA}/check-runs?per_page=100": Completed(
+                payload=[{"check_runs": [{"name": "test"}, {"name": "iac-scan"}]}]
+            ),
+            f"repos/acme/demo/commits/{SHA}/statuses?per_page=100": Completed(
+                payload=[[{"context": "lint"}, {"context": "test"}]]
+            ),
         }
     )
 
@@ -73,6 +82,7 @@ def test_discovery_is_get_only_deterministic_and_redacts_bypass_identities() -> 
 
     assert result["rulesets"][0]["has_bypass_actors"] is True
     assert result["legacy_branch_protection"]["status"] == "configured"
+    assert result["observed_checks"] == ["iac-scan", "lint", "test"]
     assert "123" not in json.dumps(result)
     assert result["effective_rules"][0]["parameters"]["required_approving_review_count"] == 1
     for command, kwargs in runner.calls:
@@ -127,6 +137,17 @@ def test_required_read_and_runner_failures_stop_closed() -> None:
         governance.discover_github("acme/demo", "main", runner=unavailable)
 
 
+def test_invalid_check_run_page_stops_closed_without_leaking_metadata() -> None:
+    runner = fake_runner(protected=False)
+    runner.responses[f"repos/acme/demo/commits/{SHA}/check-runs?per_page=100"] = Completed(
+        payload=[[{"name": "secret-name"}]]
+    )
+
+    with pytest.raises(governance.PolicyError, match="invalid paginated") as failure:
+        governance.discover_github("acme/demo", "main", runner=runner)
+    assert "secret-name" not in str(failure.value)
+
+
 @pytest.mark.parametrize(
     ("repository", "branch"),
     [("../..", "main"), ("acme/demo", "../main"), ("acme", "main")],
@@ -148,8 +169,75 @@ def test_invalid_targets_are_rejected_before_runner(repository, branch) -> None:
             "repos/acme/demo/branches/main": Completed(payload={"protected": "yes"}),
             "repos/acme/demo/rules/branches/main?per_page=100": Completed(payload=[[]]),
         },
+        {
+            "repos/acme/demo": Completed(payload=repository_payload()),
+            "repos/acme/demo/branches/main": Completed(payload={"protected": False}),
+            "repos/acme/demo/rules/branches/main?per_page=100": Completed(payload=[[]]),
+        },
     ],
 )
 def test_malformed_required_responses_stop_closed(responses) -> None:
     with pytest.raises(governance.PolicyError):
         governance.discover_github("acme/demo", "main", runner=FakeRunner(responses))
+
+
+def run_online(monkeypatch, capsys, command, status):
+    calls = []
+
+    def discover(repository, branch):
+        calls.append((repository, branch))
+        return {"inventory": True}
+
+    monkeypatch.setattr(governance, "discover_github", discover)
+    monkeypatch.setattr(
+        governance,
+        "compare_governance",
+        lambda policy, inventory: {"repository": "acme/demo", "status": status},
+    )
+    exit_code = governance.main([command, "--root", str(ROOT), "--repo", "acme/demo"])
+    return exit_code, json.loads(capsys.readouterr().out), calls
+
+
+@pytest.mark.parametrize("status", ["compliant", "drift", "unknown"])
+def test_plan_reports_every_completed_status_without_failing(monkeypatch, capsys, status) -> None:
+    exit_code, report, calls = run_online(monkeypatch, capsys, "plan", status)
+
+    assert exit_code == 0
+    assert report["status"] == status
+    assert calls == [("acme/demo", "main")]
+
+
+@pytest.mark.parametrize(("status", "expected"), [("compliant", 0), ("drift", 1), ("unknown", 1)])
+def test_audit_exit_distinguishes_compliance(monkeypatch, capsys, status, expected) -> None:
+    exit_code, report, _ = run_online(monkeypatch, capsys, "audit", status)
+
+    assert exit_code == expected
+    assert report["status"] == status
+
+
+def test_online_commands_require_repository(capsys) -> None:
+    for command in ("plan", "audit"):
+        with pytest.raises(SystemExit) as failure:
+            governance.main([command, "--root", str(ROOT)])
+        assert failure.value.code == 2
+    capsys.readouterr()
+
+
+def test_github_read_failure_returns_policy_error(monkeypatch, capsys) -> None:
+    def fail(*args):
+        raise governance.PolicyError("read failed")
+
+    monkeypatch.setattr(governance, "discover_github", fail)
+
+    assert governance.main(["audit", "--root", str(ROOT), "--repo", "acme/demo"]) == 2
+    assert "governance policy error: read failed" in capsys.readouterr().err
+
+
+def test_validate_remains_offline(monkeypatch, capsys) -> None:
+    def unexpected(*args):
+        raise AssertionError("validate called GitHub discovery")
+
+    monkeypatch.setattr(governance, "discover_github", unexpected)
+
+    assert governance.main(["validate", "--root", str(ROOT)]) == 0
+    assert json.loads(capsys.readouterr().out)["managed_by"] == "ai-dev-foundation"

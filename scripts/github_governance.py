@@ -178,7 +178,7 @@ def resolve_policy(foundation, repository, known_rule_ids):
     }
 
 
-def _gh_get_json(endpoint, runner, *, optional=False, paginate=False):
+def _gh_get_json(endpoint, runner, *, optional=False, paginate=False, collection_key=None):
     command = [
         "gh",
         "api",
@@ -207,6 +207,15 @@ def _gh_get_json(endpoint, runner, *, optional=False, paginate=False):
     except json.JSONDecodeError as error:
         raise PolicyError(f"GitHub GET returned invalid JSON for {endpoint}") from error
     if paginate:
+        if collection_key:
+            if type(payload) is not list or any(
+                type(page) is not dict or type(page.get(collection_key)) is not list
+                for page in payload
+            ):
+                raise PolicyError(
+                    f"GitHub GET returned an invalid paginated response for {endpoint}"
+                )
+            return [item for page in payload for item in page[collection_key]]
         if type(payload) is not list or any(type(page) is not list for page in payload):
             raise PolicyError(f"GitHub GET returned an invalid paginated response for {endpoint}")
         return [item for page in payload for item in page]
@@ -230,6 +239,31 @@ def _security_inventory(repository):
         "push_protection": status("secret_scanning_push_protection"),
         "secret_scanning": status("secret_scanning"),
     }
+
+
+def _observed_checks(repository, branch, runner):
+    commit = branch.get("commit")
+    sha = commit.get("sha") if type(commit) is dict else None
+    if type(sha) is not str or not re.fullmatch(r"[0-9a-fA-F]{40,64}", sha):
+        raise PolicyError("GitHub branch response is missing a valid commit SHA")
+    runs = _gh_get_json(
+        f"repos/{repository}/commits/{sha}/check-runs?per_page=100",
+        runner,
+        paginate=True,
+        collection_key="check_runs",
+    )
+    statuses = _gh_get_json(
+        f"repos/{repository}/commits/{sha}/statuses?per_page=100",
+        runner,
+        paginate=True,
+    )
+    if any(type(run) is not dict or type(run.get("name")) is not str for run in runs):
+        raise PolicyError("GitHub check-runs response contains an invalid check name")
+    if any(
+        type(status) is not dict or type(status.get("context")) is not str for status in statuses
+    ):
+        raise PolicyError("GitHub statuses response contains an invalid context")
+    return sorted({run["name"] for run in runs} | {status["context"] for status in statuses})
 
 
 def _safe_rule_parameters(rule):
@@ -388,6 +422,7 @@ def discover_github(repository, branch, runner=None):
         "branch": {"name": branch, "protected": protected},
         "effective_rules": rules,
         "legacy_branch_protection": _legacy_inventory(protected, protection),
+        "observed_checks": _observed_checks(repository, branch_data, runner),
         "repository": {
             "default_branch": _known(repository_data.get("default_branch"), str),
             "delete_branch_on_merge": _known(repository_data.get("delete_branch_on_merge"), bool),
@@ -520,6 +555,7 @@ def compare_governance(policy, inventory):
         "branch",
         "effective_rules",
         "legacy_branch_protection",
+        "observed_checks",
         "repository",
         "rulesets",
         "security",
@@ -535,8 +571,20 @@ def compare_governance(policy, inventory):
         controls, unmanaged_rules, unmanaged_legacy = _legacy_branch_controls(policy, inventory)
     minimums = policy["minimums"]
     security = inventory["security"]
+    observed_checks = inventory["observed_checks"]
+    if type(observed_checks) is not list or any(
+        type(check) is not str for check in observed_checks
+    ):
+        raise PolicyError("GitHub inventory observed_checks must be a list of names")
+    required_checks = sorted(settings["required_checks"])
     controls.extend(
         [
+            _control(
+                "branch.required_status_checks_observed",
+                sorted(set(required_checks) & set(observed_checks)),
+                required_checks,
+                minimums["status_checks_required"]["rule_refs"],
+            ),
             _control(
                 "repository.delete_branch_on_merge",
                 inventory["repository"].get("delete_branch_on_merge", UNKNOWN),
@@ -611,11 +659,14 @@ def _known_rule_ids(root):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("validate",))
+    parser.add_argument("command", choices=("validate", "plan", "audit"))
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--foundation", type=Path)
     parser.add_argument("--repository", type=Path)
+    parser.add_argument("--repo", help="GitHub repository in OWNER/REPOSITORY form")
     args = parser.parse_args(argv)
+    if args.command in {"plan", "audit"} and not args.repo:
+        parser.error("--repo is required for plan and audit")
     root = args.root.resolve()
     foundation = args.foundation or root / ".github/governance/foundation.json"
     repository = args.repository or root / ".github/governance/repository.json"
@@ -625,11 +676,19 @@ def main(argv=None):
             _load_json(repository),
             _known_rule_ids(root),
         )
+        if args.command == "validate":
+            report = resolved
+        else:
+            inventory = discover_github(
+                args.repo,
+                resolved["settings"]["target_branch"],
+            )
+            report = compare_governance(resolved, inventory)
     except PolicyError as error:
         print(f"governance policy error: {error}", file=sys.stderr)
         return 2
-    print(json.dumps(resolved, indent=2, sort_keys=True))
-    return 0
+    print(json.dumps(report, indent=2, sort_keys=True))
+    return 1 if args.command == "audit" and report["status"] != "compliant" else 0
 
 
 if __name__ == "__main__":
