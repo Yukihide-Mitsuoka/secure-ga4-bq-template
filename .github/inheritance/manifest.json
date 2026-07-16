@@ -26,6 +26,7 @@
     ".github/PULL_REQUEST_TEMPLATE.md",
     ".github/dependabot.yml",
     ".github/discussion-categories.md",
+    ".github/governance/foundation.json",
     ".github/labels.yml",
     ".github/workflows/dast.yml",
     ".mdformat.toml",
