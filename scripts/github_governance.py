@@ -5,11 +5,15 @@ import argparse
 import copy
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
+from urllib.parse import quote
 
 SCHEMA_VERSION = 1
 MANAGER = "ai-dev-foundation"
+API_VERSION = "2026-03-10"
+UNKNOWN = "unknown"
 MINIMUM_CONTRACT = {
     "pull_request_required": (True, {"GR-010"}),
     "status_checks_required": (True, {"GR-012"}),
@@ -29,6 +33,7 @@ SETTING_FIELDS = {
 }
 RULE_ID = re.compile(r"^(?:GR|SEC)-\d{3}$")
 RULE_HEADING = re.compile(r"^### ((?:GR|SEC)-\d{3}):", re.MULTILINE)
+REPOSITORY_TARGET = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 
 
 class PolicyError(ValueError):
@@ -162,6 +167,226 @@ def resolve_policy(foundation, repository, known_rule_ids):
         "managed_by": MANAGER,
         "minimums": copy.deepcopy(foundation["minimums"]),
         "settings": settings,
+    }
+
+
+def _gh_get_json(endpoint, runner, *, optional=False, paginate=False):
+    command = [
+        "gh",
+        "api",
+        "--method",
+        "GET",
+        "-H",
+        "Accept: application/vnd.github+json",
+        "-H",
+        f"X-GitHub-Api-Version: {API_VERSION}",
+    ]
+    if paginate:
+        command.extend(("--paginate", "--slurp"))
+    command.append(endpoint)
+    try:
+        result = runner(command, capture_output=True, text=True, timeout=30, check=False)
+    except (OSError, subprocess.SubprocessError) as error:
+        raise PolicyError(f"GitHub GET could not run for {endpoint}: {error}") from error
+    if result.returncode != 0:
+        if optional:
+            return None
+        raise PolicyError(
+            f"GitHub GET failed for {endpoint}; verify gh authentication and repository read access"
+        )
+    try:
+        payload = json.loads(result.stdout)
+    except json.JSONDecodeError as error:
+        raise PolicyError(f"GitHub GET returned invalid JSON for {endpoint}") from error
+    if paginate:
+        if type(payload) is not list or any(type(page) is not list for page in payload):
+            raise PolicyError(f"GitHub GET returned an invalid paginated response for {endpoint}")
+        return [item for page in payload for item in page]
+    return payload
+
+
+def _known(value, expected_type):
+    return value if type(value) is expected_type else UNKNOWN
+
+
+def _security_inventory(repository):
+    security = repository.get("security_and_analysis")
+
+    def status(name):
+        feature = security.get(name) if type(security) is dict else None
+        value = feature.get("status") if type(feature) is dict else None
+        return value if value in {"enabled", "disabled"} else UNKNOWN
+
+    return {
+        "dependabot_security_updates": status("dependabot_security_updates"),
+        "push_protection": status("secret_scanning_push_protection"),
+        "secret_scanning": status("secret_scanning"),
+    }
+
+
+def _safe_rule_parameters(rule):
+    parameters = rule.get("parameters")
+    if type(parameters) is not dict:
+        return {}
+    if rule["type"] == "pull_request":
+        return {
+            "required_approving_review_count": _known(
+                parameters.get("required_approving_review_count"), int
+            ),
+            "require_last_push_approval": _known(
+                parameters.get("require_last_push_approval"), bool
+            ),
+        }
+    if rule["type"] == "required_status_checks":
+        checks = parameters.get("required_status_checks")
+        contexts = (
+            sorted(check["context"] for check in checks)
+            if type(checks) is list
+            and all(type(check) is dict and type(check.get("context")) is str for check in checks)
+            else UNKNOWN
+        )
+        return {
+            "contexts": contexts,
+            "strict": _known(parameters.get("strict_required_status_checks_policy"), bool),
+        }
+    return {}
+
+
+def _normalize_rules(rules):
+    normalized = []
+    for rule in rules:
+        if type(rule) is not dict or type(rule.get("type")) is not str:
+            raise PolicyError("GitHub effective rules response has an invalid rule")
+        normalized.append(
+            {
+                "parameters": _safe_rule_parameters(rule),
+                "ruleset_id": _known(rule.get("ruleset_id"), int),
+                "source": _known(rule.get("ruleset_source"), str),
+                "source_type": _known(rule.get("ruleset_source_type"), str),
+                "type": rule["type"],
+            }
+        )
+    return sorted(normalized, key=lambda rule: json.dumps(rule, sort_keys=True))
+
+
+def _ruleset_endpoint(source_type, source, ruleset_id):
+    if source_type == "Repository" and REPOSITORY_TARGET.fullmatch(str(source)):
+        return f"repos/{source}/rulesets/{ruleset_id}"
+    if source_type == "Organization" and re.fullmatch(r"[A-Za-z0-9_.-]+", str(source)):
+        return f"orgs/{quote(source, safe='')}/rulesets/{ruleset_id}"
+    return None
+
+
+def _discover_rulesets(rules, runner):
+    references = {
+        (rule["source_type"], rule["source"], rule["ruleset_id"])
+        for rule in rules
+        if type(rule["ruleset_id"]) is int
+    }
+    inventory = []
+    for source_type, source, ruleset_id in sorted(references, key=lambda item: str(item)):
+        endpoint = _ruleset_endpoint(source_type, source, ruleset_id)
+        detail = _gh_get_json(endpoint, runner, optional=True) if endpoint else None
+        if detail is not None and type(detail) is not dict:
+            raise PolicyError(f"GitHub ruleset {ruleset_id} response must be an object")
+        actors = detail.get("bypass_actors") if detail else None
+        inventory.append(
+            {
+                "has_bypass_actors": bool(actors) if type(actors) is list else UNKNOWN,
+                "id": ruleset_id,
+                "name": _known(detail.get("name"), str) if detail else UNKNOWN,
+                "source": source,
+                "source_type": source_type,
+            }
+        )
+    return inventory
+
+
+def _legacy_inventory(protected, protection):
+    if not protected:
+        return {"status": "absent"}
+    if protection is None:
+        return {"status": UNKNOWN}
+    if type(protection) is not dict:
+        raise PolicyError("GitHub branch protection response must be an object")
+
+    def enabled(name):
+        value = protection.get(name)
+        return _known(value.get("enabled"), bool) if type(value) is dict else UNKNOWN
+
+    checks = protection.get("required_status_checks")
+    reviews = protection.get("required_pull_request_reviews")
+    contexts = checks.get("contexts") if type(checks) is dict else None
+    return {
+        "allow_force_pushes": enabled("allow_force_pushes"),
+        "enforce_admins": enabled("enforce_admins"),
+        "required_pull_request_reviews": (
+            {
+                "require_last_push_approval": _known(
+                    reviews.get("require_last_push_approval"), bool
+                ),
+                "required_approvals": _known(reviews.get("required_approving_review_count"), int),
+            }
+            if type(reviews) is dict
+            else None
+        ),
+        "required_status_checks": (
+            {
+                "contexts": (
+                    sorted(contexts)
+                    if type(contexts) is list and all(type(context) is str for context in contexts)
+                    else UNKNOWN
+                ),
+                "strict": _known(checks.get("strict"), bool),
+            }
+            if type(checks) is dict
+            else None
+        ),
+        "status": "configured",
+    }
+
+
+def discover_github(repository, branch, runner=None):
+    """Read and redact GitHub governance state without making write requests."""
+    if (
+        type(repository) is not str
+        or not REPOSITORY_TARGET.fullmatch(repository)
+        or any(part in {".", ".."} for part in repository.split("/"))
+    ):
+        raise PolicyError("repository target must use OWNER/REPOSITORY format")
+    _validate_branch_name(branch, "target branch")
+    runner = runner or subprocess.run
+    branch_path = quote(branch, safe="")
+    repository_data = _gh_get_json(f"repos/{repository}", runner)
+    branch_data = _gh_get_json(f"repos/{repository}/branches/{branch_path}", runner)
+    rules_data = _gh_get_json(
+        f"repos/{repository}/rules/branches/{branch_path}?per_page=100",
+        runner,
+        paginate=True,
+    )
+    if type(repository_data) is not dict or type(branch_data) is not dict:
+        raise PolicyError("GitHub repository and branch responses must be objects")
+    protected = branch_data.get("protected")
+    if type(protected) is not bool:
+        raise PolicyError("GitHub branch response is missing the protected boolean")
+    rules = _normalize_rules(rules_data)
+    protection = (
+        _gh_get_json(f"repos/{repository}/branches/{branch_path}/protection", runner, optional=True)
+        if protected
+        else None
+    )
+    return {
+        "api_version": API_VERSION,
+        "branch": {"name": branch, "protected": protected},
+        "effective_rules": rules,
+        "legacy_branch_protection": _legacy_inventory(protected, protection),
+        "repository": {
+            "default_branch": _known(repository_data.get("default_branch"), str),
+            "delete_branch_on_merge": _known(repository_data.get("delete_branch_on_merge"), bool),
+            "full_name": repository,
+        },
+        "rulesets": _discover_rulesets(rules, runner),
+        "security": _security_inventory(repository_data),
     }
 
 
