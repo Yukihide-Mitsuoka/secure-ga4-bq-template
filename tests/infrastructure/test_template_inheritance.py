@@ -129,7 +129,7 @@ def test_cli_reports_valid_and_invalid_contracts(tmp_path, capsys):
 
 def test_repository_contract_and_legacy_ignore_are_consistent():
     result = inheritance.validate_inheritance(REPOSITORY_ROOT)
-    assert result["parent"]["commit"] == "157b3c2e299722f35957c15e915139aa64730fe1"
+    assert result["parent"]["commit"] == "0b623e0f35f31e6ccd9d0c76e1434c52e2e38b37"
     ignored = {
         line.strip()
         for line in (REPOSITORY_ROOT / ".templatesyncignore").read_text().splitlines()
