@@ -15,9 +15,9 @@ authoritative in their linked documents.
 
 | Item | State on 2026-07-17 | Evidence or source |
 |------|---------------------|--------------------|
-| Default branch | `main` is release v1.1.0 and includes the inheritance lock through PR #123, protected IaC adaptation from PR #125, layered policy data from PR #127, and offline resolver from PR #129 | [Release v1.1.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v1.1.0), [PR #129](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/129) |
+| Default branch | `main` is release v1.1.0 and includes protected IaC adaptation from PR #125, layered policy data from PR #127, offline resolver from PR #129, and GET-only discovery from PR #132 | [Release v1.1.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v1.1.0), [PR #132](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/132) |
 | IaC governance prerequisite | Complete: exact `iac-scan` succeeded on PR #125 and its merged-main push | [PR run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29517379947), [main run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29518413106) |
-| Active work | Issue #131 adds an internal GET-only discovery boundary with fake-runner tests; the CLI remains offline `validate`-only and no live GitHub call or write command is authorized | [Issue #131](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/131), [ADR-0008](adr/0008-adopt-direct-parent-inheritance-contract.md) |
+| Active work | Issue #133 advances the direct-parent lock from `5324852` to reviewed comparison merge `40a63a1`; no protected or unowned path is materialized | [Issue #133](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/133), [ADR-0008](adr/0008-adopt-direct-parent-inheritance-contract.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -34,12 +34,11 @@ caller and WIF condition are pinned together to `v2.0.2`.
 
 No cloud action is required for the current milestone. Continue in this order:
 
-1. Merge Issue #131 after its fake-runner tests prove GET-only, fail-closed discovery;
-   do not expose discovery through the CLI or invoke the live GitHub API in this slice.
-2. Keep profile loading, plan, audit, apply, and every GitHub write operation absent until
-   each receives a separately reviewed issue and boundary.
-3. Review the next parent comparison commit `40a63a1` only after those protected-file
-   adaptations are complete.
+1. Merge Issue #133 after validation proves exact lock `40a63a1` and zero inherited
+   materialization.
+2. Adapt `40a63a1`'s deterministic comparison in a separate protected-file PR, retaining
+   the child-specific `iac-scan` requirement and offline `validate`-only CLI.
+3. Review next parent candidate `5ced34f` only after comparison adaptation is complete.
 4. Continue advancing only one first-parent commit per reviewed PR; keep lock changes
    separate from protected-file adaptations.
 5. Apply the asset to a second engagement when an owner and customer scope exist, then
@@ -112,11 +111,11 @@ may be absent; CI remains authoritative.
 ## Resume prompt
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
-> `docs/development-handoff.md`. Confirm `main` includes v1.1.0, PR #129, and accepted
-> ADR-0008. The inheritance lock is `5324852`, and `iac-scan` has PR and merged-main
-> evidence. Complete GET-only discovery Issue #131 without exposing it through the CLI or
-> calling GitHub live. Review next
-> parent candidate `40a63a1` only after those prerequisites, and retain legacy sync. Do not
+> `docs/development-handoff.md`. Confirm `main` includes v1.1.0, PR #132, and accepted
+> ADR-0008. The inheritance lock is `40a63a1`, and `iac-scan` has PR and merged-main
+> evidence. Adapt deterministic governance comparison with the child-specific `iac-scan`
+> requirement while retaining the offline `validate`-only CLI. Review next parent candidate
+> `5ced34f` only after that adaptation, and retain legacy sync. Do not
 > materialize parent changes, run a governance `apply`, or mutate live GitHub/GCP state.
 > Technical Acceptance A, CHK-12,
 > service packaging, and release hardening are complete. Continue toward Acceptance S
