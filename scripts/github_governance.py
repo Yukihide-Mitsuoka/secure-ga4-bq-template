@@ -367,6 +367,10 @@ def _pull_update_state(parameters, unsupported):
             parameters.get("dismiss_stale_reviews_on_push"), bool
         ),
         "require_code_owner_review": _known(parameters.get("require_code_owner_review"), bool),
+        "require_last_push_approval": _known(parameters.get("require_last_push_approval"), bool),
+        "required_approving_review_count": _known(
+            parameters.get("required_approving_review_count"), int
+        ),
         "required_review_thread_resolution": _known(
             parameters.get("required_review_thread_resolution"), bool
         ),
@@ -826,8 +830,27 @@ def _apply_action(action_id, method, endpoint, body, verify_controls, side_effec
     }
 
 
-def _ruleset_payload(settings):
-    checks = [{"context": check} for check in sorted(settings["required_checks"])]
+def _ruleset_payload(settings, update_state=None):
+    integration_ids = {
+        check["context"]: check["integration_id"]
+        for check in (update_state or {}).get("required_status_checks") or []
+    }
+    checks = []
+    for context in sorted(settings["required_checks"]):
+        check = {"context": context}
+        if integration_ids.get(context) is not None:
+            check["integration_id"] = integration_ids[context]
+        checks.append(check)
+    current_pull = (update_state or {}).get("pull_request") or {}
+    pull_parameters = {
+        "dismiss_stale_reviews_on_push": current_pull.get("dismiss_stale_reviews_on_push", False),
+        "require_code_owner_review": current_pull.get("require_code_owner_review", False),
+        "require_last_push_approval": settings["require_last_push_approval"],
+        "required_approving_review_count": settings["required_approvals"],
+        "required_review_thread_resolution": True,
+    }
+    if current_pull.get("allowed_merge_methods") is not None:
+        pull_parameters["allowed_merge_methods"] = current_pull["allowed_merge_methods"]
     return {
         "bypass_actors": [],
         "conditions": {
@@ -840,13 +863,7 @@ def _ruleset_payload(settings):
         "name": MANAGED_RULESET_NAME,
         "rules": [
             {
-                "parameters": {
-                    "dismiss_stale_reviews_on_push": False,
-                    "require_code_owner_review": False,
-                    "require_last_push_approval": settings["require_last_push_approval"],
-                    "required_approving_review_count": settings["required_approvals"],
-                    "required_review_thread_resolution": True,
-                },
+                "parameters": pull_parameters,
                 "type": "pull_request",
             },
             {
@@ -862,12 +879,119 @@ def _ruleset_payload(settings):
     }
 
 
-def _ruleset_apply_action(settings, repository):
+def _validate_pull_update_state(pull, settings):
+    if pull is None:
+        return
+    _object(
+        pull,
+        {
+            "allowed_merge_methods",
+            "dismiss_stale_reviews_on_push",
+            "require_code_owner_review",
+            "require_last_push_approval",
+            "required_approving_review_count",
+            "required_review_thread_resolution",
+        },
+        "managed ruleset pull request state",
+    )
+    boolean_fields = {
+        "dismiss_stale_reviews_on_push",
+        "require_code_owner_review",
+        "require_last_push_approval",
+        "required_review_thread_resolution",
+    }
+    if any(type(pull[field]) is not bool for field in boolean_fields):
+        raise PolicyError("managed repository ruleset review state is incomplete")
+    approvals = pull["required_approving_review_count"]
+    if type(approvals) is not int or not 0 <= approvals <= 6:
+        raise PolicyError("managed repository ruleset review count is invalid")
+    if approvals > settings["required_approvals"] or (
+        pull["require_last_push_approval"] and not settings["require_last_push_approval"]
+    ):
+        raise PolicyError("managed repository ruleset has stricter policy-owned reviews")
+    methods = pull["allowed_merge_methods"]
+    if methods is not None and (
+        type(methods) is not list
+        or not methods
+        or any(
+            type(method) is not str or method not in {"merge", "rebase", "squash"}
+            for method in methods
+        )
+        or len(methods) != len(set(methods))
+    ):
+        raise PolicyError("managed repository ruleset merge methods are invalid")
+
+
+def _validate_checks_update_state(checks, settings):
+    if checks is None:
+        return
+    if (
+        type(checks) is not list
+        or any(
+            type(check) is not dict
+            or set(check) != {"context", "integration_id"}
+            or type(check["context"]) is not str
+            or not check["context"]
+            or (
+                check["integration_id"] is not None
+                and (type(check["integration_id"]) is not int or check["integration_id"] <= 0)
+            )
+            for check in checks
+        )
+        or len(checks) != len({check["context"] for check in checks})
+    ):
+        raise PolicyError("managed repository ruleset status checks are invalid")
+    current_checks = {check["context"] for check in checks or []}
+    if current_checks - set(settings["required_checks"]):
+        raise PolicyError("managed repository ruleset has additional required status checks")
+
+
+def _validate_update_state(managed, settings):
+    if type(managed.get("id")) is not int or managed["id"] <= 0:
+        raise PolicyError("managed repository ruleset has an invalid ID")
+    state = managed.get("update_state")
+    if type(state) is not dict:
+        raise PolicyError("managed repository ruleset detail is unavailable for safe update")
+    _object(
+        state,
+        {"conditions", "pull_request", "required_status_checks", "rule_types", "unsupported"},
+        "managed ruleset update state",
+    )
+    expected = {"exclude": [], "include": [f"refs/heads/{settings['target_branch']}"]}
+    if state["conditions"] != expected or state["unsupported"] != []:
+        raise PolicyError("managed repository ruleset contains unpreservable constraints")
+    rule_types = state["rule_types"]
+    if (
+        type(rule_types) is not list
+        or any(
+            type(rule_type) is not str or rule_type not in MANAGED_RULE_TYPES
+            for rule_type in rule_types
+        )
+        or len(rule_types) != len(set(rule_types))
+    ):
+        raise PolicyError("managed repository ruleset has an invalid rule inventory")
+    pull = state["pull_request"]
+    checks = state["required_status_checks"]
+    if ("pull_request" in rule_types) != (pull is not None) or (
+        "required_status_checks" in rule_types
+    ) != (checks is not None):
+        raise PolicyError("managed repository ruleset state does not match its rule inventory")
+    _validate_pull_update_state(pull, settings)
+    _validate_checks_update_state(checks, settings)
+    return state
+
+
+def _ruleset_apply_action(settings, repository, managed=None):
+    update_state = _validate_update_state(managed, settings) if managed else None
+    method = "PUT" if managed else "POST"
+    endpoint = f"repos/{repository}/rulesets"
+    if managed:
+        endpoint = f"{endpoint}/{managed['id']}"
     return _apply_action(
         "branch.ruleset",
-        "POST",
-        f"repos/{repository}/rulesets",
-        _ruleset_payload(settings),
+        method,
+        endpoint,
+        _ruleset_payload(settings, update_state),
         BRANCH_CONTROL_IDS.values(),
         ["target_branch_merge_requirements_change_immediately"],
     )
@@ -962,9 +1086,8 @@ def build_apply_actions(policy, inventory):
     if branch_drift:
         if settings["enforcement_backend"] != "ruleset":
             raise PolicyError("legacy branch protection apply actions are not implemented")
-        if _managed_repository_ruleset(inventory):
-            raise PolicyError("updating an existing managed ruleset is not implemented safely")
-        actions.append(_ruleset_apply_action(settings, repository))
+        managed = _managed_repository_ruleset(inventory)
+        actions.append(_ruleset_apply_action(settings, repository, managed))
     for action in (
         _repository_apply_action(controls, settings, repository),
         _dependabot_apply_action(controls, settings, repository),
