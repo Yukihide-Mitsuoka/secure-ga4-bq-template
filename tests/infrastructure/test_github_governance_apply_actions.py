@@ -28,6 +28,26 @@ def missing_ruleset_inventory():
     return inventory
 
 
+def managed_update_state():
+    return {
+        "conditions": {"exclude": [], "include": ["refs/heads/main"]},
+        "pull_request": {
+            "allowed_merge_methods": ["squash"],
+            "dismiss_stale_reviews_on_push": True,
+            "require_code_owner_review": True,
+            "require_last_push_approval": False,
+            "required_approving_review_count": 0,
+            "required_review_thread_resolution": True,
+        },
+        "required_status_checks": [
+            {"context": "iac-scan", "integration_id": 42},
+            {"context": "test", "integration_id": None},
+        ],
+        "rule_types": ["non_fast_forward", "pull_request", "required_status_checks"],
+        "unsupported": [],
+    }
+
+
 def test_missing_ruleset_builds_child_safe_action_without_io(monkeypatch) -> None:
     monkeypatch.setattr(
         governance.subprocess,
@@ -58,6 +78,97 @@ def test_missing_ruleset_builds_child_safe_action_without_io(monkeypatch) -> Non
         item["context"] for item in checks["parameters"]["required_status_checks"]
     }
     assert no_force == {"type": "non_fast_forward"}
+
+
+def test_existing_ruleset_builds_update_preserving_supported_constraints(monkeypatch) -> None:
+    monkeypatch.setattr(
+        governance.subprocess,
+        "run",
+        lambda *args, **kwargs: pytest.fail("pure planner invoked subprocess"),
+    )
+    policy = comparison.resolved_policy()
+    inventory = comparison.ruleset_inventory()
+    inventory["effective_rules"] = []
+    inventory["rulesets"][0]["update_state"] = managed_update_state()
+    before = copy.deepcopy((policy, inventory))
+
+    result = governance.build_apply_actions(policy, inventory)
+
+    assert result["status"] == "ready"
+    assert len(result["actions"]) == 1
+    action = result["actions"][0]
+    assert (action["method"], action["endpoint"]) == ("PUT", "repos/acme/demo/rulesets/7")
+    pull, checks, no_force = action["body"]["rules"]
+    assert pull["parameters"] == {
+        "allowed_merge_methods": ["squash"],
+        "dismiss_stale_reviews_on_push": True,
+        "require_code_owner_review": True,
+        "require_last_push_approval": False,
+        "required_approving_review_count": 0,
+        "required_review_thread_resolution": True,
+    }
+    by_context = {
+        check["context"]: check for check in checks["parameters"]["required_status_checks"]
+    }
+    assert set(by_context) == set(comparison.CHECKS)
+    assert by_context["iac-scan"]["integration_id"] == 42
+    assert "integration_id" not in by_context["test"]
+    assert no_force == {"type": "non_fast_forward"}
+    assert (policy, inventory) == before
+
+
+@pytest.mark.parametrize(
+    "unsafe",
+    [
+        "unavailable",
+        "unsupported",
+        "conditions",
+        "unknown",
+        "methods",
+        "types",
+        "extra_check",
+        "review_count",
+        "last_push",
+        "inventory_mismatch",
+        "duplicate_check",
+        "id",
+    ],
+)
+def test_existing_ruleset_update_rejects_unpreservable_state(unsafe) -> None:
+    inventory = comparison.ruleset_inventory()
+    inventory["effective_rules"] = []
+    state = managed_update_state()
+    if unsafe == "unavailable":
+        pass
+    elif unsafe == "unsupported":
+        state["unsupported"] = ["unsupported_rule"]
+    elif unsafe == "conditions":
+        state["conditions"]["include"].append("refs/heads/release")
+    elif unsafe == "unknown":
+        state["pull_request"]["require_code_owner_review"] = "unknown"
+    elif unsafe == "methods":
+        state["pull_request"]["allowed_merge_methods"] = [[]]
+    elif unsafe == "types":
+        state["rule_types"] = [[]]
+    elif unsafe == "extra_check":
+        state["required_status_checks"].append(
+            {"context": "external-approval", "integration_id": None}
+        )
+    elif unsafe == "review_count":
+        state["pull_request"]["required_approving_review_count"] = 1
+    elif unsafe == "last_push":
+        state["pull_request"]["require_last_push_approval"] = True
+    elif unsafe == "inventory_mismatch":
+        state["pull_request"] = None
+    elif unsafe == "duplicate_check":
+        state["required_status_checks"].append({"context": "test", "integration_id": None})
+    else:
+        inventory["rulesets"][0]["id"] = 0
+    if unsafe != "unavailable":
+        inventory["rulesets"][0]["update_state"] = state
+
+    with pytest.raises(governance.PolicyError):
+        governance.build_apply_actions(comparison.resolved_policy(), inventory)
 
 
 def test_common_actions_are_ordered_and_describe_side_effects() -> None:

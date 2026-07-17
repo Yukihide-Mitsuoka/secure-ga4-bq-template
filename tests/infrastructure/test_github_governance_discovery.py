@@ -156,6 +156,8 @@ def test_managed_ruleset_discovery_records_preservable_update_state() -> None:
             "allowed_merge_methods": ["squash"],
             "dismiss_stale_reviews_on_push": True,
             "require_code_owner_review": True,
+            "require_last_push_approval": False,
+            "required_approving_review_count": 0,
             "required_review_thread_resolution": True,
         },
         "required_status_checks": [
