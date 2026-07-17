@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v1.4.0...v1.5.0) (2026-07-17)
+
+
+### Features
+
+* **governance:** discover Ruleset update constraints ([#154](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/154)) ([5eaa621](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/5eaa621839d0dfb15b76bb67dc2e850fd5bc8b54)), closes [#153](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/153)
+* **governance:** plan safe managed Ruleset updates ([#156](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/156)) ([9d9c3de](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/9d9c3de75ea98b957b231b5efe986d4767fe7b8d)), closes [#153](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/153)
+
 ## [1.4.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v1.3.0...v1.4.0) (2026-07-17)
 
 
