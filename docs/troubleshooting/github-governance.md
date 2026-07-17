@@ -21,3 +21,12 @@ on the target branch, then rerun `audit`. This command has no `apply` mode.
 gate. Unrelated observed checks are ignored.
 
 **Refs:** #140, GR-012, SEC-002.
+
+## Apply-action planning stops closed
+
+The internal planner emits request-shaped data but never executes it and is not a CLI
+command. It rejects unknown state, missing branch-head checks, unsafe targets, legacy
+protection, and existing managed-Ruleset updates; resolve those conditions through a
+separately reviewed admin procedure before planning again.
+
+**Refs:** #146, GR-010, GR-011, GR-012, SEC-002.

@@ -1,0 +1,138 @@
+import copy
+import importlib.util
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).parents[2]
+MODULE_PATH = ROOT / "scripts/github_governance.py"
+COMPARISON_PATH = Path(__file__).with_name("test_github_governance_comparison.py")
+
+
+def load(name, path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+governance = load("github_governance_apply_actions", MODULE_PATH)
+comparison = load("github_governance_apply_fixtures", COMPARISON_PATH)
+
+
+def missing_ruleset_inventory():
+    inventory = comparison.ruleset_inventory()
+    inventory["branch"]["protected"] = False
+    inventory["effective_rules"] = []
+    inventory["rulesets"] = []
+    return inventory
+
+
+def test_missing_ruleset_builds_child_safe_action_without_io(monkeypatch) -> None:
+    monkeypatch.setattr(
+        governance.subprocess,
+        "run",
+        lambda *args, **kwargs: pytest.fail("pure planner invoked subprocess"),
+    )
+
+    result = governance.build_apply_actions(
+        comparison.resolved_policy(), missing_ruleset_inventory()
+    )
+
+    assert result["status"] == "ready"
+    assert [action["id"] for action in result["actions"]] == ["branch.ruleset"]
+    action = result["actions"][0]
+    assert set(action) == {"body", "endpoint", "id", "method", "side_effects", "verify_controls"}
+    assert (action["method"], action["endpoint"]) == ("POST", "repos/acme/demo/rulesets")
+    assert set(action["verify_controls"]) == set(governance.BRANCH_CONTROL_IDS.values())
+    assert action["side_effects"] == ["target_branch_merge_requirements_change_immediately"]
+    assert action["body"]["bypass_actors"] == []
+    pull, checks, no_force = action["body"]["rules"]
+    assert pull["parameters"]["required_approving_review_count"] == 0
+    assert pull["parameters"]["required_review_thread_resolution"] is True
+    assert checks["parameters"]["strict_required_status_checks_policy"] is True
+    assert {item["context"] for item in checks["parameters"]["required_status_checks"]} == set(
+        comparison.CHECKS
+    )
+    assert {"iac-scan"} <= {
+        item["context"] for item in checks["parameters"]["required_status_checks"]
+    }
+    assert no_force == {"type": "non_fast_forward"}
+
+
+def test_common_actions_are_ordered_and_describe_side_effects() -> None:
+    inventory = comparison.ruleset_inventory()
+    inventory["repository"]["delete_branch_on_merge"] = False
+    inventory["security"] = {
+        "dependabot_security_updates": "enabled",
+        "push_protection": "disabled",
+        "secret_scanning": "disabled",
+    }
+
+    result = governance.build_apply_actions(comparison.resolved_policy(), inventory)
+
+    assert [action["id"] for action in result["actions"]] == [
+        "security.secret_scanning",
+        "repository.delete_branch_on_merge",
+        "security.dependabot_security_updates",
+    ]
+    assert result["actions"][0]["method"] == "PATCH"
+    assert "pushes_containing_detected_secrets_are_rejected" in result["actions"][0]["side_effects"]
+    assert result["actions"][2]["method"] == "DELETE"
+
+
+def test_compliant_inventory_returns_no_actions_without_mutation() -> None:
+    policy = comparison.resolved_policy()
+    inventory = comparison.ruleset_inventory()
+    before = copy.deepcopy((policy, inventory))
+
+    result = governance.build_apply_actions(policy, inventory)
+
+    assert result["status"] == "compliant"
+    assert result["actions"] == []
+    assert (policy, inventory) == before
+
+
+@pytest.mark.parametrize(
+    "unsafe", ["unknown", "unobserved", "existing", "duplicate", "legacy", "target"]
+)
+def test_unsafe_preconditions_fail_closed(unsafe) -> None:
+    policy = comparison.resolved_policy()
+    inventory = missing_ruleset_inventory()
+    if unsafe == "unknown":
+        inventory["security"]["secret_scanning"] = "unknown"
+    elif unsafe == "unobserved":
+        inventory["observed_checks"] = ["lint"]
+    elif unsafe in {"existing", "duplicate"}:
+        inventory = comparison.ruleset_inventory()
+        inventory["effective_rules"] = []
+        if unsafe == "duplicate":
+            duplicate = copy.deepcopy(inventory["rulesets"][0])
+            duplicate["id"] = 9
+            inventory["rulesets"].append(duplicate)
+    elif unsafe == "legacy":
+        policy = comparison.resolved_policy("legacy_branch_protection")
+    else:
+        inventory["repository"]["full_name"] = "../unsafe"
+
+    with pytest.raises(governance.PolicyError):
+        governance.build_apply_actions(policy, inventory)
+
+
+def test_organization_ruleset_with_managed_name_is_never_updated() -> None:
+    inventory = comparison.ruleset_inventory()
+    inventory["rulesets"][0].update(source="acme", source_type="Organization")
+    for rule in inventory["effective_rules"]:
+        rule.update(source="acme", source_type="Organization")
+
+    result = governance.build_apply_actions(comparison.resolved_policy(), inventory)
+
+    assert result["actions"][0]["method"] == "POST"
+    assert result["actions"][0]["endpoint"] == "repos/acme/demo/rulesets"
+
+
+def test_cli_does_not_expose_apply(capsys) -> None:
+    with pytest.raises(SystemExit) as failure:
+        governance.main(["apply"])
+    assert failure.value.code == 2
+    assert "invalid choice" in capsys.readouterr().err
