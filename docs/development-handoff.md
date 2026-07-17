@@ -15,9 +15,9 @@ authoritative in their linked documents.
 
 | Item | State on 2026-07-17 | Evidence or source |
 |------|---------------------|--------------------|
-| Default branch | `main` is release v1.4.0 and includes PR #150 at parent lock `7d58701` | [Release v1.4.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v1.4.0), [PR #150](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/150) |
+| Default branch | `main` is release v1.4.0 and includes PR #152 at parent lock `90bdc90` | [Release v1.4.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v1.4.0), [PR #152](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/152) |
 | IaC governance prerequisite | Complete: exact `iac-scan` succeeded on PR #125 and its merged-main push | [PR run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29517379947), [main run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29518413106) |
-| Active work | Issue #151 advances the direct-parent lock from `7d58701` to stricter-Ruleset-constraint merge `90bdc90`; five child-protected paths and one unowned guide are not materialized | [Issue #151](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/151), [ADR-0008](adr/0008-adopt-direct-parent-inheritance-contract.md) |
+| Active work | Issue #153 adapts accepted parent `90bdc90` in two bounded slices; the first adds GET-only normalization of preservation-relevant managed Ruleset constraints and no write execution | [Issue #153](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/153), [ADR-0008](adr/0008-adopt-direct-parent-inheritance-contract.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -34,10 +34,11 @@ caller and WIF condition are pinned together to `v2.0.2`.
 
 No cloud action is required for the current milestone. Continue in this order:
 
-1. Merge Issue #151 after validation proves exact lock `90bdc90` and zero inherited
-   materialization.
-2. Adapt `90bdc90` constraint preservation in a separate child PR, retaining the
-   additive `iac-scan` requirement and keeping public and executable `apply` absent.
+1. Merge Issue #153's GET-only Ruleset-constraint discovery slice after its malformed
+   and unsupported-state tests pass.
+2. Complete Issue #153 in a second PR by building a pure PUT update action only for
+   fully preservable state; retain additive `iac-scan` and keep public and executable
+   `apply` absent.
 3. Review next parent candidate `8ab930d` only after that adaptation is accepted.
 4. Continue advancing only one first-parent commit per reviewed PR; keep lock changes
    separate from protected-file adaptations.
@@ -111,10 +112,11 @@ may be absent; CI remains authoritative.
 ## Resume prompt
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
-> `docs/development-handoff.md`. Confirm `main` includes v1.4.0, PR #150, and accepted
+> `docs/development-handoff.md`. Confirm `main` includes v1.4.0, PR #152, and accepted
 > ADR-0008. The inheritance lock is `90bdc90`, and `iac-scan` has PR and merged-main
-> evidence. Adapt the accepted stricter Ruleset constraints separately, preserving the
-> child `iac-scan` requirement. Review next parent candidate `8ab930d` only after that
+> evidence. Issue #153 first adds GET-only normalization of preservation-relevant
+> Ruleset constraints, then separately adds pure PUT action planning while preserving
+> the child `iac-scan` requirement. Review next parent candidate `8ab930d` only after that
 > adaptation; keep public and executable `apply` absent and retain legacy sync. Do not
 > materialize parent changes, run a governance `apply`, or mutate live GitHub/GCP state.
 > Technical Acceptance A, CHK-12,
