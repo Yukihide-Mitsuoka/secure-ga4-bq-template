@@ -1104,6 +1104,143 @@ def build_apply_actions(policy, inventory):
     }
 
 
+def _ruleset_write_allowed(action, base):
+    body = action["body"]
+    if type(body) is not dict:
+        return False
+    required_body = {"bypass_actors", "conditions", "enforcement", "name", "rules", "target"}
+    return (
+        set(body) == required_body
+        and body["bypass_actors"] == []
+        and body["enforcement"] == "active"
+        and body["name"] == MANAGED_RULESET_NAME
+        and body["target"] == "branch"
+        and set(action["verify_controls"]) == set(BRANCH_CONTROL_IDS.values())
+        and (
+            (action["method"], action["endpoint"]) == ("POST", f"{base}/rulesets")
+            or (
+                action["method"] == "PUT"
+                and re.fullmatch(rf"{re.escape(base)}/rulesets/[1-9][0-9]*", action["endpoint"])
+            )
+        )
+    )
+
+
+def _repository_write_allowed(action, base):
+    body = action["body"]
+    return (
+        type(body) is dict
+        and set(body) == {"delete_branch_on_merge"}
+        and type(body["delete_branch_on_merge"]) is bool
+        and action["verify_controls"] == [action["id"]]
+        and (action["method"], action["endpoint"]) == ("PATCH", base)
+    )
+
+
+def _security_write_allowed(action, base):
+    body = action["body"]
+    if type(body) is not dict:
+        return False
+    fields = body.get("security_and_analysis")
+    valid_fields = (
+        type(fields) is dict and bool(fields) and all(type(field) is str for field in fields)
+    )
+    expected_controls = (
+        {f"security.{field.removeprefix('secret_scanning_')}" for field in fields}
+        if valid_fields
+        else set()
+    )
+    return (
+        set(body) == {"security_and_analysis"}
+        and valid_fields
+        and set(fields) <= {"secret_scanning", "secret_scanning_push_protection"}
+        and all(value == {"status": "enabled"} for value in fields.values())
+        and set(action["verify_controls"]) == expected_controls
+        and (action["method"], action["endpoint"]) == ("PATCH", base)
+    )
+
+
+def _dependabot_write_allowed(action, base):
+    return (
+        action["body"] is None
+        and action["method"] in {"DELETE", "PUT"}
+        and action["endpoint"] == f"{base}/automated-security-fixes"
+        and action["verify_controls"] == [action["id"]]
+    )
+
+
+def _validate_write_action(action, repository):
+    if (
+        type(repository) is not str
+        or not REPOSITORY_TARGET.fullmatch(repository)
+        or any(part in {".", ".."} for part in repository.split("/"))
+    ):
+        raise PolicyError("confirmed repository is not a safe write target")
+    _object(
+        action,
+        {"body", "endpoint", "id", "method", "side_effects", "verify_controls"},
+        "apply action",
+    )
+    action_id = action["id"]
+    if type(action_id) is not str or not re.fullmatch(r"[a-z][a-z0-9_.-]{0,127}", action_id):
+        raise PolicyError("apply action has an invalid ID")
+    if type(action["endpoint"]) is not str or type(action["method"]) is not str:
+        raise PolicyError(f"apply action {action_id} has an invalid target")
+    for field in ("side_effects", "verify_controls"):
+        values = action[field]
+        if (
+            type(values) is not list
+            or (field == "verify_controls" and not values)
+            or any(type(value) is not str or not value for value in values)
+            or len(values) != len(set(values))
+        ):
+            raise PolicyError(f"apply action {action_id} has invalid {field}")
+    base = f"repos/{repository}"
+    if action_id == "branch.ruleset":
+        allowed = _ruleset_write_allowed(action, base)
+    elif action_id == "repository.delete_branch_on_merge":
+        allowed = _repository_write_allowed(action, base)
+    elif action_id == "security.secret_scanning":
+        allowed = _security_write_allowed(action, base)
+    elif action_id == "security.dependabot_security_updates":
+        allowed = _dependabot_write_allowed(action, base)
+    else:
+        allowed = False
+    if not allowed:
+        raise PolicyError(f"apply action {action_id} is not allowed for the confirmed repository")
+
+
+def _gh_write_action(action, repository, runner):
+    _validate_write_action(action, repository)
+    command = [
+        "gh",
+        "api",
+        "--method",
+        action["method"],
+        "-H",
+        "Accept: application/vnd.github+json",
+        "-H",
+        f"X-GitHub-Api-Version: {API_VERSION}",
+        action["endpoint"],
+    ]
+    arguments = {"capture_output": True, "text": True, "timeout": 30, "check": False}
+    if action["body"] is not None:
+        command.extend(("--input", "-"))
+        try:
+            arguments["input"] = json.dumps(action["body"], separators=(",", ":"), sort_keys=True)
+        except (TypeError, ValueError) as error:
+            raise PolicyError(f"apply action {action['id']} has a non-JSON body") from error
+    try:
+        result = runner(command, **arguments)
+    except (OSError, subprocess.SubprocessError) as error:
+        raise PolicyError(f"GitHub write could not run for action {action['id']}") from error
+    if result.returncode != 0:
+        raise PolicyError(
+            f"GitHub write failed for action {action['id']}; verify gh authentication "
+            "and repository administration access"
+        )
+
+
 def _reject_duplicate_keys(pairs):
     result = {}
     for key, value in pairs:
