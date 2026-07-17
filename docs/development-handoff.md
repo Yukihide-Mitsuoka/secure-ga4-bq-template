@@ -15,9 +15,9 @@ authoritative in their linked documents.
 
 | Item | State on 2026-07-17 | Evidence or source |
 |------|---------------------|--------------------|
-| Default branch | `main` is release v1.5.0 and includes PR #156 at parent lock `90bdc90` | [Release v1.5.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v1.5.0), [PR #156](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/156) |
+| Default branch | `main` is release v1.5.0 and includes PR #158 at parent lock `8ab930d` | [Release v1.5.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v1.5.0), [PR #158](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/158) |
 | IaC governance prerequisite | Complete: exact `iac-scan` succeeded on PR #125 and its merged-main push | [PR run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29517379947), [main run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29518413106) |
-| Active work | Issue #157 advances the direct-parent lock from `90bdc90` to parent-specific handoff merge `8ab930d`; protected parent documentation is not materialized | [Issue #157](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/157), [ADR-0008](adr/0008-adopt-direct-parent-inheritance-contract.md) |
+| Active work | Issue #159 advances the direct-parent lock from `8ab930d` to internal execution-boundary merge `75dfd6c`; four protected paths and one unowned guide are reviewed but not materialized | [Issue #159](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/159), [ADR-0008](adr/0008-adopt-direct-parent-inheritance-contract.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -34,19 +34,20 @@ caller and WIF condition are pinned together to `v2.0.2`.
 
 No cloud action is required for the current milestone. Continue in this order:
 
-1. Merge Issue #157 after validation proves exact lock `8ab930d` and zero inherited
+1. Merge Issue #159 after validation proves exact lock `75dfd6c` and zero inherited
    materialization.
-2. Review next direct-parent candidate `75dfd6c`, which adapts upstream `67d1596` as an
-   internal apply-execution boundary, only after that checkpoint is accepted; do not
-   invoke it against GitHub.
-3. Continue advancing only one first-parent commit per reviewed PR; keep lock changes
+2. Adapt `75dfd6c` as an internal, separately tested child execution boundary while
+   retaining the stricter managed-Ruleset planner; keep public `apply` absent and do not
+   invoke the executor against GitHub.
+3. Review next direct-parent candidate `64fdc58` only after that adaptation is accepted.
+4. Continue advancing only one first-parent commit per reviewed PR; keep lock changes
    separate from protected-file adaptations.
-4. Apply the asset to a second engagement when an owner and customer scope exist, then
+5. Apply the asset to a second engagement when an owner and customer scope exist, then
    measure reuse effort for Acceptance S.
-5. Use the versioned standard-inspection profile, generated menu, and deterministic
+6. Use the versioned standard-inspection profile, generated menu, and deterministic
    qualification artifacts as the service-packaging baseline; change profile values in
    a reviewed PR rather than editing generated material.
-6. Keep customer delivery evidence and raw inspection artifacts outside this public
+7. Keep customer delivery evidence and raw inspection artifacts outside this public
    repository because complete inspection artifacts remain Internal.
 
 Do not recreate the deleted verification environment unless a new issue and approvals
@@ -111,12 +112,11 @@ may be absent; CI remains authoritative.
 ## Resume prompt
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
-> `docs/development-handoff.md`. Confirm `main` includes v1.5.0, PR #156, and accepted
-> ADR-0008. The inheritance lock is `8ab930d`, and the child-specific stricter-Ruleset
-> adaptation is complete with `iac-scan` preserved. Review next direct-parent candidate
-> `75dfd6c`, which adapts upstream `67d1596` as the internal apply-execution boundary,
-> separately; keep public and
-> executable `apply` absent and retain legacy sync. Do not
+> `docs/development-handoff.md`. Confirm `main` includes v1.5.0, PR #158, and accepted
+> ADR-0008. The inheritance lock is `75dfd6c`, and the child-specific stricter-Ruleset
+> planner remains authoritative with `iac-scan` preserved. Adapt the accepted internal
+> execution boundary separately without exposing public `apply`; review next direct-parent
+> candidate `64fdc58` only after that adaptation. Retain legacy sync. Do not
 > materialize parent changes, run a governance `apply`, or mutate live GitHub/GCP state.
 > Technical Acceptance A, CHK-12,
 > service packaging, and release hardening are complete. Continue toward Acceptance S
