@@ -662,6 +662,172 @@ def compare_governance(policy, inventory):
     }
 
 
+def _apply_action(action_id, method, endpoint, body, verify_controls, side_effects):
+    return {
+        "body": body,
+        "endpoint": endpoint,
+        "id": action_id,
+        "method": method,
+        "side_effects": sorted(side_effects),
+        "verify_controls": sorted(verify_controls),
+    }
+
+
+def _ruleset_payload(settings):
+    checks = [{"context": check} for check in sorted(settings["required_checks"])]
+    return {
+        "bypass_actors": [],
+        "conditions": {
+            "ref_name": {
+                "exclude": [],
+                "include": [f"refs/heads/{settings['target_branch']}"],
+            }
+        },
+        "enforcement": "active",
+        "name": MANAGED_RULESET_NAME,
+        "rules": [
+            {
+                "parameters": {
+                    "dismiss_stale_reviews_on_push": False,
+                    "require_code_owner_review": False,
+                    "require_last_push_approval": settings["require_last_push_approval"],
+                    "required_approving_review_count": settings["required_approvals"],
+                    "required_review_thread_resolution": True,
+                },
+                "type": "pull_request",
+            },
+            {
+                "parameters": {
+                    "required_status_checks": checks,
+                    "strict_required_status_checks_policy": True,
+                },
+                "type": "required_status_checks",
+            },
+            {"type": "non_fast_forward"},
+        ],
+        "target": "branch",
+    }
+
+
+def _ruleset_apply_action(settings, repository):
+    return _apply_action(
+        "branch.ruleset",
+        "POST",
+        f"repos/{repository}/rulesets",
+        _ruleset_payload(settings),
+        BRANCH_CONTROL_IDS.values(),
+        ["target_branch_merge_requirements_change_immediately"],
+    )
+
+
+def _security_apply_action(controls, repository):
+    fields = {}
+    side_effects = []
+    verify = []
+    if controls["security.secret_scanning"]["status"] == "drift":
+        fields["secret_scanning"] = {"status": "enabled"}
+        side_effects.append("secret_scanning_alerts_may_be_created")
+        verify.append("security.secret_scanning")
+    if controls["security.push_protection"]["status"] == "drift":
+        fields["secret_scanning_push_protection"] = {"status": "enabled"}
+        side_effects.append("pushes_containing_detected_secrets_are_rejected")
+        verify.append("security.push_protection")
+    if not fields:
+        return None
+    return _apply_action(
+        "security.secret_scanning",
+        "PATCH",
+        f"repos/{repository}",
+        {"security_and_analysis": fields},
+        verify,
+        side_effects,
+    )
+
+
+def _repository_apply_action(controls, settings, repository):
+    control_id = "repository.delete_branch_on_merge"
+    if controls[control_id]["status"] != "drift":
+        return None
+    side_effects = (
+        ["future_merged_head_branches_are_deleted"] if settings["delete_branch_on_merge"] else []
+    )
+    return _apply_action(
+        control_id,
+        "PATCH",
+        f"repos/{repository}",
+        {"delete_branch_on_merge": settings["delete_branch_on_merge"]},
+        [control_id],
+        side_effects,
+    )
+
+
+def _dependabot_apply_action(controls, settings, repository):
+    control_id = "security.dependabot_security_updates"
+    if controls[control_id]["status"] != "drift":
+        return None
+    enabled = settings["dependency_update_provider"] == "dependabot"
+    side_effect = (
+        "dependabot_security_pull_requests_may_be_created"
+        if enabled
+        else "dependabot_security_updates_are_disabled"
+    )
+    return _apply_action(
+        control_id,
+        "PUT" if enabled else "DELETE",
+        f"repos/{repository}/automated-security-fixes",
+        None,
+        [control_id],
+        [side_effect],
+    )
+
+
+def build_apply_actions(policy, inventory):
+    """Build deterministic GitHub write requests without executing them."""
+    report = compare_governance(policy, inventory)
+    repository = report["repository"]
+    if (
+        type(repository) is not str
+        or not REPOSITORY_TARGET.fullmatch(repository)
+        or any(part in {".", ".."} for part in repository.split("/"))
+    ):
+        raise PolicyError("GitHub inventory repository is not a safe write target")
+    controls = {control["id"]: control for control in report["controls"]}
+    if report["status"] == UNKNOWN:
+        raise PolicyError("apply requires a complete governance audit without unknown controls")
+    observed = controls["branch.required_status_checks_observed"]
+    if observed["status"] != "compliant":
+        raise PolicyError("apply requires every desired status check on the target branch head")
+
+    settings = policy["settings"]
+    actions = []
+    security_action = _security_apply_action(controls, repository)
+    if security_action:
+        actions.append(security_action)
+    branch_drift = any(
+        controls[control_id]["status"] == "drift" for control_id in BRANCH_CONTROL_IDS.values()
+    )
+    if branch_drift:
+        if settings["enforcement_backend"] != "ruleset":
+            raise PolicyError("legacy branch protection apply actions are not implemented")
+        if _managed_repository_ruleset(inventory):
+            raise PolicyError("updating an existing managed ruleset is not implemented safely")
+        actions.append(_ruleset_apply_action(settings, repository))
+    for action in (
+        _repository_apply_action(controls, settings, repository),
+        _dependabot_apply_action(controls, settings, repository),
+    ):
+        if action:
+            actions.append(action)
+    return {
+        "actions": actions,
+        "before_status": report["status"],
+        "repository": repository,
+        "schema_version": SCHEMA_VERSION,
+        "status": "ready" if actions else "compliant",
+        "target_branch": settings["target_branch"],
+    }
+
+
 def _reject_duplicate_keys(pairs):
     result = {}
     for key, value in pairs:

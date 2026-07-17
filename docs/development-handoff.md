@@ -15,9 +15,9 @@ authoritative in their linked documents.
 
 | Item | State on 2026-07-17 | Evidence or source |
 |------|---------------------|--------------------|
-| Default branch | `main` is release v1.3.0 and includes governance work through parent-lock advance PR #145 at `edd5698` | [Release v1.3.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v1.3.0), [PR #145](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/145) |
+| Default branch | `main` is release v1.3.0 and includes governance work through Ruleset-discovery PR #147 at parent lock `edd5698` | [Release v1.3.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v1.3.0), [PR #147](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/147) |
 | IaC governance prerequisite | Complete: exact `iac-scan` succeeded on PR #125 and its merged-main push | [PR run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29517379947), [main run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29518413106) |
-| Active work | Issue #146 is split for GR-020: first inactive Ruleset discovery and ownership matching, then internal pure apply-action planning; no public/executable `apply` or live mutation | [Issue #146](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/146), [ADR-0008](adr/0008-adopt-direct-parent-inheritance-contract.md) |
+| Active work | Issue #146's second GR-020 slice adds internal pure apply-action planning after PR #147; no public/executable `apply` or live mutation | [Issue #146](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/146), [ADR-0008](adr/0008-adopt-direct-parent-inheritance-contract.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -34,17 +34,16 @@ caller and WIF condition are pinned together to `v2.0.2`.
 
 No cloud action is required for the current milestone. Continue in this order:
 
-1. Merge Issue #146's Ruleset-discovery preparation PR.
-2. Complete pure apply-action planning in a second PR without request execution.
-3. Review next parent candidate `7d58701` only after that adaptation is complete.
-4. Continue advancing only one first-parent commit per reviewed PR; keep lock changes
+1. Merge Issue #146's pure apply-action planning PR without request execution.
+2. Review next parent candidate `7d58701` only after that adaptation is complete.
+3. Continue advancing only one first-parent commit per reviewed PR; keep lock changes
    separate from protected-file adaptations.
-5. Apply the asset to a second engagement when an owner and customer scope exist, then
+4. Apply the asset to a second engagement when an owner and customer scope exist, then
    measure reuse effort for Acceptance S.
-6. Use the versioned standard-inspection profile, generated menu, and deterministic
+5. Use the versioned standard-inspection profile, generated menu, and deterministic
    qualification artifacts as the service-packaging baseline; change profile values in
    a reviewed PR rather than editing generated material.
-7. Keep customer delivery evidence and raw inspection artifacts outside this public
+6. Keep customer delivery evidence and raw inspection artifacts outside this public
    repository because complete inspection artifacts remain Internal.
 
 Do not recreate the deleted verification environment unless a new issue and approvals
@@ -109,12 +108,11 @@ may be absent; CI remains authoritative.
 ## Resume prompt
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
-> `docs/development-handoff.md`. Confirm `main` includes v1.3.0, PR #145, and accepted
+> `docs/development-handoff.md`. Confirm `main` includes v1.3.0, PR #147, and accepted
 > ADR-0008. The inheritance lock is `edd5698`, and `iac-scan` has PR and merged-main
-> evidence. Complete Issue #146's repository-Ruleset discovery preparation, then add
-> internal pure apply-action planning in a separate PR. Keep public and executable
-> `apply` absent; review next parent candidate `7d58701` only after both slices, and retain
-> legacy sync. Do not
+> evidence. Complete Issue #146's internal pure apply-action planning. Keep public and
+> executable `apply` absent; review next parent candidate `7d58701` only after this slice,
+> and retain legacy sync. Do not
 > materialize parent changes, run a governance `apply`, or mutate live GitHub/GCP state.
 > Technical Acceptance A, CHK-12,
 > service packaging, and release hardening are complete. Continue toward Acceptance S
