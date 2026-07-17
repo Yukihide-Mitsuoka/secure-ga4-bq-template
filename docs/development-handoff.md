@@ -15,9 +15,9 @@ authoritative in their linked documents.
 
 | Item | State on 2026-07-17 | Evidence or source |
 |------|---------------------|--------------------|
-| Default branch | Release baseline v1.6.0 includes PR #164; Issue #165 advances the parent lock to `64fdc58` | [Release v1.6.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v1.6.0), [PR #164](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/164), [Issue #165](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/165) |
+| Default branch | Release baseline v1.6.0 includes PR #166; Issue #167 advances the parent lock to `d8fc759` without exposing public `apply` | [Release v1.6.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v1.6.0), [PR #166](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/166), [Issue #167](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/167) |
 | IaC governance prerequisite | Complete: exact `iac-scan` succeeded on PR #125 and its merged-main push | [PR run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29517379947), [main run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29518413106) |
-| Active work | Issue #165 accepts parent-specific handoff commit `64fdc58` as a lock-only checkpoint; its protected `docs/handoff.md` is not materialized | [Issue #165](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/165), [ADR-0008](adr/0008-adopt-direct-parent-inheritance-contract.md) |
+| Active work | Issue #167 accepts public-apply parent commit `d8fc759` as a zero-materialization lock checkpoint; child adoption remains blocked on a separate ADR | [Issue #167](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/167), [ADR-0008](adr/0008-adopt-direct-parent-inheritance-contract.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -34,18 +34,19 @@ caller and WIF condition are pinned together to `v2.0.2`.
 
 No cloud action is required for the current milestone. Continue in this order:
 
-1. Merge Issue #165's lock-only checkpoint for `64fdc58`; do not copy the parent's
-   protected handoff.
-2. Review next direct-parent candidate `d8fc759`, which exposes a public confirmed
-   `apply` command; do not inherit or invoke it without a separate child decision.
-3. Continue advancing only one first-parent commit per reviewed PR; keep lock changes
+1. Merge Issue #167's lock-only checkpoint for `d8fc759`; public `apply` remains absent.
+2. Draft and obtain owner approval for a child ADR before deciding whether to expose
+   the confirmed `apply` CLI; do not invoke the internal executor during that decision.
+3. Review next direct-parent handoff candidate `e8833a3` only after the public-apply
+   decision and any accepted adaptation are complete.
+4. Continue advancing only one first-parent commit per reviewed PR; keep lock changes
    separate from protected-file adaptations.
-4. Apply the asset to a second engagement when an owner and customer scope exist, then
+5. Apply the asset to a second engagement when an owner and customer scope exist, then
    measure reuse effort for Acceptance S.
-5. Use the versioned standard-inspection profile, generated menu, and deterministic
+6. Use the versioned standard-inspection profile, generated menu, and deterministic
    qualification artifacts as the service-packaging baseline; change profile values in
    a reviewed PR rather than editing generated material.
-6. Keep customer delivery evidence and raw inspection artifacts outside this public
+7. Keep customer delivery evidence and raw inspection artifacts outside this public
    repository because complete inspection artifacts remain Internal.
 
 Do not recreate the deleted verification environment unless a new issue and approvals
@@ -111,9 +112,10 @@ may be absent; CI remains authoritative.
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
 > `docs/development-handoff.md`. Confirm the v1.6.0 baseline, PR #164, and accepted
-> ADR-0008. The inheritance lock is `64fdc58`, and the child-specific stricter-Ruleset
-> planner remains authoritative with `iac-scan` preserved. Merge Issue #165's lock-only
-> checkpoint, then review public-apply candidate `d8fc759` separately. Retain legacy sync. Do not
+> ADR-0008. The inheritance lock is `d8fc759`, and the child-specific stricter-Ruleset
+> planner remains authoritative with `iac-scan` preserved. Merge Issue #167's lock-only
+> checkpoint, then draft a child ADR before exposing public `apply`; review parent handoff
+> `e8833a3` only after that decision. Retain legacy sync. Do not
 > materialize parent changes, run a governance `apply`, or mutate live GitHub/GCP state.
 > Technical Acceptance A, CHK-12,
 > service packaging, and release hardening are complete. Continue toward Acceptance S
