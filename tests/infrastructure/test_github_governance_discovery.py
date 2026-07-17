@@ -1,3 +1,4 @@
+import copy
 import importlib.util
 import json
 from pathlib import Path
@@ -59,6 +60,40 @@ def fake_runner(*, rules=None, protected=True, security=True):
     )
 
 
+def managed_ruleset_detail():
+    return {
+        "bypass_actors": [{"actor_id": 123}],
+        "conditions": {"ref_name": {"exclude": [], "include": ["refs/heads/main"]}},
+        "id": 7,
+        "name": governance.MANAGED_RULESET_NAME,
+        "rules": [
+            {
+                "parameters": {
+                    "allowed_merge_methods": ["squash"],
+                    "dismiss_stale_reviews_on_push": True,
+                    "require_code_owner_review": True,
+                    "require_last_push_approval": False,
+                    "required_approving_review_count": 0,
+                    "required_review_thread_resolution": True,
+                },
+                "type": "pull_request",
+            },
+            {
+                "parameters": {
+                    "required_status_checks": [
+                        {"context": "iac-scan", "integration_id": 42},
+                        {"context": "test"},
+                    ],
+                    "strict_required_status_checks_policy": True,
+                },
+                "type": "required_status_checks",
+            },
+            {"type": "non_fast_forward"},
+        ],
+        "target": "branch",
+    }
+
+
 def test_discovery_is_get_only_deterministic_and_redacts_bypass_identities() -> None:
     rules = [
         {
@@ -86,11 +121,115 @@ def test_discovery_is_get_only_deterministic_and_redacts_bypass_identities() -> 
     assert result["observed_checks"] == ["iac-scan", "lint", "test"]
     assert "123" not in json.dumps(result)
     assert result["effective_rules"][0]["parameters"]["required_approving_review_count"] == 1
+    assert "update_state" not in result["rulesets"][0]
     for command, kwargs in runner.calls:
         assert command[command.index("--method") + 1] == "GET"
         assert "X-GitHub-Api-Version: 2026-03-10" in command
         assert kwargs == {"capture_output": True, "text": True, "timeout": 30, "check": False}
         assert not {"POST", "PUT", "PATCH", "DELETE"} & set(command)
+
+
+def test_managed_ruleset_discovery_records_preservable_update_state() -> None:
+    rules = [
+        {
+            "type": "pull_request",
+            "ruleset_id": 7,
+            "ruleset_source_type": "Repository",
+            "ruleset_source": "acme/demo",
+            "parameters": {"required_approving_review_count": 0},
+        }
+    ]
+    runner = fake_runner(rules=rules)
+    runner.responses.update(
+        {
+            "repos/acme/demo/rulesets/7": Completed(payload=managed_ruleset_detail()),
+            "repos/acme/demo/branches/main/protection": Completed(payload={}),
+        }
+    )
+
+    result = governance.discover_github("acme/demo", "main", runner=runner)
+
+    state = result["rulesets"][0]["update_state"]
+    assert state == {
+        "conditions": {"exclude": [], "include": ["refs/heads/main"]},
+        "pull_request": {
+            "allowed_merge_methods": ["squash"],
+            "dismiss_stale_reviews_on_push": True,
+            "require_code_owner_review": True,
+            "required_review_thread_resolution": True,
+        },
+        "required_status_checks": [
+            {"context": "iac-scan", "integration_id": 42},
+            {"context": "test", "integration_id": None},
+        ],
+        "rule_types": ["non_fast_forward", "pull_request", "required_status_checks"],
+        "unsupported": [],
+    }
+    assert "123" not in json.dumps(result)
+
+
+@pytest.mark.parametrize(
+    ("mutation", "expected_reason"),
+    [
+        ("conditions", "invalid_conditions"),
+        ("pull_field", "unsupported_pull_request_parameters"),
+        ("dismissal", "review_dismissal_restriction"),
+        ("reviewers", "required_reviewers"),
+        ("merge_methods", "invalid_allowed_merge_methods"),
+        ("duplicate_check", "invalid_required_status_checks"),
+        ("status_field", "unsupported_status_check_parameters"),
+        ("extra_rule", "unsupported_rule"),
+        ("duplicate_rule", "duplicate_rule"),
+        ("target", "unsupported_target"),
+    ],
+)
+def test_managed_ruleset_discovery_marks_unpreservable_constraints(
+    mutation, expected_reason
+) -> None:
+    detail = copy.deepcopy(managed_ruleset_detail())
+    pull = detail["rules"][0]["parameters"]
+    checks = detail["rules"][1]["parameters"]
+    if mutation == "conditions":
+        detail["conditions"]["repository_name"] = {"include": ["demo"]}
+    elif mutation == "pull_field":
+        pull["future_constraint"] = True
+    elif mutation == "dismissal":
+        pull["dismissal_restriction"] = {"enabled": True, "allowed_actors": [5]}
+    elif mutation == "reviewers":
+        pull["required_reviewers"] = [{"repository_role_database_id": 2}]
+    elif mutation == "merge_methods":
+        pull["allowed_merge_methods"] = ["octopus"]
+    elif mutation == "duplicate_check":
+        checks["required_status_checks"].append({"context": "test"})
+    elif mutation == "status_field":
+        checks["future_constraint"] = True
+    elif mutation == "extra_rule":
+        detail["rules"].append({"type": "required_signatures"})
+    elif mutation == "duplicate_rule":
+        detail["rules"].append(copy.deepcopy(detail["rules"][0]))
+    else:
+        detail["target"] = "tag"
+    runner = fake_runner(
+        rules=[
+            {
+                "type": "pull_request",
+                "ruleset_id": 7,
+                "ruleset_source_type": "Repository",
+                "ruleset_source": "acme/demo",
+                "parameters": {},
+            }
+        ]
+    )
+    runner.responses.update(
+        {
+            "repos/acme/demo/rulesets/7": Completed(payload=detail),
+            "repos/acme/demo/branches/main/protection": Completed(payload={}),
+        }
+    )
+
+    result = governance.discover_github("acme/demo", "main", runner=runner)
+
+    assert expected_reason in result["rulesets"][0]["update_state"]["unsupported"]
 
 
 def test_admin_invisible_fields_are_unknown_without_leaking_stderr() -> None:
