@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v1.5.0...v1.6.0) (2026-07-17)
+
+
+### Features
+
+* **governance:** restrict internal write transport ([#162](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/162)) ([ece5f40](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/ece5f40d1db6ea28c028bc5afa3c0dffc3f9aae7)), closes [#161](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/161)
+* **governance:** verify internal apply execution ([#164](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/164)) ([f5dfdce](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/f5dfdcefe0027f8c67da43c59959a73eace48bd5)), closes [#161](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/161)
+
 ## [1.5.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v1.4.0...v1.5.0) (2026-07-17)
 
 
