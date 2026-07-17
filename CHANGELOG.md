@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v1.3.0...v1.4.0) (2026-07-17)
+
+
+### Features
+
+* **governance:** add deterministic comparison ([#136](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/136)) ([1ebe8f5](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/1ebe8f513c433a6c2256c7c29ffbeb2a7678c1d0)), closes [#135](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/135)
+* **governance:** add GET-only plan and audit ([#141](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/141)) ([3738733](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/37387333774b0d63d3f8d95286f3ede708677ed1)), closes [#140](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/140)
+* **governance:** add pure apply-action planning ([#148](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/148)) ([4df83eb](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/4df83ebe72b8831be19c568e033aa10d14952338)), closes [#146](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/146)
+* **governance:** discover repository-owned rulesets ([#147](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/147)) ([b0507da](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/b0507da45f6d877298409c090e9058f9ada9c646)), closes [#146](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/146)
+
 ## [1.3.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v1.2.0...v1.3.0) (2026-07-16)
 
 
