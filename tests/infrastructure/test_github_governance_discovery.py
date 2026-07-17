@@ -48,6 +48,7 @@ def fake_runner(*, rules=None, protected=True, security=True):
                 payload={"commit": {"sha": SHA}, "protected": protected}
             ),
             "repos/acme/demo/rules/branches/main?per_page=100": Completed(payload=[rules or []]),
+            "repos/acme/demo/rulesets?includes_parents=false&per_page=100": Completed(payload=[[]]),
             f"repos/acme/demo/commits/{SHA}/check-runs?per_page=100": Completed(
                 payload=[{"check_runs": [{"name": "test"}, {"name": "iac-scan"}]}]
             ),
@@ -110,6 +111,45 @@ def test_admin_invisible_fields_are_unknown_without_leaking_stderr() -> None:
     assert result["legacy_branch_protection"]["status"] == "unknown"
     assert result["effective_rules"][0]["source"] == "unknown"
     assert "sensitive runner detail" not in json.dumps(result)
+
+
+def test_inactive_repository_ruleset_is_listed_without_detail_metadata() -> None:
+    runner = fake_runner(protected=False)
+    runner.responses["repos/acme/demo/rulesets?includes_parents=false&per_page=100"] = Completed(
+        payload=[
+            [
+                {
+                    "id": 8,
+                    "name": "inactive governance",
+                    "source": "acme/demo",
+                    "source_type": "Repository",
+                }
+            ]
+        ]
+    )
+
+    result = governance.discover_github("acme/demo", "main", runner=runner)
+
+    assert result["rulesets"] == [
+        {
+            "has_bypass_actors": "unknown",
+            "id": 8,
+            "name": "inactive governance",
+            "source": "acme/demo",
+            "source_type": "Repository",
+        }
+    ]
+    assert "repos/acme/demo/rulesets/8" not in [call[0][-1] for call in runner.calls]
+
+
+def test_repository_ruleset_summary_for_another_source_stops_closed() -> None:
+    runner = fake_runner(protected=False)
+    endpoint = "repos/acme/demo/rulesets?includes_parents=false&per_page=100"
+    runner.responses[endpoint] = Completed(
+        payload=[[{"id": 8, "name": "x", "source": "other/repo", "source_type": "Repository"}]]
+    )
+    with pytest.raises(governance.PolicyError, match="invalid ruleset"):
+        governance.discover_github("acme/demo", "main", runner=runner)
 
 
 def test_unprotected_branch_skips_legacy_admin_endpoint() -> None:

@@ -69,7 +69,13 @@ def ruleset_inventory():
         "observed_checks": list(CHECKS),
         "repository": {"delete_branch_on_merge": True, "full_name": "acme/demo"},
         "rulesets": [
-            {"has_bypass_actors": False, "id": 7, "name": governance.MANAGED_RULESET_NAME}
+            {
+                "has_bypass_actors": False,
+                "id": 7,
+                "name": governance.MANAGED_RULESET_NAME,
+                "source": "acme/demo",
+                "source_type": "Repository",
+            }
         ],
         "security": {
             "dependabot_security_updates": "disabled",
@@ -116,6 +122,13 @@ def test_ruleset_report_is_compliant_deterministic_and_does_not_mutate_inputs() 
     assert control(first, "branch.required_status_checks")["current"] == CHECKS
     assert first["unmanaged"] == {"effective_rules": [], "legacy_branch_protection": None}
     assert (policy, inventory) == before
+
+
+def test_managed_repository_source_matching_is_case_insensitive() -> None:
+    inventory = ruleset_inventory()
+    inventory["rulesets"][0]["source"] = "Acme/Demo"
+
+    assert governance.compare_governance(resolved_policy(), inventory)["status"] == "compliant"
 
 
 def test_missing_iac_scan_and_unmanaged_controls_report_drift() -> None:
