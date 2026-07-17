@@ -15,9 +15,9 @@ authoritative in their linked documents.
 
 | Item | State on 2026-07-17 | Evidence or source |
 |------|---------------------|--------------------|
-| Default branch | `main` is release v1.4.0 and includes PR #152 at parent lock `90bdc90` | [Release v1.4.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v1.4.0), [PR #152](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/152) |
+| Default branch | `main` is release v1.5.0 and includes PR #156 at parent lock `90bdc90` | [Release v1.5.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v1.5.0), [PR #156](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/156) |
 | IaC governance prerequisite | Complete: exact `iac-scan` succeeded on PR #125 and its merged-main push | [PR run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29517379947), [main run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29518413106) |
-| Active work | Issue #153's second slice adds pure PUT action planning for safely preservable existing managed Rulesets; request execution and public `apply` remain absent | [Issue #153](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/153), [ADR-0008](adr/0008-adopt-direct-parent-inheritance-contract.md) |
+| Active work | Issue #157 advances the direct-parent lock from `90bdc90` to parent-specific handoff merge `8ab930d`; protected parent documentation is not materialized | [Issue #157](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/157), [ADR-0008](adr/0008-adopt-direct-parent-inheritance-contract.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -34,9 +34,11 @@ caller and WIF condition are pinned together to `v2.0.2`.
 
 No cloud action is required for the current milestone. Continue in this order:
 
-1. Merge Issue #153's pure PUT planning slice after its preservation and fail-closed
-   tests pass; this completes the accepted `90bdc90` child adaptation.
-2. Review next parent candidate `8ab930d` only after that adaptation is accepted.
+1. Merge Issue #157 after validation proves exact lock `8ab930d` and zero inherited
+   materialization.
+2. Review next direct-parent candidate `75dfd6c`, which adapts upstream `67d1596` as an
+   internal apply-execution boundary, only after that checkpoint is accepted; do not
+   invoke it against GitHub.
 3. Continue advancing only one first-parent commit per reviewed PR; keep lock changes
    separate from protected-file adaptations.
 4. Apply the asset to a second engagement when an owner and customer scope exist, then
@@ -109,13 +111,12 @@ may be absent; CI remains authoritative.
 ## Resume prompt
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
-> `docs/development-handoff.md`. Confirm `main` includes v1.4.0, PR #152, and accepted
-> ADR-0008. The inheritance lock is `90bdc90`, and `iac-scan` has PR and merged-main
-> evidence. Issue #153's GET-only normalization is merged; complete its pure PUT action
-> planning slice while preserving the child `iac-scan` requirement and rejecting any
-> update that could remove additional checks or weaken stronger policy-owned reviews.
-> Review next parent candidate `8ab930d` only after that
-> adaptation; keep public and executable `apply` absent and retain legacy sync. Do not
+> `docs/development-handoff.md`. Confirm `main` includes v1.5.0, PR #156, and accepted
+> ADR-0008. The inheritance lock is `8ab930d`, and the child-specific stricter-Ruleset
+> adaptation is complete with `iac-scan` preserved. Review next direct-parent candidate
+> `75dfd6c`, which adapts upstream `67d1596` as the internal apply-execution boundary,
+> separately; keep public and
+> executable `apply` absent and retain legacy sync. Do not
 > materialize parent changes, run a governance `apply`, or mutate live GitHub/GCP state.
 > Technical Acceptance A, CHK-12,
 > service packaging, and release hardening are complete. Continue toward Acceptance S
