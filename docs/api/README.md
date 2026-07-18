@@ -34,6 +34,34 @@ command, or error contract. Breaking contract changes additionally require the
 | `errors.md` | Error catalog: code → meaning → caller action |
 | `changelog.md` | Contract-level changes and deprecation schedule |
 
+## GitHub governance CLI
+
+`scripts/github_governance.py` resolves the inherited policy and exposes four commands:
+
+| Command | Authentication | Behavior | Exit codes |
+|---------|----------------|----------|------------|
+| `validate` | none | offline policy validation | 0 valid; 2 error |
+| `plan` | repository read | GET-only redacted comparison | 0 complete; 2 error |
+| `audit` | repository read | same GET-only comparison as a compliance gate | 0 compliant; 1 drift/unknown; 2 error |
+| `apply` | repository Administration write | confirmed, verified policy application | 0 compliant; 2 error |
+
+`apply` requires `--repo OWNER/REPOSITORY` and an exactly equal `--confirm-repo`.
+Missing or unequal values fail before GitHub discovery. Authentication MUST come from a
+local interactive `gh` session; CI, scheduled execution, and GitHub Actions
+Administration credentials are prohibited by ADR-0009.
+
+After initial discovery, `apply` refreshes state and replans before its first write. It
+then writes one action, reads affected controls back, verifies them, and replans. It can
+change branch merge requirements, secret scanning, push protection, merged-branch
+deletion, and Dependabot security updates. Output is deterministic JSON. Failures after
+execution preparation include redacted `attempted_actions`, `verified_actions`,
+`failure_phase`, and `failed_action` evidence; earlier input, policy, or discovery
+failures report an error without partial evidence. The command never retries or rolls
+back automatically.
+
+Every live target and run requires separate authorization after GET-only `plan` review.
+The command's availability does not authorize a live run.
+
 ## Engagement qualification CLI
 
 ```bash

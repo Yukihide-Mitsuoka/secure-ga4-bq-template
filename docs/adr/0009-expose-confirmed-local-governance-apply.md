@@ -1,7 +1,7 @@
 ---
 id: adr-0009
 title: Expose confirmed local governance apply
-status: proposed
+status: accepted
 date: 2026-07-17
 ---
 
@@ -9,7 +9,7 @@ date: 2026-07-17
 
 | Field                      | Value            |
 | -------------------------- | ---------------- |
-| Status                     | proposed         |
+| Status                     | accepted         |
 | Date                       | 2026-07-17       |
 | Deciders                   | repository owner |
 | Author                     | Codex (AI agent) |

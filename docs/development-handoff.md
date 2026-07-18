@@ -2,7 +2,7 @@
 id: development-handoff
 title: Development Handoff
 status: active
-updated: 2026-07-17
+updated: 2026-07-18
 ---
 
 # Development Handoff
@@ -13,11 +13,11 @@ authoritative in their linked documents.
 
 ## Snapshot
 
-| Item | State on 2026-07-17 | Evidence or source |
+| Item | State on 2026-07-18 | Evidence or source |
 |------|---------------------|--------------------|
-| Default branch | Release baseline v1.6.0 plus PR #168; the parent lock is `d8fc759` and public `apply` remains absent | [Release v1.6.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v1.6.0), [PR #168](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/168) |
+| Default branch | Release baseline v1.6.0 plus accepted ADR-0009 in PR #170; the parent lock is `d8fc759` | [Release v1.6.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v1.6.0), [PR #170](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/170) |
 | IaC governance prerequisite | Complete: exact `iac-scan` succeeded on PR #125 and its merged-main push | [PR run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29517379947), [main run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29518413106) |
-| Active work | Issue #169 proposes a child decision for a confirmed local `apply`; ADR approval is required before implementation | [Issue #169](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/169), [ADR-0009](adr/0009-expose-confirmed-local-governance-apply.md) |
+| Active work | Issue #171 implements the accepted confirmed local `apply` boundary without a live run | [Issue #171](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/171), [ADR-0009](adr/0009-expose-confirmed-local-governance-apply.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -34,10 +34,10 @@ caller and WIF condition are pinned together to `v2.0.2`.
 
 No cloud action is required for the current milestone. Continue in this order:
 
-1. Obtain owner approval for proposed ADR-0009; public `apply` remains absent and the
-   ADR does not authorize a live run.
-2. If ADR-0009 is accepted, implement the confirmed local CLI in a separate issue and
-   PR without invoking it against a live repository.
+1. Merge Issue #171's confirmed local CLI implementation after review; do not invoke it
+   against a live repository during implementation or CI.
+2. Treat every future live target and run as separately approval-gated after GET-only
+   `plan`; implementation merge is not authorization.
 3. Review next direct-parent handoff candidate `e8833a3` only after the public-apply
    decision and any accepted adaptation are complete.
 4. Continue advancing only one first-parent commit per reviewed PR; keep lock changes
@@ -112,12 +112,12 @@ may be absent; CI remains authoritative.
 ## Resume prompt
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
-> `docs/development-handoff.md`. Confirm the v1.6.0 baseline, PR #168, and accepted
-> ADR-0008. The inheritance lock is `d8fc759`, and the child-specific stricter-Ruleset
-> planner remains authoritative with `iac-scan` preserved. Obtain owner approval for
-> proposed ADR-0009 before implementing public `apply`; review parent handoff `e8833a3`
-> only after that decision and any accepted adaptation. Retain legacy sync. Do not
-> materialize parent changes, run a governance `apply`, or mutate live GitHub/GCP state.
+> `docs/development-handoff.md`. Confirm the v1.6.0 baseline, PR #170, accepted ADR-0008,
+> and accepted ADR-0009. The inheritance lock is `d8fc759`, and the child-specific
+> stricter-Ruleset planner remains authoritative with `iac-scan` preserved. Complete
+> Issue #171 without a live `apply`, then review parent handoff `e8833a3`. Retain legacy
+> sync. Do not materialize parent changes, run a governance `apply`, or mutate live
+> GitHub/GCP state without separate target-specific approval.
 > Technical Acceptance A, CHK-12,
 > service packaging, and release hardening are complete. Continue toward Acceptance S
 > only when a second engagement or department-standard owner and scope exist. Do not
