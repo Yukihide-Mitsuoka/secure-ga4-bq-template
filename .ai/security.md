@@ -22,6 +22,12 @@ gitleaks runs in pre-commit and CI; GitHub Secret Scanning + Push Protection MUS
 enabled on the repository. Never bypass a secret-scan finding — resolve or formally
 mark false-positive with a comment in the scanner config.
 
+### SEC-003: Vulnerability alerts and private reporting are always on
+GitHub Dependabot vulnerability alerts MUST be enabled so known vulnerable dependencies
+surface continuously. Private vulnerability reporting MUST be enabled so the intake
+route promised by `SECURITY.md` works without public disclosure. Automated security
+updates remain a separate repository choice because they can conflict with Renovate.
+
 ## Input, output, and data
 
 ### SEC-010: All external input is hostile

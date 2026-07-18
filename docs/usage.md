@@ -95,13 +95,14 @@ uv run python scripts/github_governance.py audit --repo OWNER/REPOSITORY
 ```
 
 Missing or unequal confirmation stops before GitHub discovery. A valid run refreshes
-state before writing and verifies one action at a time. It can block pushes, create
-alerts or pull requests, and change merge eligibility. There is no automatic retry or
-rollback: inspect any partial evidence and rerun GET-only `plan` before separately
-authorizing recovery. Never run `apply` in CI or on a schedule, and never store a
-repository Administration credential in GitHub Actions. Merging the implementation
-does not authorize a live run. The authoritative input, output, exit-code, and failure
-contract is [GitHub governance CLI](api/README.md#github-governance-cli).
+state before writing and verifies one action at a time. It can change repository
+security settings, create alerts or pull requests, and change merge eligibility. There
+is no automatic retry or rollback: inspect any partial evidence and rerun GET-only
+`plan` before separately authorizing recovery. Never run `apply` in CI or on a schedule,
+and never store a repository Administration credential in GitHub Actions. Merging the
+implementation does not authorize a live run. The authoritative input, output,
+exit-code, and failure contract is
+[GitHub governance CLI](api/README.md#github-governance-cli).
 
 The legacy `scripts/setup-github.sh` remains a fixed one-time bootstrap, not an
 implementation of the resolved layered policy. Prefer the confirmed policy-driven

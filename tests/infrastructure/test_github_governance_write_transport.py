@@ -108,6 +108,18 @@ def test_write_allowlist_rejects_untrusted_actions(unsafe) -> None:
             f"repos/{REPOSITORY}/automated-security-fixes",
             None,
         ),
+        (
+            "security.vulnerability_alerts",
+            "PUT",
+            f"repos/{REPOSITORY}/vulnerability-alerts",
+            None,
+        ),
+        (
+            "security.private_vulnerability_reporting",
+            "PUT",
+            f"repos/{REPOSITORY}/private-vulnerability-reporting",
+            None,
+        ),
     ],
 )
 def test_write_allowlist_accepts_only_current_planner_shapes(
@@ -126,6 +138,44 @@ def test_write_allowlist_accepts_only_current_planner_shapes(
     governance._gh_write_action(candidate, REPOSITORY, runner)
 
     assert runner.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("action_id", "endpoint"),
+    [
+        ("security.vulnerability_alerts", f"repos/{REPOSITORY}/vulnerability-alerts"),
+        (
+            "security.private_vulnerability_reporting",
+            f"repos/{REPOSITORY}/private-vulnerability-reporting",
+        ),
+    ],
+)
+@pytest.mark.parametrize("mutation", ["method", "endpoint", "body", "controls"])
+def test_vulnerability_intake_write_allowlist_requires_exact_shape(
+    action_id, endpoint, mutation
+) -> None:
+    candidate = action()
+    candidate.update(
+        id=action_id,
+        method="PUT",
+        endpoint=endpoint,
+        body=None,
+        verify_controls=[action_id],
+    )
+    if mutation == "method":
+        candidate["method"] = "DELETE"
+    elif mutation == "endpoint":
+        candidate["endpoint"] = f"repos/{REPOSITORY}/automated-security-fixes"
+    elif mutation == "body":
+        candidate["body"] = {}
+    else:
+        candidate["verify_controls"] = ["security.secret_scanning"]
+    runner = mock.Mock()
+
+    with pytest.raises(governance.PolicyError, match="not allowed"):
+        governance._gh_write_action(candidate, REPOSITORY, runner)
+
+    runner.assert_not_called()
 
 
 def test_write_failure_redacts_response_and_stderr() -> None:

@@ -1177,6 +1177,15 @@ def _dependabot_write_allowed(action, base):
     )
 
 
+def _vulnerability_intake_write_allowed(action, base, endpoint):
+    return (
+        action["body"] is None
+        and action["method"] == "PUT"
+        and action["endpoint"] == f"{base}/{endpoint}"
+        and action["verify_controls"] == [action["id"]]
+    )
+
+
 def _validate_write_action(action, repository):
     if (
         type(repository) is not str
@@ -1212,6 +1221,12 @@ def _validate_write_action(action, repository):
         allowed = _security_write_allowed(action, base)
     elif action_id == "security.dependabot_security_updates":
         allowed = _dependabot_write_allowed(action, base)
+    elif action_id == "security.vulnerability_alerts":
+        allowed = _vulnerability_intake_write_allowed(action, base, "vulnerability-alerts")
+    elif action_id == "security.private_vulnerability_reporting":
+        allowed = _vulnerability_intake_write_allowed(
+            action, base, "private-vulnerability-reporting"
+        )
     else:
         allowed = False
     if not allowed:
