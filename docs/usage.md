@@ -57,8 +57,9 @@ username:
 ```
 *   @your-username
 ```
-Leaving team syntax on a personal repo makes CODEOWNERS silently ineffective —
-`scripts/setup-github.sh` warns when it detects this on a personal account.
+Leaving team syntax on a personal repo makes CODEOWNERS silently ineffective. Fix the
+file before applying governance; account-type inference is outside the compatibility
+wrapper.
 
 ### 4. Pick a Makefile profile
 
@@ -74,6 +75,10 @@ See [profiles/README.md](../profiles/README.md) for the canonical target contrac
 uv run python scripts/github_governance.py validate
 uv run python scripts/github_governance.py plan --repo OWNER/REPOSITORY
 uv run python scripts/github_governance.py audit --repo OWNER/REPOSITORY
+
+# Compatibility entry point for the same plan/apply paths:
+DRY_RUN=1 bash scripts/setup-github.sh OWNER/REPOSITORY
+bash scripts/setup-github.sh OWNER/REPOSITORY --confirm-repo OWNER/REPOSITORY
 ```
 
 `validate` is offline. `plan` and `audit` make authenticated, 30-second-bounded GitHub
@@ -104,9 +109,11 @@ implementation does not authorize a live run. The authoritative input, output,
 exit-code, and failure contract is
 [GitHub governance CLI](api/README.md#github-governance-cli).
 
-The legacy `scripts/setup-github.sh` remains a fixed one-time bootstrap, not an
-implementation of the resolved layered policy. Prefer the confirmed policy-driven
-`apply`; review either command's writes before intentional use.
+`scripts/setup-github.sh` is a no-policy compatibility wrapper. A non-empty `DRY_RUN`
+delegates to `plan`; normal execution requires the exact target twice and delegates to
+`apply`. It makes no direct `gh` call and preserves the reconciler exit code. The former
+no-argument form and inline onboarding reminders are removed; use this guide as the
+onboarding checklist.
 
 ### 6. Install local gates and point your agent at it
 
@@ -168,8 +175,10 @@ gh auth refresh -h github.com -s workflow
 ```
 This is a **per-account / per-machine** setting — expect to do it once on each new setup.
 
-### Solo developer + the legacy bootstrap = you can't merge your own PRs
-The fixed `scripts/setup-github.sh` requires one approval and enforces it for admins.
+### Solo developer + previously applied legacy bootstrap = you can't merge your own PRs
+The former fixed bootstrap required one approval and enforced it for admins. The current
+`scripts/setup-github.sh` delegates to the layered policy and does not carry that fixed
+setting.
 The layered policy defaults to zero approvals for solo development while retaining PRs,
 status checks, and no-force-push controls. If the legacy bootstrap was already applied:
 

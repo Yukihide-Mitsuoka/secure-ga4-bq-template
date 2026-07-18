@@ -124,6 +124,8 @@ schedule. The workflow uploads `findings.json`, `summary.md`, and
    [Usage](docs/usage.md#5-review-and-optionally-apply-github-governance).
    Collaboration settings share one verified repository PATCH action; squash-only merge
    is applied before a linear-history Ruleset so every intermediate state remains valid.
+   `scripts/setup-github.sh` is a compatibility wrapper for the same `plan` and exactly
+   confirmed `apply` paths; it contains no independent governance policy.
 5. **Install local gates**: `make setup`.
 6. **Verify**: `make doctor && make build`.
 
