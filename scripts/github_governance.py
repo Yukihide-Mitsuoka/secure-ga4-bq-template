@@ -12,6 +12,8 @@ from urllib.parse import quote
 
 SCHEMA_VERSION = 1
 MANAGER = "ai-dev-foundation"
+PROFILE_DIRECTORY = ".github/governance/profiles"
+MAX_PROFILES = 32
 API_VERSION = "2026-03-10"
 UNKNOWN = "unknown"
 MANAGED_RULESET_NAME = "ai-dev-foundation: branch-governance"
@@ -40,6 +42,7 @@ SETTING_FIELDS = {
 }
 RULE_ID = re.compile(r"^(?:GR|SEC|WF)-\d{3}$")
 RULE_HEADING = re.compile(r"^#{2,3} ((?:GR|SEC|WF)-\d{3}):", re.MULTILINE)
+PROFILE_ID = re.compile(r"^[a-z][a-z0-9-]{0,62}$")
 REPOSITORY_TARGET = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 BRANCH_CONTROL_IDS = {
     "admin": "branch.admin_bypass_allowed",
@@ -197,30 +200,71 @@ def _validate_foundation(foundation, known_rule_ids):
     _validate_settings(foundation["defaults"], "foundation.defaults")
 
 
-def resolve_policy(foundation, repository, known_rule_ids):
-    """Validate both layers and return their deterministic effective policy."""
+def _profile_chain(profiles):
+    if type(profiles) is not list or len(profiles) > MAX_PROFILES:
+        raise PolicyError(f"profiles must be a list of at most {MAX_PROFILES} profiles")
+    by_id = {}
+    for index, profile in enumerate(profiles):
+        label = f"profiles[{index}]"
+        _object(profile, {"schema_version", "id", "parent", "required_checks"}, label)
+        _schema_version(profile, label)
+        profile_id = profile["id"]
+        parent = profile["parent"]
+        if (
+            type(profile_id) is not str
+            or not PROFILE_ID.fullmatch(profile_id)
+            or profile_id == MANAGER
+            or type(parent) is not str
+            or not PROFILE_ID.fullmatch(parent)
+        ):
+            raise PolicyError(f"{label} has an invalid id or parent")
+        _validate_required_checks(profile["required_checks"], label)
+        if profile_id in by_id:
+            raise PolicyError(f"profiles contain duplicate id: {profile_id}")
+        by_id[profile_id] = copy.deepcopy(profile)
+    chain = []
+    parent = MANAGER
+    remaining = set(by_id)
+    while remaining:
+        children = sorted(item for item in remaining if by_id[item]["parent"] == parent)
+        if len(children) != 1:
+            raise PolicyError(f"profiles must form one parent chain rooted at {MANAGER}")
+        profile_id = children[0]
+        chain.append(by_id[profile_id])
+        remaining.remove(profile_id)
+        parent = profile_id
+    return chain
+
+
+def _merge_required_checks(*groups):
+    return list(dict.fromkeys(check for group in groups for check in group))
+
+
+def resolve_policy(foundation, repository, known_rule_ids, profiles=None):
+    """Validate ordered governance layers and return their effective policy."""
     _validate_foundation(foundation, known_rule_ids)
+    profiles = _profile_chain([] if profiles is None else profiles)
     _object(repository, {"schema_version", "overrides"}, "repository")
     _schema_version(repository, "repository")
     _object(repository["overrides"], SETTING_FIELDS, "repository.overrides", partial=True)
 
+    overrides = copy.deepcopy(repository["overrides"])
+    repository_checks = overrides.pop("required_checks", [])
+    if "required_checks" in repository["overrides"]:
+        _validate_required_checks(repository_checks, "repository.overrides")
     settings = copy.deepcopy(foundation["defaults"])
-    settings.update(copy.deepcopy(repository["overrides"]))
+    settings.update(overrides)
+    settings["required_checks"] = _merge_required_checks(
+        foundation["defaults"]["required_checks"],
+        *(profile["required_checks"] for profile in profiles),
+        repository_checks,
+    )
     _validate_settings(settings, "resolved.settings")
-    missing_checks = [
-        check
-        for check in foundation["defaults"]["required_checks"]
-        if check not in settings["required_checks"]
-    ]
-    if missing_checks:
-        raise PolicyError(
-            "repository.overrides.required_checks cannot remove foundation checks: "
-            + ", ".join(missing_checks)
-        )
     return {
         "schema_version": SCHEMA_VERSION,
         "managed_by": MANAGER,
         "minimums": copy.deepcopy(foundation["minimums"]),
+        "profiles": profiles,
         "settings": settings,
     }
 
@@ -1651,6 +1695,30 @@ def _load_json(path):
         raise PolicyError(f"cannot read policy {path}: {error}") from error
 
 
+def _load_profiles(root):
+    try:
+        root = Path(root).resolve(strict=True)
+    except OSError as error:
+        raise PolicyError("cannot resolve repository root for profiles") from error
+    directory = root / PROFILE_DIRECTORY
+    try:
+        if directory.is_symlink():
+            raise PolicyError(f"profile directory must not use symlinks: {directory}")
+        if not directory.exists():
+            return []
+        if directory.resolve(strict=True) != directory or not directory.is_dir():
+            raise PolicyError(f"profile directory must not use symlinks: {directory}")
+        paths = sorted(directory.glob("*.json"))
+        if len(paths) > MAX_PROFILES:
+            raise PolicyError(f"profile directory contains more than {MAX_PROFILES} profiles")
+        for path in paths:
+            if path.resolve(strict=True) != path or not path.is_file():
+                raise PolicyError(f"profile must be a regular file without symlinks: {path}")
+    except OSError as error:
+        raise PolicyError(f"cannot read profile directory: {directory}") from error
+    return [_load_json(path) for path in paths]
+
+
 def _known_rule_ids(root):
     try:
         return {
@@ -1683,6 +1751,7 @@ def main(argv=None):
             _load_json(foundation),
             _load_json(repository),
             _known_rule_ids(root),
+            _load_profiles(root),
         )
         if args.command == "validate":
             report = resolved

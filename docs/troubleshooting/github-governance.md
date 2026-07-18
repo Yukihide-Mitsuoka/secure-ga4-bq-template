@@ -5,6 +5,25 @@ title: GitHub governance troubleshooting
 
 # GitHub governance troubleshooting
 
+## `validate` rejects governance profiles
+
+**Affects:** Offline governance validation and every command that resolves policy.
+
+**Cause:** Files under `.github/governance/profiles/` branch, cycle, contain duplicate or
+invalid IDs/checks, do not connect to `ai-dev-foundation`, exceed 32 profiles, or use a
+symlink. The resolver rejects the entire policy instead of guessing layer order.
+
+**Fix:** Keep only regular `*.json` files and make each profile's `parent` name the
+preceding profile ID; exactly one profile names `ai-dev-foundation`. Give every profile a
+unique lowercase kebab-case ID and a non-empty unique `required_checks` list. Rerun
+`validate` before any GET-only plan.
+
+**Prevention:** Add one template-family profile at a time and keep repository-only checks
+in `.github/governance/repository.json`. Required checks merge monotonically; do not copy
+the foundation list into a profile merely to preserve it.
+
+**Refs:** #104, ADR-0008, GR-012.
+
 ## `audit` exits with status 1
 
 **Affects:** GET-only governance audit.

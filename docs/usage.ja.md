@@ -85,6 +85,12 @@ bash scripts/setup-github.sh OWNER/REPOSITORY --confirm-repo OWNER/REPOSITORY
 unknownがあっても0、`audit` は準拠時0・差異/unknown時1・入力/ポリシー/読取エラー時2です。
 [GitHubガバナンスのトラブルシューティング](troubleshooting/github-governance.md)も参照。
 
+テンプレートファミリー固有の任意ポリシーは `.github/governance/profiles/` 配下の通常JSON
+ファイル（symlink不可）から読み込みます。`ai-dev-foundation` を根とする明示的な1本のchainで
+なければなりません。必須チェックはfoundation、profile、repositoryの順で単調に追加されるため、
+profileやrepository overrideからfoundationのチェックを削除できません。profileがない場合は
+既存の有効順序を維持します。
+
 `apply` はローカルで実行する認証必須の管理コマンドです。実行ごとに、リポジトリの
 Administration書込権限を持つ対話的な `gh auth login` セッションを使い、GET専用の `plan` で
 対象と差異を確認し、その対象と実行について承認してください。その後、リポジトリ名を完全に同じ
