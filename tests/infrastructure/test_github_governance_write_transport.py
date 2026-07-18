@@ -26,6 +26,30 @@ def action():
     }
 
 
+def repository_settings_action():
+    return {
+        "body": {
+            "allow_merge_commit": False,
+            "allow_rebase_merge": False,
+            "allow_squash_merge": True,
+            "delete_branch_on_merge": True,
+            "has_discussions": True,
+            "squash_merge_commit_message": "PR_BODY",
+            "squash_merge_commit_title": "PR_TITLE",
+        },
+        "endpoint": f"repos/{REPOSITORY}",
+        "id": "repository.settings",
+        "method": "PATCH",
+        "side_effects": [],
+        "verify_controls": [
+            "repository.delete_branch_on_merge",
+            "repository.discussions_enabled",
+            "repository.merge_strategy",
+            "repository.squash_commit_format",
+        ],
+    }
+
+
 def test_write_uses_json_stdin_fixed_api_version_and_no_shell() -> None:
     current = action()
     before = copy.deepcopy(current)
@@ -68,6 +92,45 @@ def test_write_allowlist_rejects_untrusted_actions(unsafe) -> None:
     runner = mock.Mock()
 
     with pytest.raises(governance.PolicyError, match="invalid|not allowed"):
+        governance._gh_write_action(candidate, REPOSITORY, runner)
+
+    runner.assert_not_called()
+
+
+def test_repository_settings_write_accepts_exact_grouped_shape() -> None:
+    current = repository_settings_action()
+    runner = mock.Mock(return_value=subprocess.CompletedProcess([], 0, stdout="{}", stderr=""))
+
+    governance._gh_write_action(current, REPOSITORY, runner)
+
+    assert runner.call_count == 1
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    ["id", "method", "endpoint", "extra", "partial_merge", "partial_squash", "type", "controls"],
+)
+def test_repository_settings_write_rejects_non_planner_shapes(mutation) -> None:
+    candidate = repository_settings_action()
+    if mutation == "id":
+        candidate["id"] = "repository.delete_branch_on_merge"
+    elif mutation == "method":
+        candidate["method"] = "PUT"
+    elif mutation == "endpoint":
+        candidate["endpoint"] = f"repos/{REPOSITORY}/settings"
+    elif mutation == "extra":
+        candidate["body"]["visibility"] = "private"
+    elif mutation == "partial_merge":
+        candidate["body"].pop("allow_rebase_merge")
+    elif mutation == "partial_squash":
+        candidate["body"].pop("squash_merge_commit_title")
+    elif mutation == "type":
+        candidate["body"]["has_discussions"] = "yes"
+    else:
+        candidate["verify_controls"] = ["repository.delete_branch_on_merge"]
+    runner = mock.Mock()
+
+    with pytest.raises(governance.PolicyError, match="not allowed"):
         governance._gh_write_action(candidate, REPOSITORY, runner)
 
     runner.assert_not_called()

@@ -66,15 +66,16 @@ def execute(monkeypatch, plans, reports, *, run=None, discover=None, confirmed=R
 
 def test_actions_refresh_and_verify_one_at_a_time_without_mutating_inputs(monkeypatch) -> None:
     first = action()
-    second = action("repository.delete_branch_on_merge", "repository.delete_branch_on_merge")
+    repository_control = "repository.delete_branch_on_merge"
+    second = action("repository.settings", repository_control)
     second["body"] = {"delete_branch_on_merge": True}
     refreshed = copy.deepcopy(second)
     refreshed["body"] = {"delete_branch_on_merge": False}
     plans = [plan([first, second]), plan([first, second]), plan([refreshed]), plan([])]
     reports = [
-        report(**{"security.secret_scanning": "drift", second["id"]: "drift"}),
-        report(**{"security.secret_scanning": "compliant", second["id"]: "drift"}),
-        report(**{"security.secret_scanning": "compliant", second["id"]: "compliant"}),
+        report(**{"security.secret_scanning": "drift", repository_control: "drift"}),
+        report(**{"security.secret_scanning": "compliant", repository_control: "drift"}),
+        report(**{"security.secret_scanning": "compliant", repository_control: "compliant"}),
     ]
     policy, inventory = {"policy": True}, {"inventory": True}
     before = copy.deepcopy((policy, inventory))

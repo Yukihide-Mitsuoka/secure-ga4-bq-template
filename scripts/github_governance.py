@@ -1173,18 +1173,41 @@ def _security_apply_action(controls, repository):
 
 
 def _repository_apply_action(controls, settings, repository):
-    control_id = "repository.delete_branch_on_merge"
-    if controls[control_id]["status"] != "drift":
+    fields = {}
+    side_effects = []
+    verify = []
+    if controls["repository.merge_strategy"]["status"] == "drift":
+        fields.update(
+            allow_merge_commit=False,
+            allow_rebase_merge=False,
+            allow_squash_merge=True,
+        )
+        side_effects.append("available_pull_request_merge_methods_change_immediately")
+        verify.append("repository.merge_strategy")
+    if controls["repository.squash_commit_format"]["status"] == "drift":
+        fields.update(
+            squash_merge_commit_message=settings["squash_merge_commit_message"],
+            squash_merge_commit_title=settings["squash_merge_commit_title"],
+        )
+        side_effects.append("future_squash_commit_defaults_change")
+        verify.append("repository.squash_commit_format")
+    if controls["repository.discussions_enabled"]["status"] == "drift":
+        fields["has_discussions"] = settings["discussions_enabled"]
+        side_effects.append("repository_discussions_availability_changes")
+        verify.append("repository.discussions_enabled")
+    if controls["repository.delete_branch_on_merge"]["status"] == "drift":
+        fields["delete_branch_on_merge"] = settings["delete_branch_on_merge"]
+        if settings["delete_branch_on_merge"]:
+            side_effects.append("future_merged_head_branches_are_deleted")
+        verify.append("repository.delete_branch_on_merge")
+    if not fields:
         return None
-    side_effects = (
-        ["future_merged_head_branches_are_deleted"] if settings["delete_branch_on_merge"] else []
-    )
     return _apply_action(
-        control_id,
+        "repository.settings",
         "PATCH",
         f"repos/{repository}",
-        {"delete_branch_on_merge": settings["delete_branch_on_merge"]},
-        [control_id],
+        fields,
+        verify,
         side_effects,
     )
 
@@ -1253,14 +1276,6 @@ def build_apply_actions(policy, inventory):
     observed = controls["branch.required_status_checks_observed"]
     if observed["status"] != "compliant":
         raise PolicyError("apply requires every desired status check on the target branch head")
-    collaboration_controls = {
-        "repository.discussions_enabled",
-        "repository.merge_strategy",
-        "repository.squash_commit_format",
-    }
-    if any(controls[control_id]["status"] == "drift" for control_id in collaboration_controls):
-        raise PolicyError("collaboration settings apply is not implemented")
-
     settings = policy["settings"]
     actions = []
     security_action = _security_apply_action(controls, repository)
@@ -1272,6 +1287,9 @@ def build_apply_actions(policy, inventory):
     ):
         if action:
             actions.append(action)
+    repository_action = _repository_apply_action(controls, settings, repository)
+    if repository_action:
+        actions.append(repository_action)
     branch_drift = any(
         controls[control_id]["status"] == "drift" for control_id in BRANCH_CONTROL_IDS.values()
     )
@@ -1280,12 +1298,9 @@ def build_apply_actions(policy, inventory):
             raise PolicyError("legacy branch protection apply actions are not implemented")
         managed = _managed_repository_ruleset(inventory)
         actions.append(_ruleset_apply_action(settings, repository, managed))
-    for action in (
-        _repository_apply_action(controls, settings, repository),
-        _dependabot_apply_action(controls, settings, repository),
-    ):
-        if action:
-            actions.append(action)
+    dependabot_action = _dependabot_apply_action(controls, settings, repository)
+    if dependabot_action:
+        actions.append(dependabot_action)
     return {
         "actions": actions,
         "before_status": report["status"],
@@ -1320,11 +1335,53 @@ def _ruleset_write_allowed(action, base):
 
 def _repository_write_allowed(action, base):
     body = action["body"]
+    if type(body) is not dict or not body:
+        return False
+    merge_fields = {"allow_merge_commit", "allow_rebase_merge", "allow_squash_merge"}
+    squash_fields = {"squash_merge_commit_message", "squash_merge_commit_title"}
+    allowed_fields = (
+        merge_fields
+        | squash_fields
+        | {
+            "delete_branch_on_merge",
+            "has_discussions",
+        }
+    )
+    if not set(body) <= allowed_fields:
+        return False
+    if set(body) & merge_fields and not merge_fields <= set(body):
+        return False
+    if set(body) & squash_fields and not squash_fields <= set(body):
+        return False
+    if merge_fields <= set(body) and any(
+        body[field] is not expected
+        for field, expected in {
+            "allow_merge_commit": False,
+            "allow_rebase_merge": False,
+            "allow_squash_merge": True,
+        }.items()
+    ):
+        return False
+    for field in {"delete_branch_on_merge", "has_discussions"} & set(body):
+        if type(body[field]) is not bool:
+            return False
+    if squash_fields <= set(body) and (
+        body["squash_merge_commit_title"] not in {"PR_TITLE", "COMMIT_OR_PR_TITLE"}
+        or body["squash_merge_commit_message"] not in {"PR_BODY", "COMMIT_MESSAGES", "BLANK"}
+    ):
+        return False
+    expected_controls = set()
+    if merge_fields <= set(body):
+        expected_controls.add("repository.merge_strategy")
+    if squash_fields <= set(body):
+        expected_controls.add("repository.squash_commit_format")
+    if "delete_branch_on_merge" in body:
+        expected_controls.add("repository.delete_branch_on_merge")
+    if "has_discussions" in body:
+        expected_controls.add("repository.discussions_enabled")
     return (
-        type(body) is dict
-        and set(body) == {"delete_branch_on_merge"}
-        and type(body["delete_branch_on_merge"]) is bool
-        and action["verify_controls"] == [action["id"]]
+        action["id"] == "repository.settings"
+        and set(action["verify_controls"]) == expected_controls
         and (action["method"], action["endpoint"]) == ("PATCH", base)
     )
 
@@ -1399,7 +1456,7 @@ def _validate_write_action(action, repository):
     base = f"repos/{repository}"
     if action_id == "branch.ruleset":
         allowed = _ruleset_write_allowed(action, base)
-    elif action_id == "repository.delete_branch_on_merge":
+    elif action_id == "repository.settings":
         allowed = _repository_write_allowed(action, base)
     elif action_id == "security.secret_scanning":
         allowed = _security_write_allowed(action, base)
