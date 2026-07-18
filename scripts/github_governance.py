@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate and resolve layered GitHub governance policy (ADR-0008)."""
+"""Validate, audit, and apply layered GitHub governance policy (ADR-0008, ADR-0009)."""
 
 import argparse
 import copy
@@ -1408,14 +1408,17 @@ def _known_rule_ids(root):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("validate", "plan", "audit"))
+    parser.add_argument("command", choices=("validate", "plan", "audit", "apply"))
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--foundation", type=Path)
     parser.add_argument("--repository", type=Path)
     parser.add_argument("--repo", help="GitHub repository in OWNER/REPOSITORY form")
+    parser.add_argument("--confirm-repo", help="exact repository confirmation required by apply")
     args = parser.parse_args(argv)
-    if args.command in {"plan", "audit"} and not args.repo:
-        parser.error("--repo is required for plan and audit")
+    if args.command in {"plan", "audit", "apply"} and not args.repo:
+        parser.error("--repo is required for plan, audit, and apply")
+    if args.command == "apply" and args.confirm_repo != args.repo:
+        parser.error("--confirm-repo must exactly match --repo for apply")
     root = args.root.resolve()
     foundation = args.foundation or root / ".github/governance/foundation.json"
     repository = args.repository or root / ".github/governance/repository.json"
@@ -1432,7 +1435,15 @@ def main(argv=None):
                 args.repo,
                 resolved["settings"]["target_branch"],
             )
-            report = compare_governance(resolved, inventory)
+            report = (
+                execute_apply(resolved, inventory, args.confirm_repo)
+                if args.command == "apply"
+                else compare_governance(resolved, inventory)
+            )
+    except ApplyFailure as error:
+        print(json.dumps(error.evidence, indent=2, sort_keys=True))
+        print(f"governance apply error: {error}", file=sys.stderr)
+        return 2
     except PolicyError as error:
         print(f"governance policy error: {error}", file=sys.stderr)
         return 2

@@ -1,7 +1,7 @@
 ---
 id: usage
 title: Usage — New Machine, New Account, New Project
-updated: 2026-07-17
+updated: 2026-07-18
 ---
 
 # Usage
@@ -68,7 +68,7 @@ cp profiles/python-uv/Makefile ./Makefile      # or typescript-node / terraform-
 ```
 See [profiles/README.md](../profiles/README.md) for the canonical target contract.
 
-### 5. Review GitHub governance
+### 5. Review and optionally apply GitHub governance
 
 ```bash
 uv run python scripts/github_governance.py validate
@@ -82,9 +82,30 @@ returns 0 after a complete comparison even for drift or unknown state. `audit` r
 only when compliant, 1 for drift/unknown, and 2 for input, policy, or read errors. See
 [GitHub governance troubleshooting](troubleshooting/github-governance.md).
 
+`apply` is an authenticated local administration command. Before each run, use an
+interactive `gh auth login` session with repository Administration write access, run
+the GET-only `plan`, review its target and drift, and authorize that exact target and
+run. Then repeat the repository value verbatim:
+
+```bash
+uv run python scripts/github_governance.py apply \
+  --repo OWNER/REPOSITORY \
+  --confirm-repo OWNER/REPOSITORY
+uv run python scripts/github_governance.py audit --repo OWNER/REPOSITORY
+```
+
+Missing or unequal confirmation stops before GitHub discovery. A valid run refreshes
+state before writing and verifies one action at a time. It can block pushes, create
+alerts or pull requests, and change merge eligibility. There is no automatic retry or
+rollback: inspect any partial evidence and rerun GET-only `plan` before separately
+authorizing recovery. Never run `apply` in CI or on a schedule, and never store a
+repository Administration credential in GitHub Actions. Merging the implementation
+does not authorize a live run. The authoritative input, output, exit-code, and failure
+contract is [GitHub governance CLI](api/README.md#github-governance-cli).
+
 The legacy `scripts/setup-github.sh` remains a fixed one-time bootstrap, not an
-implementation of the resolved layered policy. Review its writes before intentionally
-using it; policy-driven `apply` is not provided.
+implementation of the resolved layered policy. Prefer the confirmed policy-driven
+`apply`; review either command's writes before intentional use.
 
 ### 6. Install local gates and point your agent at it
 
@@ -125,7 +146,7 @@ Install once on each new machine:
 | Tool | Needed for | Notes |
 |------|-----------|-------|
 | `git`, `make` | everything | — |
-| `gh` (GitHub CLI) | GET-only governance review, auth | `gh auth login` |
+| `gh` (GitHub CLI) | Governance review and separately authorized local application | `gh auth login` |
 | `pre-commit` | local commit gates | `make setup` (once a profile is wired) or `pre-commit install` |
 | Stack toolchain | build/test | uv (python), pnpm+node (ts), terraform (iac) — per your profile |
 | `gitleaks`, `trivy`, `syft` | local `make security-scan` / `sbom` | optional locally; **CI enforces them regardless** |

@@ -1,5 +1,6 @@
 import copy
 import importlib.util
+import json
 from pathlib import Path
 
 import pytest
@@ -242,8 +243,79 @@ def test_organization_ruleset_with_managed_name_is_never_updated() -> None:
     assert result["actions"][0]["endpoint"] == "repos/acme/demo/rulesets"
 
 
-def test_cli_does_not_expose_apply(capsys) -> None:
+def test_apply_requires_repository(capsys) -> None:
     with pytest.raises(SystemExit) as failure:
-        governance.main(["apply"])
+        governance.main(["apply", "--root", str(ROOT)])
     assert failure.value.code == 2
-    assert "invalid choice" in capsys.readouterr().err
+    assert "--repo is required" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("confirmation", [None, "acme/other"])
+def test_apply_requires_exact_confirmation_before_discovery(
+    monkeypatch, capsys, confirmation
+) -> None:
+    calls = []
+
+    def discover(*args):
+        calls.append(args)
+
+    monkeypatch.setattr(governance, "discover_github", discover)
+    arguments = ["apply", "--root", str(ROOT), "--repo", "acme/demo"]
+    if confirmation:
+        arguments.extend(("--confirm-repo", confirmation))
+
+    with pytest.raises(SystemExit) as failure:
+        governance.main(arguments)
+
+    assert failure.value.code == 2
+    assert "--confirm-repo must exactly match --repo" in capsys.readouterr().err
+    assert calls == []
+
+
+@pytest.mark.parametrize(
+    ("evidence", "error", "expected_exit"),
+    [
+        ({"repository": "acme/demo", "status": "compliant"}, None, 0),
+        (
+            {"failed_action": "branch.ruleset", "status": "failed"},
+            "verification failed",
+            2,
+        ),
+    ],
+)
+def test_apply_emits_success_or_partial_failure_evidence(
+    monkeypatch, capsys, evidence, error, expected_exit
+) -> None:
+    inventory = {"inventory": True}
+    calls = []
+
+    monkeypatch.setattr(governance, "discover_github", lambda *args: inventory)
+
+    def execute(policy, discovered, confirmed):
+        calls.append((policy, discovered, confirmed))
+        if error:
+            raise governance.ApplyFailure(error, evidence)
+        return evidence
+
+    monkeypatch.setattr(governance, "execute_apply", execute)
+
+    exit_code = governance.main(
+        [
+            "apply",
+            "--root",
+            str(ROOT),
+            "--repo",
+            "acme/demo",
+            "--confirm-repo",
+            "acme/demo",
+        ]
+    )
+    streams = capsys.readouterr()
+
+    assert exit_code == expected_exit
+    assert json.loads(streams.out) == evidence
+    assert len(calls) == 1
+    assert "iac-scan" in calls[0][0]["settings"]["required_checks"]
+    assert calls[0][1:] == (inventory, "acme/demo")
+    if error:
+        assert "governance apply error: verification failed" in streams.err

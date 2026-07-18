@@ -1,7 +1,7 @@
 ---
 id: usage-ja
 title: 使い方（日本語）— 新しいPC / 別アカウント / 新規プロジェクト
-updated: 2026-07-17
+updated: 2026-07-18
 ---
 
 # 使い方（日本語セットアップ手順書）
@@ -68,7 +68,7 @@ cp profiles/python-uv/Makefile ./Makefile      # または typescript-node / ter
 ```
 正準ターゲット契約は [profiles/README.md](../profiles/README.md) を参照。
 
-### 5. GitHub ガバナンスを点検
+### 5. GitHub ガバナンスを点検し、必要な場合だけ反映
 
 ```bash
 uv run python scripts/github_governance.py validate
@@ -81,9 +81,29 @@ uv run python scripts/github_governance.py audit --repo OWNER/REPOSITORY
 unknownがあっても0、`audit` は準拠時0・差異/unknown時1・入力/ポリシー/読取エラー時2です。
 [GitHubガバナンスのトラブルシューティング](troubleshooting/github-governance.md)も参照。
 
+`apply` はローカルで実行する認証必須の管理コマンドです。実行ごとに、リポジトリの
+Administration書込権限を持つ対話的な `gh auth login` セッションを使い、GET専用の `plan` で
+対象と差異を確認し、その対象と実行について承認してください。その後、リポジトリ名を完全に同じ
+値で2回指定します。
+
+```bash
+uv run python scripts/github_governance.py apply \
+  --repo OWNER/REPOSITORY \
+  --confirm-repo OWNER/REPOSITORY
+uv run python scripts/github_governance.py audit --repo OWNER/REPOSITORY
+```
+
+確認値がない、または一致しない場合はGitHubの読取前に停止します。有効な実行では、最初の書込前に
+状態を再取得し、1操作ずつ検証します。pushの拒否、アラートやPRの作成、マージ可否の変更が起こる
+場合があります。自動再試行と自動ロールバックはありません。部分証跡を確認し、GET専用の `plan`
+を再実行してから復旧操作を改めて承認してください。CIや定期実行では使用せず、GitHub Actionsに
+Administration資格情報を保存しないでください。実装PRのマージだけではライブ実行は承認されません。
+入力・出力・終了コード・失敗時動作の正準契約は
+[GitHub governance CLI](api/README.md#github-governance-cli)です。
+
 従来の `scripts/setup-github.sh` は固定内容の初期設定として残っていますが、階層ポリシーの
-反映機能ではありません。書込内容を確認して意図的に使ってください。ポリシー駆動の `apply`
-は未提供です。
+反映機能ではありません。確認付きのポリシー駆動 `apply` を優先し、どちらも書込内容を確認して
+意図的に使ってください。
 
 ### 6. ローカルゲート導入 → エージェントに向ける
 
@@ -124,7 +144,7 @@ make build
 | ツール | 用途 | 備考 |
 |--------|------|------|
 | `git`, `make` | 全般 | — |
-| `gh`（GitHub CLI）| GET専用ガバナンス点検・認証 | `gh auth login` |
+| `gh`（GitHub CLI）| ガバナンス点検と個別承認済みのローカル反映 | `gh auth login` |
 | `pre-commit` | ローカルコミットゲート | `make setup`（プロファイル導入後）または `pre-commit install` |
 | スタックのツールチェーン | build/test | uv(python) / pnpm+node(ts) / terraform(iac) |
 | `gitleaks`, `trivy`, `syft` | ローカルの `make security-scan` / `sbom` | ローカルは任意。**CIは常時強制** |
