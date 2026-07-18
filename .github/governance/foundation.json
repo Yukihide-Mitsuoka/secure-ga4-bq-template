@@ -29,8 +29,8 @@
       "license-check"
     ],
     "dependency_update_provider": "renovate",
-    "delete_branch_on_merge": false,
-    "discussions_enabled": true,
+    "delete_branch_on_merge": true,
+    "discussions_enabled": false,
     "squash_merge_commit_title": "PR_TITLE",
     "squash_merge_commit_message": "PR_BODY"
   }

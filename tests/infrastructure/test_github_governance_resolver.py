@@ -55,7 +55,7 @@ def test_repository_policy_resolves_deterministically(resolver) -> None:
         ],
         "dependency_update_provider": "renovate",
         "delete_branch_on_merge": True,
-        "discussions_enabled": True,
+        "discussions_enabled": False,
         "squash_merge_commit_title": "PR_TITLE",
         "squash_merge_commit_message": "PR_BODY",
     }
