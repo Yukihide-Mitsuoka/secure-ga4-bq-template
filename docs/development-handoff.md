@@ -15,9 +15,9 @@ authoritative in their linked documents.
 
 | Item | State on 2026-07-18 | Evidence or source |
 |------|---------------------|--------------------|
-| Default branch | Release baseline v1.6.0 plus confirmed local `apply` in PR #172; the parent lock advances to `e8833a3` without materialization in Issue #174 | [Release v1.6.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v1.6.0), [PR #172](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/172), [Issue #174](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/174) |
+| Default branch | Release baseline v1.7.0; PR #175 accepted parent handoff `e8833a3` without materialization | [Release v1.7.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v1.7.0), [PR #175](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/175) |
 | IaC governance prerequisite | Complete: exact `iac-scan` succeeded on PR #125 and its merged-main push | [PR run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29517379947), [main run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29518413106) |
-| Active work | Issue #174 accepts parent-specific handoff `e8833a3` as a lock-only checkpoint; no parent content or live setting is applied | [Issue #174](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/174), [ADR-0008](adr/0008-adopt-direct-parent-inheritance-contract.md) |
+| Active work | Issue #176 accepts vulnerability-intake merge `10e4a1a` as a lock-only checkpoint; no parent content or live setting is applied | [Issue #176](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/176), [ADR-0008](adr/0008-adopt-direct-parent-inheritance-contract.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -34,19 +34,24 @@ caller and WIF condition are pinned together to `v2.0.2`.
 
 No cloud action is required for the current milestone. Continue in this order:
 
-1. Merge Issue #174's lock-only checkpoint for `e8833a3`; materialize no parent file.
-2. Review next direct-parent vulnerability-intake candidate `10e4a1a` separately; do not
-   assume its security controls or parent usage guidance fit this child.
-3. Treat every future live target and run as separately approval-gated after GET-only
+1. Merge Issue #176's lock-only checkpoint for vulnerability-intake merge `10e4a1a`;
+   materialize no parent file.
+2. Adapt the accepted `SEC-003` vulnerability-alert and private-reporting minimums in a
+   separate test-backed issue. Preserve permission-limited `unknown`, enable-only
+   actions, the stricter Ruleset planner, additive `iac-scan`, and the accepted exact
+   confirmation and read-back boundary for public `apply`.
+3. Review collaboration-settings merge `414aa03` only after the `SEC-003` child
+   adaptation is complete.
+4. Treat every future live target and run as separately approval-gated after GET-only
    `plan`; implementation merge is not authorization.
-4. Continue advancing only one first-parent commit per reviewed PR; keep lock changes
+5. Continue advancing only one first-parent commit per reviewed PR; keep lock changes
    separate from protected-file adaptations.
-5. Apply the asset to a second engagement when an owner and customer scope exist, then
+6. Apply the asset to a second engagement when an owner and customer scope exist, then
    measure reuse effort for Acceptance S.
-6. Use the versioned standard-inspection profile, generated menu, and deterministic
+7. Use the versioned standard-inspection profile, generated menu, and deterministic
    qualification artifacts as the service-packaging baseline; change profile values in
    a reviewed PR rather than editing generated material.
-7. Keep customer delivery evidence and raw inspection artifacts outside this public
+8. Keep customer delivery evidence and raw inspection artifacts outside this public
    repository because complete inspection artifacts remain Internal.
 
 Do not recreate the deleted verification environment unless a new issue and approvals
@@ -111,12 +116,13 @@ may be absent; CI remains authoritative.
 ## Resume prompt
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
-> `docs/development-handoff.md`. Confirm the v1.6.0 baseline, PR #172, accepted ADR-0008,
-> and accepted ADR-0009. The inheritance lock is `e8833a3`, and the child-specific
+> `docs/development-handoff.md`. Confirm the v1.7.0 baseline, PR #175, accepted ADR-0008,
+> and accepted ADR-0009. The inheritance lock is `10e4a1a`, and the child-specific
 > stricter-Ruleset planner remains authoritative with `iac-scan` preserved. Merge Issue
-> #174's lock-only checkpoint without materialization, then review vulnerability-intake
-> candidate `10e4a1a` separately. Retain legacy sync. Do not run governance `apply` or
-> mutate live GitHub/GCP state without separate target-specific approval.
+> #176's lock-only checkpoint without materialization, then adapt the accepted `SEC-003`
+> controls before reviewing collaboration-settings candidate `414aa03`. Retain legacy
+> sync. Do not run governance `apply` or mutate live GitHub/GCP state without separate
+> target-specific approval.
 > Technical Acceptance A, CHK-12,
 > service packaging, and release hardening are complete. Continue toward Acceptance S
 > only when a second engagement or department-standard owner and scope exist. Do not
