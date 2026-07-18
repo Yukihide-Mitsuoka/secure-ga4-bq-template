@@ -2,6 +2,7 @@ import copy
 import importlib.util
 import json
 from pathlib import Path
+from unittest import mock
 
 import pytest
 
@@ -23,11 +24,21 @@ def policy(name: str) -> dict:
     return json.loads((GOVERNANCE / name).read_text(encoding="utf-8"))
 
 
-def resolve(resolver, foundation=None, repository=None):
+def profile(profile_id, parent, checks):
+    return {
+        "schema_version": 1,
+        "id": profile_id,
+        "parent": parent,
+        "required_checks": checks,
+    }
+
+
+def resolve(resolver, foundation=None, repository=None, profiles=None):
     return resolver.resolve_policy(
         foundation or policy("foundation.json"),
         repository or policy("repository.json"),
         KNOWN_RULES,
+        [] if profiles is None else profiles,
     )
 
 
@@ -36,6 +47,7 @@ def test_repository_policy_resolves_deterministically(resolver) -> None:
 
     assert result["schema_version"] == 1
     assert result["managed_by"] == "ai-dev-foundation"
+    assert result["profiles"] == []
     assert result["settings"] == {
         "target_branch": "main",
         "enforcement_backend": "ruleset",
@@ -78,19 +90,76 @@ def test_foundation_requires_vulnerability_intake_minimums(resolver) -> None:
     }
 
 
-def test_repository_may_add_but_not_remove_foundation_checks(resolver) -> None:
+def test_repository_checks_are_monotonically_added_to_foundation_checks(resolver) -> None:
     foundation = policy("foundation.json")
     foundation_checks = foundation["defaults"]["required_checks"]
-    additive = {"schema_version": 1, "overrides": {"required_checks": [*foundation_checks, "x"]}}
+    additive = {"schema_version": 1, "overrides": {"required_checks": ["x"]}}
 
-    assert resolve(resolver, foundation, additive)["settings"]["required_checks"][-1] == "x"
+    assert resolve(resolver, foundation, additive)["settings"]["required_checks"] == [
+        *foundation_checks,
+        "x",
+    ]
 
-    with pytest.raises(resolver.PolicyError, match="cannot remove foundation checks"):
-        resolve(
-            resolver,
-            foundation,
-            {"schema_version": 1, "overrides": {"required_checks": foundation_checks[1:]}},
-        )
+
+def test_profiles_form_one_parent_chain_and_merge_checks_stably(resolver) -> None:
+    result = resolve(
+        resolver,
+        repository={"schema_version": 1, "overrides": {"required_checks": ["test", "leaf"]}},
+        profiles=[
+            profile("secure-data", "terraform-gcp", ["data-contract"]),
+            profile("terraform-gcp", "ai-dev-foundation", ["lint", "iac-scan"]),
+        ],
+    )
+
+    assert [item["id"] for item in result["profiles"]] == ["terraform-gcp", "secure-data"]
+    assert result["settings"]["required_checks"] == [
+        *policy("foundation.json")["defaults"]["required_checks"],
+        "iac-scan",
+        "data-contract",
+        "leaf",
+    ]
+
+
+@pytest.mark.parametrize(
+    "profiles",
+    [
+        [profile("terraform", "ai-dev-foundation", ["scan"])] * 2,
+        [
+            profile("terraform", "ai-dev-foundation", ["scan"]),
+            profile("nextjs", "ai-dev-foundation", ["web-test"]),
+        ],
+        [profile("orphan", "missing", ["scan"])],
+        [profile("first", "second", ["scan"]), profile("second", "first", ["test"])],
+        [profile("Invalid", "ai-dev-foundation", ["scan"])],
+        [profile("terraform", "ai-dev-foundation", ["scan", "scan"])],
+    ],
+)
+def test_invalid_profile_graphs_fail_closed(resolver, profiles) -> None:
+    with pytest.raises(resolver.PolicyError):
+        resolve(resolver, profiles=profiles)
+
+
+def test_profile_loader_accepts_regular_json_and_rejects_symlinks(resolver, tmp_path) -> None:
+    directory = tmp_path / ".github/governance/profiles"
+    directory.mkdir(parents=True)
+    safe = profile("terraform", "ai-dev-foundation", ["scan"])
+    (directory / "safe.json").write_text(json.dumps(safe), encoding="utf-8")
+
+    assert resolver._load_profiles(tmp_path) == [safe]
+
+    outside = tmp_path / "outside.json"
+    outside.write_text(json.dumps(profile("outside", "ai-dev-foundation", ["scan"])))
+    (directory / "unsafe.json").symlink_to(outside)
+
+    with pytest.raises(resolver.PolicyError):
+        resolver._load_profiles(tmp_path)
+
+    linked_root = tmp_path / "linked-root"
+    linked_root.mkdir()
+    (linked_root / ".github").symlink_to(tmp_path / ".github", target_is_directory=True)
+
+    with pytest.raises(resolver.PolicyError):
+        resolver._load_profiles(linked_root)
 
 
 @pytest.mark.parametrize(
@@ -149,6 +218,18 @@ def test_validate_cli_prints_stable_json_without_network(resolver, capsys) -> No
     captured = capsys.readouterr()
     assert json.loads(captured.out) == resolve(resolver)
     assert captured.err == ""
+
+
+def test_validate_cli_loads_profiles_without_network(resolver, capsys) -> None:
+    terraform = profile("terraform-gcp", "ai-dev-foundation", ["iac-scan"])
+
+    with mock.patch.object(resolver, "_load_profiles", return_value=[terraform]) as load:
+        assert resolver.main(["validate", "--root", str(ROOT)]) == 0
+
+    report = json.loads(capsys.readouterr().out)
+    assert report["profiles"] == [terraform]
+    assert report["settings"]["required_checks"][-1] == "iac-scan"
+    load.assert_called_once_with(ROOT)
 
 
 @pytest.mark.parametrize(

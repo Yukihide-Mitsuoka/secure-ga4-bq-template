@@ -87,6 +87,12 @@ returns 0 after a complete comparison even for drift or unknown state. `audit` r
 only when compliant, 1 for drift/unknown, and 2 for input, policy, or read errors. See
 [GitHub governance troubleshooting](troubleshooting/github-governance.md).
 
+Optional template-family policies are loaded from regular, non-symlink JSON files under
+`.github/governance/profiles/`. They must form one explicit chain rooted at
+`ai-dev-foundation`. Required checks merge monotonically in foundation-to-profile-to-
+repository order, so neither a profile nor a repository override can remove a foundation
+check. Repositories without profiles retain their existing effective order.
+
 `apply` is an authenticated local administration command. Before each run, use an
 interactive `gh auth login` session with repository Administration write access, run
 the GET-only `plan`, review its target and drift, and authorize that exact target and
