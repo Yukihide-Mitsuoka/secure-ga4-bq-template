@@ -46,3 +46,7 @@ infra/**
 # ci.yml carries this stack's runtime setup (hashicorp/setup-terraform); port base CI
 # improvements manually when a sync PR shows a diff here.
 .github/workflows/ci.yml
+
+docs/**
+!docs/foundation/
+!docs/foundation/**
