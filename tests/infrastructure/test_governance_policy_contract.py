@@ -5,7 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).parents[2]
 GOVERNANCE = ROOT / ".github/governance"
-PARENT_FOUNDATION_BLOB = "2b1d5b2e57415d9ba1fdf3989811d95b6c4c4315"
+PARENT_FOUNDATION_BLOB = "923aaf46a5c7fff7328b215fa107f039eccb1082"
 FOUNDATION_CHECKS = [
     "lint",
     "test",
@@ -62,8 +62,8 @@ def test_foundation_policy_matches_the_accepted_parent_contract() -> None:
         "require_last_push_approval": False,
         "required_checks": FOUNDATION_CHECKS,
         "dependency_update_provider": "renovate",
-        "delete_branch_on_merge": False,
-        "discussions_enabled": True,
+        "delete_branch_on_merge": True,
+        "discussions_enabled": False,
         "squash_merge_commit_title": "PR_TITLE",
         "squash_merge_commit_message": "PR_BODY",
     }
