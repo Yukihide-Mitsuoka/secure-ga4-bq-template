@@ -174,7 +174,13 @@ def test_existing_ruleset_update_rejects_unpreservable_state(unsafe) -> None:
 
 def test_common_actions_are_ordered_and_describe_side_effects() -> None:
     inventory = comparison.ruleset_inventory()
-    inventory["repository"]["delete_branch_on_merge"] = False
+    inventory["repository"].update(
+        allow_merge_commit=True,
+        delete_branch_on_merge=False,
+        has_discussions=False,
+        squash_merge_commit_message="BLANK",
+        squash_merge_commit_title="COMMIT_OR_PR_TITLE",
+    )
     inventory["security"] = {
         "dependabot_security_updates": "enabled",
         "private_vulnerability_reporting": "disabled",
@@ -189,7 +195,7 @@ def test_common_actions_are_ordered_and_describe_side_effects() -> None:
         "security.secret_scanning",
         "security.vulnerability_alerts",
         "security.private_vulnerability_reporting",
-        "repository.delete_branch_on_merge",
+        "repository.settings",
         "security.dependabot_security_updates",
     ]
     assert result["actions"][0]["method"] == "PATCH"
@@ -202,22 +208,28 @@ def test_common_actions_are_ordered_and_describe_side_effects() -> None:
     assert result["actions"][2]["side_effects"] == [
         "private_vulnerability_reports_can_be_submitted"
     ]
+    assert result["actions"][3]["body"] == {
+        "allow_merge_commit": False,
+        "allow_rebase_merge": False,
+        "allow_squash_merge": True,
+        "delete_branch_on_merge": True,
+        "has_discussions": True,
+        "squash_merge_commit_message": "PR_BODY",
+        "squash_merge_commit_title": "PR_TITLE",
+    }
     assert result["actions"][4]["method"] == "DELETE"
 
 
-def test_collaboration_drift_fails_closed_until_action_adapter_exists() -> None:
-    inventory = comparison.ruleset_inventory()
-    inventory["repository"].update(
-        allow_merge_commit=True,
-        has_discussions=False,
-        squash_merge_commit_message="BLANK",
-    )
+def test_squash_merge_is_enabled_before_linear_history_ruleset() -> None:
+    inventory = missing_ruleset_inventory()
+    inventory["repository"].update(allow_merge_commit=True, allow_squash_merge=False)
 
-    with pytest.raises(
-        governance.PolicyError,
-        match="collaboration settings apply is not implemented",
-    ):
-        governance.build_apply_actions(comparison.resolved_policy(), inventory)
+    result = governance.build_apply_actions(comparison.resolved_policy(), inventory)
+
+    assert [action["id"] for action in result["actions"]] == [
+        "repository.settings",
+        "branch.ruleset",
+    ]
 
 
 def test_compliant_inventory_returns_no_actions_without_mutation() -> None:
