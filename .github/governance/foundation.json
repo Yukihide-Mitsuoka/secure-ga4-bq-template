@@ -7,7 +7,9 @@
     "force_pushes_allowed": {"value": false, "rule_refs": ["GR-011"]},
     "admin_bypass_allowed": {"value": false, "rule_refs": ["GR-010", "GR-012"]},
     "secret_scanning_enabled": {"value": true, "rule_refs": ["SEC-002"]},
-    "push_protection_enabled": {"value": true, "rule_refs": ["SEC-002"]}
+    "push_protection_enabled": {"value": true, "rule_refs": ["SEC-002"]},
+    "vulnerability_alerts_enabled": {"value": true, "rule_refs": ["SEC-003"]},
+    "private_vulnerability_reporting_enabled": {"value": true, "rule_refs": ["SEC-003"]}
   },
   "defaults": {
     "target_branch": "main",

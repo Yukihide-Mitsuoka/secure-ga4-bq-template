@@ -11,7 +11,9 @@ title: GitHub governance troubleshooting
 
 **Cause:** At least one control is `drift` or `unknown`. Missing required branch-head
 checks, including child-required `iac-scan`, are drift; inaccessible admin-only state is
-unknown.
+unknown. Vulnerability alerts are confirmed disabled only when GitHub returns 404 and
+the repository response confirms Administration access; otherwise ambiguous access is
+`unknown`. Private vulnerability reporting uses GitHub's explicit enabled Boolean.
 
 **Fix:** Inspect the redacted JSON `controls` entries. Allow missing required workflows
 to run on the target branch. If policy-backed settings still drift, review `plan` and
@@ -20,7 +22,7 @@ use the separately authorized local `apply`, then rerun `audit`.
 **Prevention:** Run `plan` before changing governance and use `audit` as CI's compliance
 gate. Unrelated observed checks are ignored.
 
-**Refs:** #140, GR-012, SEC-002.
+**Refs:** #140, #178, GR-012, SEC-002, SEC-003.
 
 ## `apply` exits with status 2
 
@@ -37,8 +39,13 @@ recovery run or manual reversal. Missing checks, unknown state, unsafe targets, 
 protection, additional required checks, and unpreservable managed-Ruleset state must be
 resolved without weakening the child policy or its `iac-scan` requirement.
 
+For `security.vulnerability_alerts` or
+`security.private_vulnerability_reporting`, an `unknown` state produces no write action.
+Restore repository read/Administration access and rerun `plan`; do not interpret an
+inaccessible endpoint as proof that the control is disabled.
+
 **Prevention:** Use local interactive `gh` authentication with repository Administration
 write access, confirm the exact repository value, and never run `apply` from CI or a
 schedule.
 
-**Refs:** #171, ADR-0009, GR-010, GR-011, GR-012, SEC-002.
+**Refs:** #171, #178, ADR-0009, GR-010, GR-011, GR-012, SEC-002, SEC-003.

@@ -177,20 +177,32 @@ def test_common_actions_are_ordered_and_describe_side_effects() -> None:
     inventory["repository"]["delete_branch_on_merge"] = False
     inventory["security"] = {
         "dependabot_security_updates": "enabled",
+        "private_vulnerability_reporting": "disabled",
         "push_protection": "disabled",
         "secret_scanning": "disabled",
+        "vulnerability_alerts": "disabled",
     }
 
     result = governance.build_apply_actions(comparison.resolved_policy(), inventory)
 
     assert [action["id"] for action in result["actions"]] == [
         "security.secret_scanning",
+        "security.vulnerability_alerts",
+        "security.private_vulnerability_reporting",
         "repository.delete_branch_on_merge",
         "security.dependabot_security_updates",
     ]
     assert result["actions"][0]["method"] == "PATCH"
     assert "pushes_containing_detected_secrets_are_rejected" in result["actions"][0]["side_effects"]
-    assert result["actions"][2]["method"] == "DELETE"
+    assert result["actions"][1]["method"] == "PUT"
+    assert result["actions"][1]["body"] is None
+    assert result["actions"][1]["side_effects"] == [
+        "dependabot_vulnerability_alerts_may_be_created"
+    ]
+    assert result["actions"][2]["side_effects"] == [
+        "private_vulnerability_reports_can_be_submitted"
+    ]
+    assert result["actions"][4]["method"] == "DELETE"
 
 
 def test_compliant_inventory_returns_no_actions_without_mutation() -> None:
@@ -206,13 +218,24 @@ def test_compliant_inventory_returns_no_actions_without_mutation() -> None:
 
 
 @pytest.mark.parametrize(
-    "unsafe", ["unknown", "unobserved", "existing", "duplicate", "legacy", "target"]
+    "unsafe",
+    [
+        "unknown",
+        "vulnerability_unknown",
+        "unobserved",
+        "existing",
+        "duplicate",
+        "legacy",
+        "target",
+    ],
 )
 def test_unsafe_preconditions_fail_closed(unsafe) -> None:
     policy = comparison.resolved_policy()
     inventory = missing_ruleset_inventory()
     if unsafe == "unknown":
         inventory["security"]["secret_scanning"] = "unknown"
+    elif unsafe == "vulnerability_unknown":
+        inventory["security"]["vulnerability_alerts"] = "unknown"
     elif unsafe == "unobserved":
         inventory["observed_checks"] = ["lint"]
     elif unsafe in {"existing", "duplicate"}:

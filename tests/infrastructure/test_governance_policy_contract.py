@@ -5,7 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).parents[2]
 GOVERNANCE = ROOT / ".github/governance"
-PARENT_FOUNDATION_BLOB = "1843a21cbf897c58e711a05ad327d81a07f143f7"
+PARENT_FOUNDATION_BLOB = "1563778f7b995621ece23f719b729568ebeab5dc"
 FOUNDATION_CHECKS = [
     "lint",
     "test",
@@ -24,6 +24,8 @@ MINIMUMS = {
     "admin_bypass_allowed": (False, ["GR-010", "GR-012"]),
     "secret_scanning_enabled": (True, ["SEC-002"]),
     "push_protection_enabled": (True, ["SEC-002"]),
+    "vulnerability_alerts_enabled": (True, ["SEC-003"]),
+    "private_vulnerability_reporting_enabled": (True, ["SEC-003"]),
 }
 
 

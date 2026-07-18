@@ -22,6 +22,8 @@ MINIMUM_CONTRACT = {
     "admin_bypass_allowed": (False, {"GR-010", "GR-012"}),
     "secret_scanning_enabled": (True, {"SEC-002"}),
     "push_protection_enabled": (True, {"SEC-002"}),
+    "vulnerability_alerts_enabled": (True, {"SEC-003"}),
+    "private_vulnerability_reporting_enabled": (True, {"SEC-003"}),
 }
 SETTING_FIELDS = {
     "target_branch",
@@ -246,6 +248,30 @@ def _gh_get_json(endpoint, runner, *, optional=False, paginate=False, collection
     return payload
 
 
+def _gh_get_status(endpoint, runner):
+    command = [
+        "gh",
+        "api",
+        "--method",
+        "GET",
+        "-H",
+        "Accept: application/vnd.github+json",
+        "-H",
+        f"X-GitHub-Api-Version: {API_VERSION}",
+        "--include",
+        endpoint,
+    ]
+    try:
+        result = runner(command, capture_output=True, text=True, timeout=30, check=False)
+    except (OSError, subprocess.SubprocessError) as error:
+        raise PolicyError(f"GitHub GET could not run for {endpoint}") from error
+    first_line = result.stdout.splitlines()[0] if result.stdout else ""
+    match = re.match(r"^HTTP/\S+\s+(\d{3})\b", first_line)
+    if not match:
+        raise PolicyError(f"GitHub GET returned no HTTP status for {endpoint}")
+    return int(match.group(1))
+
+
 def _known(value, expected_type):
     return value if type(value) is expected_type else UNKNOWN
 
@@ -263,6 +289,28 @@ def _security_inventory(repository):
         "push_protection": status("secret_scanning_push_protection"),
         "secret_scanning": status("secret_scanning"),
     }
+
+
+def _vulnerability_alerts_inventory(repository, admin_access, runner):
+    endpoint = f"repos/{repository}/vulnerability-alerts"
+    try:
+        status = _gh_get_status(endpoint, runner)
+    except PolicyError:
+        if admin_access is not True:
+            return UNKNOWN
+        raise
+    if status == 204:
+        return "enabled"
+    if status == 404:
+        return "disabled" if admin_access is True else UNKNOWN
+    if status == 403:
+        return UNKNOWN
+    raise PolicyError(f"GitHub GET returned unexpected HTTP status for {endpoint}")
+
+
+def _private_reporting_inventory(payload):
+    enabled = payload.get("enabled") if type(payload) is dict else None
+    return "enabled" if enabled is True else "disabled" if enabled is False else UNKNOWN
 
 
 def _observed_checks(repository, branch, runner):
@@ -604,6 +652,27 @@ def discover_github(repository, branch, runner=None):
         if protected
         else None
     )
+    permissions = repository_data.get("permissions")
+    admin_access = permissions.get("admin") if type(permissions) is dict else UNKNOWN
+    if type(admin_access) is not bool:
+        admin_access = UNKNOWN
+    security = _security_inventory(repository_data)
+    security.update(
+        {
+            "private_vulnerability_reporting": _private_reporting_inventory(
+                _gh_get_json(
+                    f"repos/{repository}/private-vulnerability-reporting",
+                    runner,
+                    optional=True,
+                )
+            ),
+            "vulnerability_alerts": _vulnerability_alerts_inventory(
+                repository,
+                admin_access,
+                runner,
+            ),
+        }
+    )
     return {
         "api_version": API_VERSION,
         "branch": {"name": branch, "protected": protected},
@@ -616,7 +685,7 @@ def discover_github(repository, branch, runner=None):
             "full_name": repository,
         },
         "rulesets": _discover_rulesets(repository, rules, runner),
-        "security": _security_inventory(repository_data),
+        "security": security,
     }
 
 
@@ -804,6 +873,18 @@ def compare_governance(policy, inventory):
                 security.get("secret_scanning", UNKNOWN),
                 "enabled",
                 minimums["secret_scanning_enabled"]["rule_refs"],
+            ),
+            _control(
+                "security.private_vulnerability_reporting",
+                security.get("private_vulnerability_reporting", UNKNOWN),
+                "enabled",
+                minimums["private_vulnerability_reporting_enabled"]["rule_refs"],
+            ),
+            _control(
+                "security.vulnerability_alerts",
+                security.get("vulnerability_alerts", UNKNOWN),
+                "enabled",
+                minimums["vulnerability_alerts_enabled"]["rule_refs"],
             ),
         ]
     )
@@ -1046,6 +1127,34 @@ def _repository_apply_action(controls, settings, repository):
     )
 
 
+def _vulnerability_alerts_apply_action(controls, repository):
+    control_id = "security.vulnerability_alerts"
+    if controls[control_id]["status"] != "drift":
+        return None
+    return _apply_action(
+        control_id,
+        "PUT",
+        f"repos/{repository}/vulnerability-alerts",
+        None,
+        [control_id],
+        ["dependabot_vulnerability_alerts_may_be_created"],
+    )
+
+
+def _private_reporting_apply_action(controls, repository):
+    control_id = "security.private_vulnerability_reporting"
+    if controls[control_id]["status"] != "drift":
+        return None
+    return _apply_action(
+        control_id,
+        "PUT",
+        f"repos/{repository}/private-vulnerability-reporting",
+        None,
+        [control_id],
+        ["private_vulnerability_reports_can_be_submitted"],
+    )
+
+
 def _dependabot_apply_action(controls, settings, repository):
     control_id = "security.dependabot_security_updates"
     if controls[control_id]["status"] != "drift":
@@ -1088,6 +1197,12 @@ def build_apply_actions(policy, inventory):
     security_action = _security_apply_action(controls, repository)
     if security_action:
         actions.append(security_action)
+    for action in (
+        _vulnerability_alerts_apply_action(controls, repository),
+        _private_reporting_apply_action(controls, repository),
+    ):
+        if action:
+            actions.append(action)
     branch_drift = any(
         controls[control_id]["status"] == "drift" for control_id in BRANCH_CONTROL_IDS.values()
     )

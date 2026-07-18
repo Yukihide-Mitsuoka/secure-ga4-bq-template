@@ -79,8 +79,10 @@ def ruleset_inventory():
         ],
         "security": {
             "dependabot_security_updates": "disabled",
+            "private_vulnerability_reporting": "enabled",
             "push_protection": "enabled",
             "secret_scanning": "enabled",
+            "vulnerability_alerts": "enabled",
         },
     }
 
@@ -121,6 +123,8 @@ def test_ruleset_report_is_compliant_deterministic_and_does_not_mutate_inputs() 
     )
     assert control(first, "branch.required_status_checks")["current"] == CHECKS
     assert first["unmanaged"] == {"effective_rules": [], "legacy_branch_protection": None}
+    assert control(first, "security.private_vulnerability_reporting")["rule_refs"] == ["SEC-003"]
+    assert control(first, "security.vulnerability_alerts")["rule_refs"] == ["SEC-003"]
     assert (policy, inventory) == before
 
 
@@ -161,6 +165,21 @@ def test_admin_invisible_control_makes_report_unknown() -> None:
 
     assert report["status"] == "unknown"
     assert control(report, "branch.admin_bypass_allowed")["status"] == "unknown"
+
+
+def test_vulnerability_intake_disabled_is_drift_and_unknown_blocks_status() -> None:
+    disabled = ruleset_inventory()
+    disabled["security"]["private_vulnerability_reporting"] = "disabled"
+    disabled["security"]["vulnerability_alerts"] = "disabled"
+    unknown = ruleset_inventory()
+    unknown["security"]["vulnerability_alerts"] = "unknown"
+
+    drift_report = governance.compare_governance(resolved_policy(), disabled)
+    unknown_report = governance.compare_governance(resolved_policy(), unknown)
+
+    assert drift_report["status"] == "drift"
+    assert control(drift_report, "security.vulnerability_alerts")["status"] == "drift"
+    assert unknown_report["status"] == "unknown"
 
 
 def test_unobserved_iac_scan_is_drift_but_unrelated_checks_are_ignored() -> None:
