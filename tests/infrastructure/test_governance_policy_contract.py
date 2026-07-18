@@ -72,15 +72,21 @@ def test_foundation_policy_matches_the_accepted_parent_contract() -> None:
     } <= known_rule_ids()
 
 
-def test_repository_policy_only_adds_the_proven_iac_context() -> None:
+def test_terraform_profile_owns_the_proven_iac_context() -> None:
     repository = load(GOVERNANCE / "repository.json")
+    profile = load(GOVERNANCE / "profiles/terraform-gcp.json")
     overrides = repository["overrides"]
 
     assert repository["schema_version"] == 1
+    assert profile == {
+        "schema_version": 1,
+        "id": "terraform-gcp",
+        "parent": "ai-dev-foundation",
+        "required_checks": ["iac-scan"],
+    }
     assert overrides["required_approvals"] == 0
     assert overrides["require_last_push_approval"] is False
-    assert overrides["required_checks"] == [*FOUNDATION_CHECKS, "iac-scan"]
-    assert set(FOUNDATION_CHECKS) <= set(overrides["required_checks"])
+    assert "required_checks" not in overrides
     assert overrides["delete_branch_on_merge"] is True
 
 
@@ -88,5 +94,6 @@ def test_governance_policy_ownership_is_disjoint() -> None:
     manifest = load(ROOT / ".github/inheritance/manifest.json")
 
     assert ".github/governance/foundation.json" in manifest["inherited_paths"]
+    assert ".github/governance/profiles/" in manifest["inherited_paths"]
     assert ".github/governance/repository.json" in manifest["protected_paths"]
     assert not set(manifest["inherited_paths"]) & set(manifest["protected_paths"])

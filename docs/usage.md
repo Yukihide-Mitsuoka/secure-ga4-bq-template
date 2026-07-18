@@ -91,7 +91,9 @@ Optional template-family policies are loaded from regular, non-symlink JSON file
 `.github/governance/profiles/`. They must form one explicit chain rooted at
 `ai-dev-foundation`. Required checks merge monotonically in foundation-to-profile-to-
 repository order, so neither a profile nor a repository override can remove a foundation
-check. Repositories without profiles retain their existing effective order.
+check. This repository inherits the `terraform-gcp` profile, which adds the proven
+always-reported `iac-scan` context; the leaf repository policy does not duplicate shared
+checks.
 
 `apply` is an authenticated local administration command. Before each run, use an
 interactive `gh auth login` session with repository Administration write access, run

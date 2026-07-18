@@ -1,0 +1,6 @@
+{
+  "schema_version": 1,
+  "id": "terraform-gcp",
+  "parent": "ai-dev-foundation",
+  "required_checks": ["iac-scan"]
+}
