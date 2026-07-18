@@ -8,7 +8,7 @@ import pytest
 ROOT = Path(__file__).parents[2]
 MODULE_PATH = ROOT / "scripts/github_governance.py"
 GOVERNANCE = ROOT / ".github/governance"
-KNOWN_RULES = {"GR-010", "GR-011", "GR-012", "SEC-002", "SEC-003"}
+KNOWN_RULES = {"GR-010", "GR-011", "GR-012", "SEC-002", "SEC-003", "WF-030"}
 
 
 @pytest.fixture(scope="module")
@@ -55,6 +55,9 @@ def test_repository_policy_resolves_deterministically(resolver) -> None:
         ],
         "dependency_update_provider": "renovate",
         "delete_branch_on_merge": True,
+        "discussions_enabled": True,
+        "squash_merge_commit_title": "PR_TITLE",
+        "squash_merge_commit_message": "PR_BODY",
     }
 
 
@@ -68,6 +71,10 @@ def test_foundation_requires_vulnerability_intake_minimums(resolver) -> None:
     assert minimums["private_vulnerability_reporting_enabled"] == {
         "value": True,
         "rule_refs": ["SEC-003"],
+    }
+    assert minimums["squash_merge_only"] == {
+        "value": True,
+        "rule_refs": ["WF-030"],
     }
 
 
@@ -121,6 +128,9 @@ def test_foundation_contract_is_strict(resolver, mutate) -> None:
         {"required_checks": ["lint\ntest"]},
         {"required_checks": ["lint", ["test"]]},
         {"dependency_update_provider": ["renovate", "dependabot"]},
+        {"discussions_enabled": "yes"},
+        {"squash_merge_commit_title": "ISSUE_TITLE"},
+        {"squash_merge_commit_message": "FULL_DIFF"},
         {"required_approvals": 0, "require_last_push_approval": True},
         {"unknown": True},
     ],
