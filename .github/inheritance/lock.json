@@ -2,6 +2,6 @@
   "schema_version": 1,
   "parent": {
     "repository": "Yukihide-Mitsuoka/terraform-gcp-template",
-    "commit": "bbbeee0c99e2da3f60b58c9fe43f87150cbfab12"
+    "commit": "6763ef4ed0232038b684820744241d8e9807f5aa"
   }
 }
