@@ -8,7 +8,7 @@ import pytest
 ROOT = Path(__file__).parents[2]
 MODULE_PATH = ROOT / "scripts/github_governance.py"
 GOVERNANCE = ROOT / ".github/governance"
-KNOWN_RULES = {"GR-010", "GR-011", "GR-012", "SEC-002"}
+KNOWN_RULES = {"GR-010", "GR-011", "GR-012", "SEC-002", "SEC-003"}
 
 
 @pytest.fixture(scope="module")
@@ -55,6 +55,19 @@ def test_repository_policy_resolves_deterministically(resolver) -> None:
         ],
         "dependency_update_provider": "renovate",
         "delete_branch_on_merge": True,
+    }
+
+
+def test_foundation_requires_vulnerability_intake_minimums(resolver) -> None:
+    minimums = resolve(resolver)["minimums"]
+
+    assert minimums["vulnerability_alerts_enabled"] == {
+        "value": True,
+        "rule_refs": ["SEC-003"],
+    }
+    assert minimums["private_vulnerability_reporting_enabled"] == {
+        "value": True,
+        "rule_refs": ["SEC-003"],
     }
 
 

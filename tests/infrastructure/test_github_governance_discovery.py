@@ -14,9 +14,11 @@ SHA = "a" * 40
 
 
 class Completed:
-    def __init__(self, returncode=0, payload=None):
+    def __init__(self, returncode=0, payload=None, stdout=None):
         self.returncode = returncode
-        self.stdout = json.dumps(payload) if payload is not None else ""
+        self.stdout = (
+            stdout if stdout is not None else json.dumps(payload) if payload is not None else ""
+        )
         self.stderr = "sensitive runner detail"
 
 
@@ -30,8 +32,10 @@ class FakeRunner:
         return self.responses.get(command[-1], Completed(returncode=1))
 
 
-def repository_payload(security=True):
+def repository_payload(security=True, admin=True):
     payload = {"default_branch": "main", "delete_branch_on_merge": True}
+    if admin is not None:
+        payload["permissions"] = {"admin": admin}
     if security:
         payload["security_and_analysis"] = {
             "secret_scanning": {"status": "enabled"},
@@ -41,15 +45,19 @@ def repository_payload(security=True):
     return payload
 
 
-def fake_runner(*, rules=None, protected=True, security=True):
+def fake_runner(*, rules=None, protected=True, security=True, admin=True):
     return FakeRunner(
         {
-            "repos/acme/demo": Completed(payload=repository_payload(security)),
+            "repos/acme/demo": Completed(payload=repository_payload(security, admin)),
             "repos/acme/demo/branches/main": Completed(
                 payload={"commit": {"sha": SHA}, "protected": protected}
             ),
             "repos/acme/demo/rules/branches/main?per_page=100": Completed(payload=[rules or []]),
             "repos/acme/demo/rulesets?includes_parents=false&per_page=100": Completed(payload=[[]]),
+            "repos/acme/demo/private-vulnerability-reporting": Completed(payload={"enabled": True}),
+            "repos/acme/demo/vulnerability-alerts": Completed(
+                stdout="HTTP/2.0 204 No Content\r\n\r\n"
+            ),
             f"repos/acme/demo/commits/{SHA}/check-runs?per_page=100": Completed(
                 payload=[{"check_runs": [{"name": "test"}, {"name": "iac-scan"}]}]
             ),
@@ -119,6 +127,8 @@ def test_discovery_is_get_only_deterministic_and_redacts_bypass_identities() -> 
     assert result["rulesets"][0]["has_bypass_actors"] is True
     assert result["legacy_branch_protection"]["status"] == "configured"
     assert result["observed_checks"] == ["iac-scan", "lint", "test"]
+    assert result["security"]["private_vulnerability_reporting"] == "enabled"
+    assert result["security"]["vulnerability_alerts"] == "enabled"
     assert "123" not in json.dumps(result)
     assert result["effective_rules"][0]["parameters"]["required_approving_review_count"] == 1
     assert "update_state" not in result["rulesets"][0]
@@ -243,15 +253,65 @@ def test_admin_invisible_fields_are_unknown_without_leaking_stderr() -> None:
             "ruleset_source": [],
         }
     ]
-    runner = fake_runner(rules=rules, security=False)
+    runner = fake_runner(rules=rules, security=False, admin=None)
+    runner.responses["repos/acme/demo/private-vulnerability-reporting"] = Completed(returncode=1)
+    runner.responses["repos/acme/demo/vulnerability-alerts"] = Completed(
+        returncode=1,
+        stdout="HTTP/2.0 404 Not Found\r\n\r\n",
+    )
 
     result = governance.discover_github("acme/demo", "main", runner=runner)
 
     assert result["security"]["secret_scanning"] == "unknown"
+    assert result["security"]["private_vulnerability_reporting"] == "unknown"
+    assert result["security"]["vulnerability_alerts"] == "unknown"
     assert result["rulesets"][0]["has_bypass_actors"] == "unknown"
     assert result["legacy_branch_protection"]["status"] == "unknown"
     assert result["effective_rules"][0]["source"] == "unknown"
     assert "sensitive runner detail" not in json.dumps(result)
+
+
+def test_admin_visible_disabled_vulnerability_intake_is_confirmed_drift() -> None:
+    runner = fake_runner(protected=False)
+    runner.responses["repos/acme/demo/private-vulnerability-reporting"] = Completed(
+        payload={"enabled": False}
+    )
+    runner.responses["repos/acme/demo/vulnerability-alerts"] = Completed(
+        returncode=1,
+        stdout="HTTP/2.0 404 Not Found\r\n\r\n",
+    )
+
+    result = governance.discover_github("acme/demo", "main", runner=runner)
+
+    assert result["security"]["private_vulnerability_reporting"] == "disabled"
+    assert result["security"]["vulnerability_alerts"] == "disabled"
+
+
+def test_unexpected_vulnerability_alert_status_stops_closed() -> None:
+    runner = fake_runner(protected=False)
+    runner.responses["repos/acme/demo/vulnerability-alerts"] = Completed(
+        returncode=1,
+        stdout="HTTP/2.0 500 Internal Server Error\r\n\r\n",
+    )
+
+    with pytest.raises(governance.PolicyError, match="unexpected HTTP status"):
+        governance.discover_github("acme/demo", "main", runner=runner)
+
+
+def test_permission_limited_and_malformed_vulnerability_intake_is_unknown() -> None:
+    runner = fake_runner(protected=False)
+    runner.responses["repos/acme/demo/private-vulnerability-reporting"] = Completed(
+        payload={"enabled": "yes"}
+    )
+    runner.responses["repos/acme/demo/vulnerability-alerts"] = Completed(
+        returncode=1,
+        stdout="HTTP/2.0 403 Forbidden\r\n\r\n",
+    )
+
+    result = governance.discover_github("acme/demo", "main", runner=runner)
+
+    assert result["security"]["private_vulnerability_reporting"] == "unknown"
+    assert result["security"]["vulnerability_alerts"] == "unknown"
 
 
 def test_inactive_repository_ruleset_is_listed_without_detail_metadata() -> None:
