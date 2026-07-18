@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v1.7.0...v1.8.0) (2026-07-18)
+
+
+### Features
+
+* **governance:** enforce vulnerability intake policy ([#181](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/181)) ([299db56](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/299db565ac60f0ac56c6d57cd3a6f0f88e93b82a)), closes [#178](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/178)
+* **governance:** prepare vulnerability intake transport ([#179](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/179)) ([dbc1748](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/dbc17484a6754d5084acfcf7dbc283f23ce0a506)), closes [#178](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/178)
+
 ## [1.7.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v1.6.0...v1.7.0) (2026-07-18)
 
 
