@@ -43,11 +43,14 @@ def resolve(resolver, foundation=None, repository=None, profiles=None):
 
 
 def test_repository_policy_resolves_deterministically(resolver) -> None:
-    result = resolve(resolver)
+    result = resolve(
+        resolver,
+        profiles=[profile("terraform-gcp", "ai-dev-foundation", ["iac-scan"])],
+    )
 
     assert result["schema_version"] == 1
     assert result["managed_by"] == "ai-dev-foundation"
-    assert result["profiles"] == []
+    assert result["profiles"] == [profile("terraform-gcp", "ai-dev-foundation", ["iac-scan"])]
     assert result["settings"] == {
         "target_branch": "main",
         "enforcement_backend": "ruleset",
@@ -216,7 +219,7 @@ def test_validate_cli_prints_stable_json_without_network(resolver, capsys) -> No
     assert resolver.main(["validate", "--root", str(ROOT)]) == 0
 
     captured = capsys.readouterr()
-    assert json.loads(captured.out) == resolve(resolver)
+    assert json.loads(captured.out) == resolve(resolver, profiles=resolver._load_profiles(ROOT))
     assert captured.err == ""
 
 

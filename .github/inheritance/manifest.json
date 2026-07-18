@@ -27,6 +27,7 @@
     ".github/dependabot.yml",
     ".github/discussion-categories.md",
     ".github/governance/foundation.json",
+    ".github/governance/profiles/",
     ".github/labels.yml",
     ".github/workflows/dast.yml",
     ".mdformat.toml",
