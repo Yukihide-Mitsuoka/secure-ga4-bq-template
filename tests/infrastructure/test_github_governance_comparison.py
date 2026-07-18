@@ -41,6 +41,9 @@ def resolved_policy(backend="ruleset"):
             "required_checks": CHECKS,
             "dependency_update_provider": "renovate",
             "delete_branch_on_merge": True,
+            "discussions_enabled": True,
+            "squash_merge_commit_title": "PR_TITLE",
+            "squash_merge_commit_message": "PR_BODY",
         },
     }
 
@@ -67,7 +70,16 @@ def ruleset_inventory():
         ],
         "legacy_branch_protection": {"status": "absent"},
         "observed_checks": list(CHECKS),
-        "repository": {"delete_branch_on_merge": True, "full_name": "acme/demo"},
+        "repository": {
+            "allow_merge_commit": False,
+            "allow_rebase_merge": False,
+            "allow_squash_merge": True,
+            "delete_branch_on_merge": True,
+            "full_name": "acme/demo",
+            "has_discussions": True,
+            "squash_merge_commit_message": "PR_BODY",
+            "squash_merge_commit_title": "PR_TITLE",
+        },
         "rulesets": [
             {
                 "has_bypass_actors": False,
@@ -125,6 +137,7 @@ def test_ruleset_report_is_compliant_deterministic_and_does_not_mutate_inputs() 
     assert first["unmanaged"] == {"effective_rules": [], "legacy_branch_protection": None}
     assert control(first, "security.private_vulnerability_reporting")["rule_refs"] == ["SEC-003"]
     assert control(first, "security.vulnerability_alerts")["rule_refs"] == ["SEC-003"]
+    assert control(first, "repository.merge_strategy")["rule_refs"] == ["WF-030"]
     assert (policy, inventory) == before
 
 
@@ -180,6 +193,25 @@ def test_vulnerability_intake_disabled_is_drift_and_unknown_blocks_status() -> N
     assert drift_report["status"] == "drift"
     assert control(drift_report, "security.vulnerability_alerts")["status"] == "drift"
     assert unknown_report["status"] == "unknown"
+
+
+def test_repository_collaboration_drift_is_reported() -> None:
+    inventory = ruleset_inventory()
+    inventory["repository"].update(
+        allow_merge_commit=True,
+        has_discussions=False,
+        squash_merge_commit_message="BLANK",
+    )
+
+    report = governance.compare_governance(resolved_policy(), inventory)
+
+    assert report["status"] == "drift"
+    for control_id in (
+        "repository.discussions_enabled",
+        "repository.merge_strategy",
+        "repository.squash_commit_format",
+    ):
+        assert control(report, control_id)["status"] == "drift"
 
 
 def test_unobserved_iac_scan_is_drift_but_unrelated_checks_are_ignored() -> None:

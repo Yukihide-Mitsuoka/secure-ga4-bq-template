@@ -205,6 +205,21 @@ def test_common_actions_are_ordered_and_describe_side_effects() -> None:
     assert result["actions"][4]["method"] == "DELETE"
 
 
+def test_collaboration_drift_fails_closed_until_action_adapter_exists() -> None:
+    inventory = comparison.ruleset_inventory()
+    inventory["repository"].update(
+        allow_merge_commit=True,
+        has_discussions=False,
+        squash_merge_commit_message="BLANK",
+    )
+
+    with pytest.raises(
+        governance.PolicyError,
+        match="collaboration settings apply is not implemented",
+    ):
+        governance.build_apply_actions(comparison.resolved_policy(), inventory)
+
+
 def test_compliant_inventory_returns_no_actions_without_mutation() -> None:
     policy = comparison.resolved_policy()
     inventory = comparison.ruleset_inventory()

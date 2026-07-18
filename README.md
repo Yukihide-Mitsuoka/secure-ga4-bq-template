@@ -122,6 +122,8 @@ schedule. The workflow uploads `findings.json`, `summary.md`, and
    gate. A separately authorized local `apply` can enforce the reviewed policy; read its
    authentication and partial-application constraints before use. See
    [Usage](docs/usage.md#5-review-and-optionally-apply-github-governance).
+   Collaboration settings are included in the read-only report; until the follow-up
+   write adapter lands, local `apply` fails closed when those settings drift.
 5. **Install local gates**: `make setup`.
 6. **Verify**: `make doctor && make build`.
 

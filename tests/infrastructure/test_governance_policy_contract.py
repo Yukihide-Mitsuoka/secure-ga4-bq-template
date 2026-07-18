@@ -5,7 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).parents[2]
 GOVERNANCE = ROOT / ".github/governance"
-PARENT_FOUNDATION_BLOB = "1563778f7b995621ece23f719b729568ebeab5dc"
+PARENT_FOUNDATION_BLOB = "2b1d5b2e57415d9ba1fdf3989811d95b6c4c4315"
 FOUNDATION_CHECKS = [
     "lint",
     "test",
@@ -22,6 +22,7 @@ MINIMUMS = {
     "status_checks_required": (True, ["GR-012"]),
     "force_pushes_allowed": (False, ["GR-011"]),
     "admin_bypass_allowed": (False, ["GR-010", "GR-012"]),
+    "squash_merge_only": (True, ["WF-030"]),
     "secret_scanning_enabled": (True, ["SEC-002"]),
     "push_protection_enabled": (True, ["SEC-002"]),
     "vulnerability_alerts_enabled": (True, ["SEC-003"]),
@@ -34,7 +35,7 @@ def load(path: Path) -> dict:
 
 
 def known_rule_ids() -> set[str]:
-    pattern = re.compile(r"^### ((?:GR|SEC)-\d{3}):", re.MULTILINE)
+    pattern = re.compile(r"^#{2,3} ((?:GR|SEC|WF)-\d{3}):", re.MULTILINE)
     return {
         rule_id
         for path in sorted((ROOT / ".ai").glob("*.md"))
@@ -62,6 +63,9 @@ def test_foundation_policy_matches_the_accepted_parent_contract() -> None:
         "required_checks": FOUNDATION_CHECKS,
         "dependency_update_provider": "renovate",
         "delete_branch_on_merge": False,
+        "discussions_enabled": True,
+        "squash_merge_commit_title": "PR_TITLE",
+        "squash_merge_commit_message": "PR_BODY",
     }
     assert {
         rule_id for control in foundation["minimums"].values() for rule_id in control["rule_refs"]

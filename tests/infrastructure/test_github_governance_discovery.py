@@ -33,7 +33,16 @@ class FakeRunner:
 
 
 def repository_payload(security=True, admin=True):
-    payload = {"default_branch": "main", "delete_branch_on_merge": True}
+    payload = {
+        "allow_merge_commit": False,
+        "allow_rebase_merge": False,
+        "allow_squash_merge": True,
+        "default_branch": "main",
+        "delete_branch_on_merge": True,
+        "has_discussions": True,
+        "squash_merge_commit_message": "PR_BODY",
+        "squash_merge_commit_title": "PR_TITLE",
+    }
     if admin is not None:
         payload["permissions"] = {"admin": admin}
     if security:
@@ -129,6 +138,17 @@ def test_discovery_is_get_only_deterministic_and_redacts_bypass_identities() -> 
     assert result["observed_checks"] == ["iac-scan", "lint", "test"]
     assert result["security"]["private_vulnerability_reporting"] == "enabled"
     assert result["security"]["vulnerability_alerts"] == "enabled"
+    assert result["repository"] == {
+        "allow_merge_commit": False,
+        "allow_rebase_merge": False,
+        "allow_squash_merge": True,
+        "default_branch": "main",
+        "delete_branch_on_merge": True,
+        "full_name": "acme/demo",
+        "has_discussions": True,
+        "squash_merge_commit_message": "PR_BODY",
+        "squash_merge_commit_title": "PR_TITLE",
+    }
     assert "123" not in json.dumps(result)
     assert result["effective_rules"][0]["parameters"]["required_approving_review_count"] == 1
     assert "update_state" not in result["rulesets"][0]
