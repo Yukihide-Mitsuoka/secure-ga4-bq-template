@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v1.6.0...v1.7.0) (2026-07-18)
+
+
+### Features
+
+* **governance:** expose confirmed local apply ([#172](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/172)) ([451c3c2](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/451c3c274b52976bbe455380b7abcee7212ecd98)), closes [#171](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/171)
+
 ## [1.6.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v1.5.0...v1.6.0) (2026-07-17)
 
 
