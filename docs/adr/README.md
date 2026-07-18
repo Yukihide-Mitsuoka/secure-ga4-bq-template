@@ -31,5 +31,6 @@ architectural change (definition: ARC-020 "Architectural" scope). Process:
 | [0007](0007-generate-service-packages-from-versioned-profiles.md) | Generate service packages from versioned profiles | accepted | 2026-07-15 |
 | [0008](0008-adopt-direct-parent-inheritance-contract.md) | Adopt the direct-parent inheritance contract | accepted | 2026-07-16 |
 | [0009](0009-expose-confirmed-local-governance-apply.md) | Expose confirmed local governance apply | accepted | 2026-07-17 |
+| [0010](0010-separate-foundation-and-project-document-ownership.md) | Separate foundation and project document ownership | proposed | 2026-07-19 |
 
 <!-- Append new ADRs to this table (newest last). -->
