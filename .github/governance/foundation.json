@@ -6,6 +6,7 @@
     "status_checks_required": {"value": true, "rule_refs": ["GR-012"]},
     "force_pushes_allowed": {"value": false, "rule_refs": ["GR-011"]},
     "admin_bypass_allowed": {"value": false, "rule_refs": ["GR-010", "GR-012"]},
+    "squash_merge_only": {"value": true, "rule_refs": ["WF-030"]},
     "secret_scanning_enabled": {"value": true, "rule_refs": ["SEC-002"]},
     "push_protection_enabled": {"value": true, "rule_refs": ["SEC-002"]},
     "vulnerability_alerts_enabled": {"value": true, "rule_refs": ["SEC-003"]},
@@ -28,6 +29,9 @@
       "license-check"
     ],
     "dependency_update_provider": "renovate",
-    "delete_branch_on_merge": false
+    "delete_branch_on_merge": true,
+    "discussions_enabled": false,
+    "squash_merge_commit_title": "PR_TITLE",
+    "squash_merge_commit_message": "PR_BODY"
   }
 }
