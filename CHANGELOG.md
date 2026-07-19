@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.0.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v1.8.0...v2.0.0) (2026-07-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* **governance:** inherit setup policy wrapper ([#190](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/190))
+
+### Features
+
+* **governance:** adapt collaboration read path ([#186](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/186)) ([3a3e839](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/3a3e8396ebc2f4d3e51e54812a7340b7d88b7de2)), closes [#104](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/104)
+* **governance:** apply collaboration settings safely ([#188](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/188)) ([a730e8d](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/a730e8dd867aa2c68c3197fd1f07bdafaed7552b))
+* **governance:** inherit profile chain resolution ([#197](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/197)) ([7de44e7](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/7de44e7d2e2979be4d178573487555f35d5b0fc6))
+* **governance:** inherit setup policy wrapper ([#190](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/190)) ([5b998a8](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/5b998a8e58172ac5d9925eba2a96e6f328d5304e))
+* **governance:** inherit solo defaults ([#193](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/193)) ([a0e8993](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/a0e899343a12da3e51580b9c75da6f38070f8228))
+* **governance:** inherit Terraform profile ([#200](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/200)) ([7244d94](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/7244d9452d5dc008b831007f3fd0d0d280826999))
+
 ## [1.8.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v1.7.0...v1.8.0) (2026-07-18)
 
 
