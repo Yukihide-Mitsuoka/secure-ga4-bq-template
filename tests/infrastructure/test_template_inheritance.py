@@ -129,13 +129,21 @@ def test_cli_reports_valid_and_invalid_contracts(tmp_path, capsys):
 
 def test_repository_contract_and_legacy_ignore_are_consistent():
     result = inheritance.validate_inheritance(REPOSITORY_ROOT)
-    assert result["parent"]["commit"] == "ee9e61c573136c145b1a3f7fa74c12ee3d43af8e"
+    assert result["parent"]["commit"] == "56e13707b9f4567572149798bae1552d292a7abf"
     ignored = {
         line.strip()
         for line in (REPOSITORY_ROOT / ".templatesyncignore").read_text().splitlines()
         if line.strip() and not line.startswith("#")
     }
-    expected = {
-        f"{path}**" if path.endswith("/") else path for path in result["ownership"]["protected"]
-    }
-    assert expected <= ignored
+
+    def covered(path):
+        candidate = f"{path}**" if path.endswith("/") else path
+        return candidate in ignored or any(
+            entry.endswith("/**") and path.startswith(entry[:-3]) for entry in ignored
+        )
+
+    assert all(covered(path) for path in result["ownership"]["protected"])
+    assert ":!docs/foundation/" in ignored
+    assert ":!docs/foundation/**" in ignored
+    assert "!docs/foundation/" not in ignored
+    assert "!docs/foundation/**" not in ignored

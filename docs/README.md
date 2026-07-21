@@ -1,33 +1,28 @@
 ---
-id: docs-index
-title: Documentation Index
+id: secure-ga4-bq-docs
+title: Secure GA4 BigQuery Template Documentation
 ---
 
-# docs/ — Documentation Index
+# Secure GA4 BigQuery Template Documentation
 
-Descriptive documentation (authority level 5 — see `.ai/README.md`). Binding rules live
-in `.ai/`; decisions in `docs/adr/`. Writing rules: `.ai/documentation.md`.
+Project-owned documentation for `secure-ga4-bq-template` stays directly under `docs/`.
+Foundation-owned documentation inherited from `terraform-gcp-template` and its
+`ai-dev-foundation` parent stays under [`docs/foundation/`](foundation/).
 
-| Directory | Content | Primary reader task |
-|-----------|---------|---------------------|
-| [adr/](adr/) | Architecture Decision Records (**normative** when accepted) | "why is it built this way?" |
-| [requirements/](requirements/) | Normative requirement/design docs for this asset (**what** to build) | scope any feature work |
-| [architecture/](architecture/) | System structure, C4 diagrams, data flows | understand before changing structure |
-| [domain/](domain/) | Domain model, bounded contexts, ubiquitous language | understand the business rules |
-| [api/](api/) | API contracts (OpenAPI/schema + commentary) | integrate with or change an API |
-| [deployment/](deployment/) | Environments, deploy procedure, configuration | ship it |
-| [operations/](operations/) | Monitoring, alerts, SLOs, maintenance | keep it running |
-| [runbook/](runbook/) | Step-by-step incident/ops procedures | 3am emergency |
-| [troubleshooting/](troubleshooting/) | Known failure modes → diagnosis → fix | "it's broken, what now?" |
-| [verification/](verification/) | Dated live-execution evidence for acceptance criteria | verify claims against recorded runs |
-| [templates/](templates/) | Reusable document templates (requirements, ...) | start a standard document |
-| [development-handoff.md](development-handoff.md) | Current state, source index, decisions, and resume sequence | continue work on another machine |
-| [roadmap.md](roadmap.md) | Direction and planned milestones | prioritize work |
-| [glossary.md](glossary.md) | Ubiquitous language dictionary | name things correctly |
-| [usage.md](usage.md) | Using the template on a new machine/account; new-project setup (日本語: [usage.ja.md](usage.ja.md)) | onboard a new environment |
-| [ai-instruction-files.ja.md](ai-instruction-files.ja.md) | 日本語: AIへ指示を出す全ファイルの目的・利用シーン・利用例 | understand the AI-instruction file set |
+| Path | Ownership | Purpose |
+|------|-----------|---------|
+| [foundation/](foundation/) | inherited from the direct parent chain | reusable foundation guidance, templates, and foundation ADRs |
+| [adr/](adr/) | `secure-ga4-bq-template` | Secure GA4 decisions and local ADR index |
+| [requirements/](requirements/) | `secure-ga4-bq-template` | normative requirement/design documents for this asset |
+| [api/](api/) | `secure-ga4-bq-template` | CLI and report contracts |
+| [architecture/](architecture/) | `secure-ga4-bq-template` | local module and system structure |
+| [deployment/](deployment/) | `secure-ga4-bq-template` | local configuration and deployment notes |
+| [runbook/](runbook/) | `secure-ga4-bq-template` | local operational procedures |
+| [troubleshooting/](troubleshooting/) | `secure-ga4-bq-template` | local failure modes and governance adaptations |
+| [verification/](verification/) | `secure-ga4-bq-template` | dated live-execution evidence for acceptance criteria |
+| [development-handoff.md](development-handoff.md) | `secure-ga4-bq-template` | current state, source index, decisions, and resume sequence |
+| [glossary.md](glossary.md) | `secure-ga4-bq-template` | project ubiquitous language |
+| [roadmap.md](roadmap.md) | `secure-ga4-bq-template` | project direction and planned milestones |
 
-Contribution guide: [/CONTRIBUTING.md](../CONTRIBUTING.md).
-
-Each directory's README defines its own structure and **update triggers** — the doc-update
-matrix (DOC-030) tells you which directory a given change must touch.
+Use [`docs/foundation/guides/project-documentation.md`](foundation/guides/project-documentation.md)
+for the reusable documentation structure and update-trigger guidance.
