@@ -48,5 +48,5 @@ infra/**
 .github/workflows/ci.yml
 
 docs/**
-!docs/foundation/
-!docs/foundation/**
+:!docs/foundation/
+:!docs/foundation/**

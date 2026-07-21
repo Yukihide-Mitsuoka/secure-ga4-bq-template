@@ -37,7 +37,8 @@
     "CONTRIBUTING.md",
     "LICENSE",
     "SECURITY.md",
-    "renovate.json"
+    "renovate.json",
+    "docs/foundation/"
   ],
   "protected_paths": [
     ".ai/architecture.md",
@@ -69,7 +70,6 @@
     "Makefile",
     "README.md",
     "catalog/",
-    "docs/",
     "engagement-scope.example.yml",
     "infra/",
     "inspection-params.example.yml",
@@ -80,6 +80,18 @@
     "src/",
     "tests/",
     "uv.lock",
-    "version.txt"
+    "version.txt",
+    "docs/README.md",
+    "docs/adr/",
+    "docs/api/",
+    "docs/architecture/",
+    "docs/deployment/",
+    "docs/development-handoff.md",
+    "docs/glossary.md",
+    "docs/requirements/",
+    "docs/roadmap.md",
+    "docs/runbook/",
+    "docs/troubleshooting/",
+    "docs/verification/"
   ]
 }
