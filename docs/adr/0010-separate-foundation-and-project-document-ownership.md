@@ -2,9 +2,9 @@
 
 | Field | Value |
 |-------|-------|
-| Status | proposed |
+| Status | accepted |
 | Date | 2026-07-19 |
-| Deciders | repository owner |
+| Deciders | repository owner (approved 2026-07-19) |
 | Author | Codex (AI agent) |
 | Supersedes / Superseded by | Supersedes ADR-0002 for project-specific documents; extends ADR-0008 |
 
