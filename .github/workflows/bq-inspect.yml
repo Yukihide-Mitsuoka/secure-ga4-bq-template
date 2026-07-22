@@ -25,7 +25,7 @@ concurrency:
 jobs:
   inspect:
     if: github.event_name == 'workflow_dispatch' || vars.BQ_INSPECT_ENABLED == 'true'
-    uses: Yukihide-Mitsuoka/gcp-cicd-workflows/.github/workflows/bq-inspect.yml@v1
+    uses: Yukihide-Mitsuoka/gcp-cicd-workflows/.github/workflows/bq-inspect.yml@d574a042aeb03ca97e6008e93bb3fd4202f4f9db # v1
     with:
       wif_provider: ${{ vars.WIF_PROVIDER }}
       service_account: ${{ vars.INSPECTOR_SA }}

@@ -19,7 +19,7 @@ jobs:
       issues: write
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: crazy-max/ghaction-github-labeler@v5
+      - uses: crazy-max/ghaction-github-labeler@24d110aa46a59976b8a7f35518cb7f14f434c916 # v5
         with:
           yaml-file: .github/labels.yml
           skip-delete: true   # never mass-delete labels automatically (GR-031 spirit)
