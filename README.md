@@ -121,7 +121,7 @@ schedule. The workflow uploads `findings.json`, `summary.md`, and
 4. **Review GitHub governance** with GET-only `plan`, then use `audit` as the compliance
    gate. A separately authorized local `apply` can enforce the reviewed policy; read its
    authentication and partial-application constraints before use. See
-   [Usage](docs/usage.md#5-review-and-optionally-apply-github-governance).
+   [Usage](docs/foundation/guides/usage.md#5-review-and-optionally-apply-github-governance).
    Collaboration settings share one verified repository PATCH action; squash-only merge
    is applied before a linear-history Ruleset so every intermediate state remains valid.
    `scripts/setup-github.sh` is a compatibility wrapper for the same `plan` and exactly

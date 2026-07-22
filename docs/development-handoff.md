@@ -96,7 +96,7 @@ sources of truth.
 
 ## New-machine resume procedure
 
-Use [Usage](usage.md), then run:
+Use [Usage](foundation/guides/usage.md), then run:
 
 ```bash
 gh auth status
