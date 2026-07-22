@@ -118,6 +118,7 @@ def test_markdown_summary_is_deterministic_and_complete(tmp_path: Path) -> None:
     assert "excluded by engagement params" in first  # skipped listed with reason
 
 
-def test_markdown_clean_report_says_all_checkpoints_passed(tmp_path: Path) -> None:
+def test_markdown_clean_report_does_not_overstate_skipped_coverage(tmp_path: Path) -> None:
     text = MarkdownReportWriter().write(_report(), tmp_path).read_text(encoding="utf-8")
-    assert "No findings — all eleven checkpoints passed." in text
+    assert "No findings detected in the evaluated scope." in text
+    assert "all eleven checkpoints passed" not in text

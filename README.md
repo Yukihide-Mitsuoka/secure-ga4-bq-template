@@ -70,6 +70,8 @@ make report-ai FINDINGS=reports/<project>/<timestamp>/findings.json
 
 `findings.csv` is a deterministic spreadsheet projection of the finding list.
 `ai-report.md` is a human-review draft; `findings.json` and `summary.md` are authoritative.
+A zero-finding summary applies only to the evaluated scope; skipped resources remain
+explicit and are never reported as passed.
 
 Render the separate non-applying remediation attachment without cloud credentials:
 
