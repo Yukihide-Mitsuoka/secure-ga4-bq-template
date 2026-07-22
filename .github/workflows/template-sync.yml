@@ -25,7 +25,7 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: AndreasAugustin/actions-template-sync@v2
+      - uses: AndreasAugustin/actions-template-sync@8a0f668b83c32a0f673353086d74f12b8853d4f5 # v2
         id: template-sync
         with:
           # This repo syncs from terraform-gcp-template (its direct parent). Downstream
