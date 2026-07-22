@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate and plan local template inheritance defined by ADR-0008."""
+"""Validate and plan local template inheritance defined by project ADR-0008."""
 
 import argparse
 import json
@@ -10,11 +10,11 @@ from pathlib import Path
 
 SCHEMA_VERSION = 1
 MANIFEST_PATH = ".github/inheritance/manifest.json"
+TEMPLATE_SYNC_IGNORE_PATH = ".templatesyncignore"
 MAX_CONTRACT_BYTES = 1_000_000
 MAX_OWNERSHIP_ROOTS = 1_000
 MAX_FIRST_PARENT_COMMITS = 100_000
 MAX_CHANGED_PATHS = 1_000
-DIFF_TREE_OPTIONS = ["diff-tree", "--no-commit-id", "--name-only", "-r", "-z", "--no-renames"]
 REPOSITORY_TARGET = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 COMMIT_ID = re.compile(r"^[0-9a-f]{40}$")
 REQUIRED_PROTECTED_PATHS = {
@@ -24,6 +24,7 @@ REQUIRED_PROTECTED_PATHS = {
     ".github/workflows/template-sync.yml",
     ".templatesyncignore",
 }
+REQUIRED_TEMPLATE_SYNC_IGNORES = {".github/workflows/"}
 
 
 class InheritanceError(ValueError):
@@ -141,6 +142,78 @@ def _read_json(root, relative_path):
         raise InheritanceError(f"{relative_path} must contain valid UTF-8 JSON") from error
 
 
+def _read_template_sync_ignore(root):
+    candidate = root / TEMPLATE_SYNC_IGNORE_PATH
+    try:
+        resolved = candidate.resolve(strict=True)
+    except OSError as error:
+        raise InheritanceError(
+            f"{TEMPLATE_SYNC_IGNORE_PATH} must be a file inside the repository root"
+        ) from error
+    if resolved != candidate or not resolved.is_relative_to(root) or not resolved.is_file():
+        raise InheritanceError(
+            f"{TEMPLATE_SYNC_IGNORE_PATH} must be a non-symlink file inside the repository root"
+        )
+    try:
+        if resolved.stat().st_size > MAX_CONTRACT_BYTES:
+            raise InheritanceError(
+                f"{TEMPLATE_SYNC_IGNORE_PATH} exceeds {MAX_CONTRACT_BYTES} bytes"
+            )
+        lines = resolved.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeError) as error:
+        raise InheritanceError(
+            f"{TEMPLATE_SYNC_IGNORE_PATH} must contain valid UTF-8 text"
+        ) from error
+
+    positive = []
+    exceptions = []
+    for line_number, line in enumerate(lines, start=1):
+        entry = line.strip()
+        if not entry or entry.startswith("#"):
+            continue
+        destination = exceptions if entry.startswith(":!") else positive
+        root_entry = entry[2:] if destination is exceptions else entry
+        if root_entry.endswith("/**"):
+            root_entry = root_entry[:-2]
+        try:
+            destination.append(
+                _ownership_root(root_entry, f"{TEMPLATE_SYNC_IGNORE_PATH}:{line_number}")
+            )
+        except InheritanceError as error:
+            raise InheritanceError(
+                f"{TEMPLATE_SYNC_IGNORE_PATH}:{line_number} must be a literal path, "
+                "directory, directory/**, or :! exception"
+            ) from error
+    return positive, exceptions
+
+
+def _covers(outer, inner):
+    return outer == inner or (outer.endswith("/") and inner.startswith(outer))
+
+
+def _validate_template_sync_ignore(root, protected):
+    positive, exceptions = _read_template_sync_ignore(root)
+    required = sorted(set(protected) | REQUIRED_TEMPLATE_SYNC_IGNORES)
+    missing = sorted(
+        path for path in required if not any(_covers(entry, path) for entry in positive)
+    )
+    if missing:
+        raise InheritanceError(f"template sync ignore is missing protected paths: {missing}")
+    unsafe_exceptions = sorted(
+        exception
+        for exception in exceptions
+        if any(_overlaps(exception, protected_root) for protected_root in required)
+    )
+    if unsafe_exceptions:
+        raise InheritanceError(
+            f"template sync exception re-includes protected paths: {unsafe_exceptions}"
+        )
+    return {
+        "ignore_file": TEMPLATE_SYNC_IGNORE_PATH,
+        "required": required,
+    }
+
+
 def validate_inheritance(root):
     """Validate manifest, lock, and exclusive path ownership without external I/O."""
     try:
@@ -182,6 +255,8 @@ def validate_inheritance(root):
     if missing:
         raise InheritanceError(f"manifest is missing required protected paths: {missing}")
 
+    template_sync = _validate_template_sync_ignore(repository_root, protected)
+
     lock = _read_json(repository_root, lock_file)
     _object(lock, {"schema_version", "parent"}, "lock")
     if type(lock["schema_version"]) is not int or lock["schema_version"] != SCHEMA_VERSION:
@@ -199,6 +274,7 @@ def validate_inheritance(root):
         "parent": {"repository": parent_repository, "branch": parent_branch, "commit": commit},
         "lock_file": lock_file,
         "ownership": {"inherited": sorted(inherited), "protected": sorted(protected)},
+        "template_sync": template_sync,
     }
 
 
@@ -263,10 +339,14 @@ def _next_parent_commit(parent_root, contract):
     ).splitlines()
     locked = contract["parent"]["commit"]
     if locked not in history:
-        truncated = len(history) > MAX_FIRST_PARENT_COMMITS
-        suffix = " within the supported history window" if truncated else ""
-        message = "locked commit is not on the remote branch first-parent history"
-        raise InheritanceError(message + suffix)
+        suffix = (
+            " within the supported history window"
+            if len(history) > MAX_FIRST_PARENT_COMMITS
+            else ""
+        )
+        raise InheritanceError(
+            f"locked commit is not on the remote branch first-parent history{suffix}"
+        )
     index = history.index(locked)
     return target, None if index == 0 else history[index - 1]
 
@@ -274,7 +354,16 @@ def _next_parent_commit(parent_root, contract):
 def _changed_paths(parent_root, locked, candidate):
     output = _git(
         parent_root,
-        [*DIFF_TREE_OPTIONS, locked, candidate],
+        [
+            "diff-tree",
+            "--no-commit-id",
+            "--name-only",
+            "-r",
+            "-z",
+            "--no-renames",
+            locked,
+            candidate,
+        ],
         "candidate diff read",
     )
     paths = sorted(path for path in output.split("\0") if path)
@@ -320,9 +409,7 @@ def _child_entry(child_root, parent_root, path):
     if not current.is_file():
         raise InheritanceError(f"inherited child path must be a regular file: {path}")
     object_id = _git(
-        parent_root,
-        ["hash-object", "--no-filters", "--", str(current)],
-        "child hash",
+        parent_root, ["hash-object", "--no-filters", "--", str(current)], "child hash"
     ).strip()
     return object_id, bool(current.stat().st_mode & 0o111)
 

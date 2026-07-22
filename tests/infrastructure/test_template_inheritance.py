@@ -35,13 +35,17 @@ def valid_lock():
 
 
 def write_contract(root, manifest=None, lock=None):
+    manifest_value = manifest or valid_manifest()
     directory = root / ".github/inheritance"
     directory.mkdir(parents=True)
-    (directory / "manifest.json").write_text(
-        json.dumps(manifest or valid_manifest()), encoding="utf-8"
-    )
+    (directory / "manifest.json").write_text(json.dumps(manifest_value), encoding="utf-8")
     (directory / "lock.json").write_text(json.dumps(lock or valid_lock()), encoding="utf-8")
+    write_ignore(root, [*manifest_value["protected_paths"], ".github/workflows/**"])
     return directory
+
+
+def write_ignore(root, entries):
+    (root / ".templatesyncignore").write_text("\n".join(entries) + "\n", encoding="utf-8")
 
 
 def test_valid_contract_returns_deterministic_ownership(tmp_path):
@@ -79,6 +83,49 @@ def test_manifest_rejects_unknown_or_invalid_boundary_values(tmp_path, mutate):
     mutate(manifest)
     write_contract(tmp_path, manifest=manifest)
     with pytest.raises(inheritance.InheritanceError):
+        inheritance.validate_inheritance(tmp_path)
+
+
+def test_every_protected_root_must_be_covered_by_template_sync_ignore(tmp_path):
+    manifest = valid_manifest()
+    write_contract(tmp_path, manifest=manifest)
+    write_ignore(
+        tmp_path,
+        [
+            *[path for path in manifest["protected_paths"] if path != ".gitignore"],
+            ".github/workflows/**",
+        ],
+    )
+
+    with pytest.raises(inheritance.InheritanceError, match=r"template sync ignore.*\.gitignore"):
+        inheritance.validate_inheritance(tmp_path)
+
+
+def test_template_sync_must_exclude_every_workflow(tmp_path):
+    manifest = valid_manifest()
+    write_contract(tmp_path, manifest=manifest)
+    write_ignore(tmp_path, manifest["protected_paths"])
+
+    with pytest.raises(
+        inheritance.InheritanceError,
+        match=r"template sync ignore.*\.github/workflows/",
+    ):
+        inheritance.validate_inheritance(tmp_path)
+
+
+def test_template_sync_exception_cannot_reinclude_protected_workflow(tmp_path):
+    manifest = valid_manifest()
+    write_contract(tmp_path, manifest=manifest)
+    write_ignore(
+        tmp_path,
+        [
+            *manifest["protected_paths"],
+            ".github/workflows/**",
+            ":!.github/workflows/security.yml",
+        ],
+    )
+
+    with pytest.raises(inheritance.InheritanceError, match="template sync exception"):
         inheritance.validate_inheritance(tmp_path)
 
 
@@ -129,7 +176,7 @@ def test_cli_reports_valid_and_invalid_contracts(tmp_path, capsys):
 
 def test_repository_contract_and_legacy_ignore_are_consistent():
     result = inheritance.validate_inheritance(REPOSITORY_ROOT)
-    assert result["parent"]["commit"] == "bf70f53ee682d4614cceea6b3dae86dfaf01a6d4"
+    assert result["parent"]["commit"] == "beb5310db975811a3da0b37bbf6ad8837d9e31b7"
     ignored = {
         line.strip()
         for line in (REPOSITORY_ROOT / ".templatesyncignore").read_text().splitlines()
