@@ -1,11 +1,15 @@
 ---
 id: design-inspection-engine
 title: Implementation design — Inspection engine (FR-4 and FR-9 deterministic checkpoints)
-status: implemented-v1.1-chk12
-updated: 2026-07-15
+status: implemented-v1.2-csv
+updated: 2026-07-23
 ---
 
 # Implementation design: Inspection engine
+
+- FR-5 CSV extension status: **implemented for Issue #228** (2026-07-23). It adds a
+  deterministic flat finding-list projection without changing the authoritative JSON
+  artifact, the Markdown summary, collection behavior, or query cost.
 
 - CHK-12 extension status: **implemented for Issue #70** (2026-07-15). It adds generic
   mart table/column description completeness without changing the implemented FR-4
@@ -65,7 +69,8 @@ src/modules/inspection/
       logging_config.py      # sinks.list, exclusions.list
     yaml_catalog_repository.py   # loads catalog/ga4-sensitivity.yml
     yaml_params_repository.py    # loads engagement params file
-    json_report_writer.py        # findings.json (stable ordering)
+    json_report_writer.py        # findings.json (authoritative full artifact)
+    csv_report_writer.py         # findings.csv (stable flat finding projection)
     markdown_report_writer.py    # deterministic summary.md rendering
   interface/
     cli.py             # argparse entry point; boundary validation (COD-011)
@@ -215,6 +220,12 @@ destinations are reported as `INFO: retention not verifiable with inspector role
 - `findings.json` — `{meta: SnapshotMeta+params digest, coverage: {datasets, tables,
   columns, skipped[]}, findings[]}`. Stable key order and finding sort. This is the
   **frame** the A-level AI report generator will consume.
+- `findings.csv` — the finding list only, using the fixed serialized field order
+  `check_id,severity,resource,observed,expected,rule_ref,remediation_hint`. CSV quoting
+  preserves commas, quotes, newlines, and non-ASCII text; UTF-8 bytes and LF endings are
+  deterministic. A clean report contains the header and no data rows. JSON remains the
+  complete authoritative artifact; parameters, coverage, and skipped details are not
+  duplicated into CSV.
 - `summary.md` — deterministic template rendering: coverage table, findings grouped by
   check, severity counts. No LLM involved.
 

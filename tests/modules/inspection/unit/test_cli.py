@@ -80,7 +80,7 @@ def params_file(tmp_path: Path) -> Path:
     return path
 
 
-def test_happy_path_writes_both_reports_and_exits_zero(
+def test_happy_path_writes_all_reports_and_exits_zero(
     params_file: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     exit_code = main(
@@ -93,6 +93,7 @@ def test_happy_path_writes_both_reports_and_exits_zero(
     report_dirs = list((tmp_path / "out" / "verify-project").iterdir())
     assert len(report_dirs) == 1
     assert (report_dirs[0] / "findings.json").exists()
+    assert (report_dirs[0] / "findings.csv").exists()
     assert (report_dirs[0] / "summary.md").exists()
 
 

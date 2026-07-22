@@ -1,11 +1,13 @@
-"""Unit tests for the JSON/Markdown report writers (byte-determinism, §6)."""
+"""Unit tests for the JSON/CSV/Markdown report writers (byte-determinism, §6)."""
 
+import csv
 import json
 from pathlib import Path
 
 from src.modules.inspection.domain.finding import Finding, Severity
 from src.modules.inspection.domain.report import Coverage, Report
 from src.modules.inspection.domain.snapshot import SkippedResource
+from src.modules.inspection.infrastructure.csv_report_writer import CsvReportWriter
 from src.modules.inspection.infrastructure.json_report_writer import JsonReportWriter
 from src.modules.inspection.infrastructure.markdown_report_writer import MarkdownReportWriter
 from tests.modules.inspection.builders import FIXED_NOW, params
@@ -38,6 +40,18 @@ def _finding() -> Finding:
     )
 
 
+def _finding_with_csv_metacharacters() -> Finding:
+    return Finding(
+        check_id="CHK-12",
+        severity=Severity.LOW,
+        resource="projects/p/datasets/marts/tables/report,ja/columns/売上",
+        observed='description is "missing"\nfor the leaf column',
+        expected="non-empty description",
+        rule_ref="FR-9.1",
+        remediation_hint="add a BigQuery description",
+    )
+
+
 def test_json_report_is_byte_identical_across_writes(tmp_path: Path) -> None:
     report = _report((_finding(),))
     first = JsonReportWriter().write(report, tmp_path / "a").read_bytes()
@@ -61,6 +75,35 @@ def test_json_report_carries_meta_coverage_and_findings(tmp_path: Path) -> None:
     }
     assert data["findings"][0]["check_id"] == "CHK-04"
     assert data["findings"][0]["severity"] == "HIGH"
+
+
+def test_csv_report_is_deterministic_and_preserves_escaped_values(tmp_path: Path) -> None:
+    report = _report((_finding(), _finding_with_csv_metacharacters()))
+    first = CsvReportWriter().write(report, tmp_path / "a").read_bytes()
+    second = CsvReportWriter().write(report, tmp_path / "b").read_bytes()
+
+    assert first == second
+    assert b"\r\n" not in first
+    with (tmp_path / "a" / "findings.csv").open(encoding="utf-8", newline="") as stream:
+        reader = csv.DictReader(stream)
+        assert reader.fieldnames == [
+            "check_id",
+            "severity",
+            "resource",
+            "observed",
+            "expected",
+            "rule_ref",
+            "remediation_hint",
+        ]
+        rows = list(reader)
+    assert [row["check_id"] for row in rows] == ["CHK-04", "CHK-12"]
+    assert rows[1]["resource"].endswith("report,ja/columns/売上")
+    assert rows[1]["observed"] == 'description is "missing"\nfor the leaf column'
+
+
+def test_csv_clean_report_contains_only_the_header(tmp_path: Path) -> None:
+    data = CsvReportWriter().write(_report(), tmp_path).read_text(encoding="utf-8")
+    assert data == ("check_id,severity,resource,observed,expected,rule_ref,remediation_hint\n")
 
 
 def test_markdown_summary_is_deterministic_and_complete(tmp_path: Path) -> None:

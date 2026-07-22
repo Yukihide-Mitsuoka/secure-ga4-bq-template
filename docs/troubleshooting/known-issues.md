@@ -40,7 +40,7 @@ not describe a partial inspection as complete.
 **Cause:** ADC/WIF, model permission, location, quota, timeout, or provider availability.
 
 **Fix:** Verify ADC and the configured project/location/model. Deterministic
-`findings.json` and `summary.md` remain valid; no cleanup is required.
+`findings.json`, `findings.csv`, and `summary.md` remain valid; no cleanup is required.
 
 ## ga4-bq-report: invalid input or output: report already exists
 

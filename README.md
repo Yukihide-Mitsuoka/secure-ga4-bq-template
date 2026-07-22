@@ -36,7 +36,7 @@ ai-dev-foundation ─sync▶ terraform-gcp-template ─sync▶ secure-ga4-bq-tem
 | GA4 sensitivity catalog + `event_params` unnest examples | [`catalog/ga4-sensitivity.yml`](catalog/README.md) + exemplar in [`profiles/dbt-bigquery/skeleton/`](profiles/dbt-bigquery/skeleton/) | imported |
 | Secure-mart build rail (Terraform datasets/taxonomy plus profile-copy engine selection) | [`infra/envs/dev/`](infra/README.md); [`profiles/dbt-bigquery/`](profiles/dbt-bigquery/README.md); [`profiles/dataform-bigquery/`](profiles/dataform-bigquery/README.md) | implemented |
 | WIF wiring (deployer, read-only inspector, and isolated cost-gate SAs) | [inspection identities](infra/envs/dev/wif.tf); [cost-gate identity](infra/envs/dev/cost_gate_wif.tf) | implemented |
-| Read-only inspection engine (CHK-01..CHK-11 security plus CHK-12 table/leaf-column description completeness; JSON/Markdown output) | [src/modules/inspection/](src/modules/inspection/MODULE.md) | implemented |
+| Read-only inspection engine (CHK-01..CHK-11 security plus CHK-12 table/leaf-column description completeness; JSON/CSV/Markdown output) | [src/modules/inspection/](src/modules/inspection/MODULE.md) | implemented |
 | Reporting (deterministic remediation draft plus optional Vertex AI narrative) | [src/modules/reporting/](src/modules/reporting/MODULE.md) | implemented |
 | Reusable scheduled/on-demand inspection and PR dry-run cost gate | [BQ Inspect](.github/workflows/bq-inspect.yml) at `v1`; [BQ Cost Gate](.github/workflows/bq-cost-gate.yml) at `v2.0.2` | implemented, opt-in |
 | Configurable standard-inspection menu and deterministic scope qualification | [`service-packages/`](service-packages/inspection-standard.yml); [src/modules/service_packaging/](src/modules/service_packaging/MODULE.md) | implemented |
@@ -68,6 +68,7 @@ it at the generated artifact:
 make report-ai FINDINGS=reports/<project>/<timestamp>/findings.json
 ```
 
+`findings.csv` is a deterministic spreadsheet projection of the finding list.
 `ai-report.md` is a human-review draft; `findings.json` and `summary.md` are authoritative.
 
 Render the separate non-applying remediation attachment without cloud credentials:
@@ -106,7 +107,7 @@ or calculate a final sales price.
 For GitHub Actions, copy `inspection-params.example.yml` to `inspection-params.yml`, set
 the repository variables `WIF_PROVIDER` and `INSPECTOR_SA`, then run **BQ Inspect**
 manually. Set `BQ_INSPECT_ENABLED=true` only after that run succeeds to enable the weekly
-schedule. The workflow uploads `findings.json`, `summary.md`, and
+schedule. The workflow uploads `findings.json`, `findings.csv`, `summary.md`, and
 `remediation-draft.md`; it never applies remediation.
 
 ## Using this template
