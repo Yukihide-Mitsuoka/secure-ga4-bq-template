@@ -46,7 +46,7 @@ def _render(report: Report) -> list[str]:
 
     lines += ["", "## Findings by checkpoint", ""]
     if not report.findings:
-        lines.append("No findings — all eleven checkpoints passed.")
+        lines.append("No findings detected in the evaluated scope.")
     for check_id in sorted({f.check_id for f in report.findings}):
         check_findings = [f for f in report.findings if f.check_id == check_id]
         lines += [f"### {check_id} ({check_findings[0].rule_ref}) — {len(check_findings)}", ""]
