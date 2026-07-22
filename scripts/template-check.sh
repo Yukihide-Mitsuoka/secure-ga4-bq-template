@@ -9,6 +9,8 @@
 #   2. No file carries the "collapsed frontmatter" signature a non-frontmatter-aware
 #      formatter produces (guards against the LOG-0007 regression recurring).
 #   3. The PR size guard excludes generated package-manager lockfiles at any depth.
+#   4. Child repositories with a manifest satisfy the local inheritance and legacy
+#      Template Sync protection contract.
 
 set -u
 cd "$(dirname "$0")/.." || exit 9
@@ -42,6 +44,13 @@ for lockfile in package-lock.json pnpm-lock.yaml; do
     err ".github/workflows/ci.yml: PR size guard does not exclude nested $lockfile files"
   fi
 done
+
+# 4. ADR-0007: validate the actual child contract, not only unit-test fixtures. The
+# foundation root has no child manifest, so this remains a no-op there.
+if [ -f ".github/inheritance/manifest.json" ]; then
+  python3 scripts/template_inheritance.py validate --root . >/dev/null || \
+    err "Template inheritance and legacy sync protection contract is invalid"
+fi
 
 if [ "$errors" -eq 0 ]; then
   echo "doctor: OK — template invariants hold"

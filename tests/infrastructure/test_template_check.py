@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 REPOSITORY_ROOT = Path(__file__).parents[2]
 TEMPLATE_CHECK = REPOSITORY_ROOT / "scripts" / "template-check.sh"
 
