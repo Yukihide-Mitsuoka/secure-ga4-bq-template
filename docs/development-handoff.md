@@ -64,7 +64,7 @@ Google's undelete window. Do not reuse that ID during the window.
 | Actual BigQuery processing | 1,604,088,078 bytes; billed 1,604,321,280 bytes |
 | Dedicated WIF cost gate | Three SQL files passed the 2,000,000,000-byte per-file ceiling |
 | Inspection coverage | 3 datasets, 3 tables/views, 19 columns, 0 skipped |
-| Reporting | Deterministic summary/remediation plus one non-authoritative AI draft |
+| Reporting | Deterministic JSON/CSV/Markdown inspection outputs and remediation plus one non-authoritative AI draft |
 | CHK-12 | Implemented through the specification, reporting, and inspection slices; no query jobs or additional cloud resources |
 | Service packaging | Versioned standard profile, customer-menu renderer, deterministic scope evaluator, and rollback-safe JSON/Markdown qualification publication |
 | Teardown | 25 Terraform resources plus three Dataform objects, all state versions, bucket, variables, and two temporary APIs removed |

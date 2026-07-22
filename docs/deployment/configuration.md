@@ -33,9 +33,9 @@ uses `gcp-cicd-workflows@v1` and the following repository variables:
 Copy `inspection-params.example.yml` to the engagement-owned
 `inspection-params.yml`, replace `project_id` and `expected_location`, and review every
 scope and threshold before the first manual run. The workflow uses the inspector identity,
-never `DEPLOYER_SA`, and uploads `findings.json`, `summary.md`, and the deterministic
-`remediation-draft.md`. Findings only fail a manually dispatched run when the operator
-sets `fail_on`; scheduled runs remain report-only.
+never `DEPLOYER_SA`, and uploads `findings.json`, the flat `findings.csv` projection,
+`summary.md`, and the deterministic `remediation-draft.md`. Findings only fail a manually
+dispatched run when the operator sets `fail_on`; scheduled runs remain report-only.
 
 ## Cost-gate infrastructure
 

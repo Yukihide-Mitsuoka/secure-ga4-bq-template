@@ -21,6 +21,7 @@ from src.modules.inspection.application.collect_snapshot import CollectSnapshot
 from src.modules.inspection.application.run_inspection import RunInspection
 from src.modules.inspection.domain.finding import Severity
 from src.modules.inspection.domain.report import Report
+from src.modules.inspection.infrastructure.csv_report_writer import CsvReportWriter
 from src.modules.inspection.infrastructure.gcp.bigquery_metadata import BigQueryMetadataAdapter
 from src.modules.inspection.infrastructure.gcp.client import GcpServices, build_gcp_services
 from src.modules.inspection.infrastructure.gcp.data_catalog import DataCatalogTaxonomyAdapter
@@ -63,6 +64,7 @@ def main(
 
     out_dir = Path(args.out_dir) / report.project_id / report.captured_at.strftime("%Y%m%dT%H%M%SZ")
     json_path = JsonReportWriter().write(report, out_dir)
+    CsvReportWriter().write(report, out_dir)
     MarkdownReportWriter().write(report, out_dir)
 
     counts = report.severity_counts()
