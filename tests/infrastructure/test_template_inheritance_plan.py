@@ -93,6 +93,11 @@ class Repositories:
         lock = {"schema_version": 1, "parent": {"repository": PARENT, "commit": commit}}
         self.write(self.child, ".github/inheritance/manifest.json", json.dumps(manifest))
         self.write(self.child, ".github/inheritance/lock.json", json.dumps(lock))
+        self.write(
+            self.child,
+            ".templatesyncignore",
+            "\n".join([*PROTECTED, ".github/workflows/**"]) + "\n",
+        )
 
     def snapshot(self):
         return {
