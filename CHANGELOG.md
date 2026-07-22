@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.0.1](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.0.0...v2.0.1) (2026-07-22)
+
+
+### Bug Fixes
+
+* **governance:** adopt ruleset-only discovery ([#220](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/220)) ([bccadec](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/bccadecccc8c862878a845259b47c68b4edc997f))
+* **sync:** adopt safe parent propagation ([#217](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/217)) ([3c1c282](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/3c1c28264d07e6f601493d8d65fd45d487d68597))
+* **sync:** validate the actual child contract ([#219](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/219)) ([68161a6](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/68161a6d510c0c5d3ba9a03e3ba0618dcbf5acd1))
+
 ## [2.0.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v1.8.0...v2.0.0) (2026-07-19)
 
 
