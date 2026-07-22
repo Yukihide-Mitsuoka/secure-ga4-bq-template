@@ -384,6 +384,29 @@ def test_unprotected_branch_skips_legacy_admin_endpoint() -> None:
     ]
 
 
+def test_ruleset_only_branch_treats_confirmed_legacy_404_as_absent() -> None:
+    protection_endpoint = "repos/acme/demo/branches/main/protection"
+    runner = fake_runner()
+    runner.responses[protection_endpoint] = Completed(
+        returncode=1,
+        stdout="HTTP/2.0 404 Not Found\r\n\r\n",
+    )
+
+    result = governance.discover_github("acme/demo", "main", runner=runner)
+
+    assert result["legacy_branch_protection"]["status"] == "absent"
+    assert [command[-1] for command, _ in runner.calls].count(protection_endpoint) == 2
+
+
+def test_unreadable_legacy_status_remains_unknown_for_an_admin() -> None:
+    runner = fake_runner()
+    runner.responses["repos/acme/demo/branches/main/protection"] = Completed(returncode=1)
+
+    result = governance.discover_github("acme/demo", "main", runner=runner)
+
+    assert result["legacy_branch_protection"]["status"] == "unknown"
+
+
 def test_required_read_and_runner_failures_stop_closed() -> None:
     with pytest.raises(governance.PolicyError, match="GitHub GET failed") as failure:
         governance.discover_github(
