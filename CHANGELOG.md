@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.1.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.0.1...v2.1.0) (2026-07-22)
+
+
+### Features
+
+* **inspection:** export deterministic findings CSV ([#229](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/229)) ([5cecba2](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/5cecba2fcaa350a722510726571a205c551ab9c2))
+
+
+### Bug Fixes
+
+* **inspection:** avoid overstating zero-finding coverage ([#231](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/231)) ([5786c1b](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/5786c1b7e1fcdba0eafb3b45d1d8b036c028b63d))
+* **sync:** keep PR body inside workflow script ([#222](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/222)) ([ea2aee4](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/ea2aee4939b792f3ecf2a0317a6213af0a84faab))
+
 ## [2.0.1](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.0.0...v2.0.1) (2026-07-22)
 
 
