@@ -31,6 +31,6 @@ decisions from the direct parent chain are synchronized under
 | [0008](0008-adopt-direct-parent-inheritance-contract.md) | Adopt the direct-parent inheritance contract | accepted | 2026-07-16 |
 | [0009](0009-expose-confirmed-local-governance-apply.md) | Expose confirmed local governance apply | accepted | 2026-07-17 |
 | [0010](0010-separate-foundation-and-project-document-ownership.md) | Separate foundation and project document ownership | accepted | 2026-07-19 |
-| [0011](0011-record-structured-promoted-column-lineage.md) | 昇格列の出所を構造化カタログで記録する | proposed | 2026-07-23 |
+| [0011](0011-record-structured-promoted-column-lineage.md) | 昇格列の出所を構造化カタログで記録する | accepted | 2026-07-23 |
 
 <!-- Append new Secure GA4 ADRs to this table (newest last). -->

@@ -23,6 +23,7 @@ Architecture decision: [ADR-0003](../../../docs/adr/0003-inspection-engine-pytho
 |-------------|-------|-------------|
 | `Finding`, `Severity`, `sorted_findings` | domain | Output vocabulary every consumer reads |
 | `Report`, `Coverage` | domain | The complete output frame: findings + §4.2 coverage + params echo |
+| `SensitivityCatalog`, `PromotedColumn`, `PromotionSource` | domain | Versioned sensitivity and declared promotion-origin vocabulary; source values remain vendor-neutral and do not prove SQL lineage |
 | `RunInspection.handle(params) -> Report` | application | snapshot → 12 checks → sorted report; Acceptance B remains CHK-01..CHK-11 |
 | `make inspect PARAMS=<yaml>` (`python -m src.modules.inspection.interface.cli`) | interface | engagement params in, `findings.json` + `findings.csv` + `summary.md` out; `--fail-on` gates CI |
 
@@ -56,6 +57,9 @@ flat finding-list projection. The module never mutates any GCP resource.
 7. CSV uses the serialized finding vocabulary in a fixed column order, preserves report
    order, emits a header for zero findings, and is byte-deterministic UTF-8 with LF line
    endings. It never duplicates parameters, coverage, or skipped-resource detail from JSON.
+8. Catalog version 1 promotion entries are read compatibly throughout 2.x; version 2
+   records target level plus optional source field path/key without reading row data or
+   transformation SQL. Missing source values remain inert until CHK-13 lands.
 
 ## Dependencies
 

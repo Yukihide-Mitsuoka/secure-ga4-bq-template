@@ -1,7 +1,7 @@
 ---
 id: adr-0011
 title: ADR-0011 — 昇格列の出所を構造化カタログで記録する
-status: proposed
+status: accepted
 updated: 2026-07-23
 ---
 
@@ -9,7 +9,7 @@ updated: 2026-07-23
 
 | Field | Value |
 |-------|-------|
-| Status | proposed |
+| Status | accepted (2026-07-23, repository owner via merged PR #237) |
 | Date | 2026-07-23 |
 | Deciders | repository owner |
 | Author | Codex (AI agent) |

@@ -1,7 +1,7 @@
 ---
 id: glossary
 title: Glossary — Ubiquitous Language
-updated: 2026-07-17
+updated: 2026-07-23
 ---
 
 # Glossary
@@ -39,6 +39,7 @@ confusable. Keep alphabetical.
 | Engagement scope | Anonymous preflight counts and work flags evaluated against one menu profile | service packaging | inspection parameters or collected customer metadata |
 | Menu profile | Versioned product-definition data containing a service package's fee range, capacity limits, checks, deliverables, and separate-estimate conditions | service packaging | deployment or customer configuration |
 | Plan | GET-only governance comparison that reports compliant, drift, or unknown state without acting as a compliance gate | governance | audit or apply |
+| Promotion source | Structured declaration of the nested field path and key from which a mart leaf column is promoted; it records intended origin but does not prove transformation correctness | inspection | BigQuery description or verified SQL lineage |
 | Qualification reason | A profile-defined condition requiring work outside the standard service package | service packaging | a security finding or final sales decision |
 | Remediation recipe | Versioned local mapping from an FR-4 check ID to non-applying Terraform, policy, or manual review guidance | reporting | model-generated code |
 | Service package | A reviewed commercial boundary rendered and qualified from one menu profile | service packaging | the technical inspection engine |

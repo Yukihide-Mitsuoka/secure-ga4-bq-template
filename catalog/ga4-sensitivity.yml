@@ -6,7 +6,7 @@
 # Rule (FR-1.2): this file ships recommended DEFAULTS and stays unchanged in
 # engagements; per-engagement changes go ONLY in `overrides` (e.g. promote
 # user_pseudo_id to high under strict regulation). No code edits to re-level.
-version: 1
+version: 2
 
 levels: [high, medium, low]
 
@@ -22,12 +22,20 @@ columns:
   event_date: low
   event_ts: low
 
-# event_params keys recommended for typed promotion (FR-1.3) and the level the
-# promoted column receives. Which keys actually get promoted is an engagement
-# parameter; anything left nested is covered by dataset IAM + value-scan (A+).
-promoted_event_params:
-  page_location: high # query strings can carry PII
-  page_referrer: high # same risk as page_location
+# Typed mart columns promoted from nested keys (FR-1.3 / ADR-0011). Target names
+# remain the mapping keys used by CHK-04. `source` records declaration lineage;
+# it does not prove that the transformation SQL reads this key.
+promoted_columns:
+  page_location:
+    level: high # query strings can carry PII
+    source:
+      field_path: event_params
+      key: page_location
+  page_referrer:
+    level: high # query strings can carry PII
+    source:
+      field_path: event_params
+      key: page_referrer
 
 # Engagement-level re-mapping: column name -> level. Empty in the template.
 overrides: {}
