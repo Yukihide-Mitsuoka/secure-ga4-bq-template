@@ -8,6 +8,11 @@ output "policy_tag_ids" {
   value       = module.sensitivity.policy_tag_ids
 }
 
+output "data_policy_ids" {
+  description = "Map: configured data policy key -> created data policy ID. Empty when column masking is disabled."
+  value       = { for key, policy in module.data_policy : key => policy.data_policy_id }
+}
+
 # GitHub repo variables (design B-2 step 3): WIF_PROVIDER / DEPLOYER_SA / INSPECTOR_SA.
 output "workload_identity_provider" {
   description = "WIF provider resource name -> repo variable WIF_PROVIDER."

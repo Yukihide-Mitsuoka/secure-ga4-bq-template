@@ -39,3 +39,18 @@ module "sensitivity" {
   taxonomy_display_name = var.taxonomy_display_name
   fine_grained_readers  = var.fine_grained_readers
 }
+
+# Optional column masking. An empty map creates nothing, preserving the standard
+# access-control-only path. Dataset readers and query-job permissions stay engagement
+# owned; this module grants only masked-reader access to the named data policy.
+module "data_policy" {
+  source   = "git::https://github.com/Yukihide-Mitsuoka/terraform-gcp-modules.git//modules/bigquery-data-policy?ref=v0.4.0"
+  for_each = var.data_policies
+
+  project_id            = var.project_id
+  location              = lower(var.region)
+  data_policy_id        = each.key
+  policy_tag            = module.sensitivity.policy_tag_ids[each.value.policy_tag_level]
+  predefined_expression = each.value.predefined_expression
+  masked_readers        = each.value.masked_readers
+}

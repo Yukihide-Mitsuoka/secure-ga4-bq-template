@@ -1,7 +1,7 @@
 ---
 id: roadmap
 title: Roadmap
-updated: 2026-07-15
+updated: 2026-07-23
 ---
 
 # Roadmap
@@ -25,6 +25,13 @@ Keep `updated:` current; stale roadmaps mislead agents (DOC-040).
   baseline.
 - Revisit conditional service options only after engagement evidence establishes demand
   and an approved data-access boundary.
+
+## Completed on 2026-07-23
+
+- Optional BigQuery column masking was integrated with a default-off Terraform input and
+  accepted through cleartext, masked, and denied live paths using synthetic data. The
+  [dated evidence](verification/2026-07-23-column-masking-live-evidence.md) records the
+  cost boundary and complete teardown.
 
 ## Completed on 2026-07-15
 
