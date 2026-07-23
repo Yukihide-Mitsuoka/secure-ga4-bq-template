@@ -10,7 +10,11 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from src.modules.inspection.domain.catalog import SensitivityCatalog
+from src.modules.inspection.domain.catalog import (
+    PromotedColumn,
+    PromotionSource,
+    SensitivityCatalog,
+)
 from src.modules.inspection.domain.params import AuditParams, InspectionParams, Thresholds
 from src.modules.inspection.domain.snapshot import (
     AccessEntry,
@@ -97,14 +101,24 @@ def a_catalog(
     *,
     levels: tuple[str, ...] = ("high", "medium", "low"),
     columns: dict[str, str] | None = None,
-    promoted_event_params: dict[str, str] | None = None,
+    promoted_columns: dict[str, PromotedColumn] | None = None,
     overrides: dict[str, str] | None = None,
 ) -> SensitivityCatalog:
     return SensitivityCatalog(
         levels=levels,
         columns={"user_id": "high", "user_pseudo_id": "medium"} if columns is None else columns,
-        promoted_event_params=(
-            {"page_location": "high"} if promoted_event_params is None else promoted_event_params
+        promoted_columns=(
+            {
+                "page_location": PromotedColumn(
+                    level="high",
+                    source=PromotionSource(
+                        field_path="event_params",
+                        key="page_location",
+                    ),
+                )
+            }
+            if promoted_columns is None
+            else promoted_columns
         ),
         overrides={} if overrides is None else overrides,
     )
