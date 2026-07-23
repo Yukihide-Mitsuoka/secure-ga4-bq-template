@@ -18,14 +18,15 @@ authoritative in their linked documents.
 | Default branch | Release baseline v2.0.1; reviewed inheritance and governance maintenance through 2026-07-23 is merged | [Release v2.0.1](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v2.0.1) |
 | Direct parent lock | `terraform-gcp-template` at `de7df1b760534644eb97b9bdd10ab72adb5f665c` | [Inheritance lock](../.github/inheritance/lock.json) |
 | IaC governance prerequisite | Complete: exact `iac-scan` succeeded on PR #125 and its merged-main push | [PR run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29517379947), [main run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29518413106) |
-| Active work | No product or cloud implementation is active. Repository maintenance remains review-merge only; Acceptance S is condition-gated | [Main requirements section 8](requirements/requirements-secure-asset.md) |
+| Active work | Issue #232 is implemented on `feat/232-column-masking-live`; cloud proof and teardown are complete, with review/merge pending | [Issue #232](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/232) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
 | Acceptance boundary | Approval is constrained to the public sample, interactive ADC inspection, and an inspector WIF path that was not invoked; it is not customer-engagement evidence | [Evidence limitations](verification/2026-07-15-public-ga4-acceptance-a-evidence.md#limitations-and-human-decision) |
 | Mart-description governance | Complete: CHK-12 retains table/view and leaf-column descriptions and reports missing metadata without changing the historical Acceptance B denominator | [Issue #70](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/70), [inspection design](requirements/design-inspection-engine.md) |
+| Column masking | Opt-in technical acceptance PASS: default-off Terraform integration, clear/masked/denied behavior, bounded cost, and teardown proven with synthetic data | [Live evidence](verification/2026-07-23-column-masking-live-evidence.md) |
 | Acceptance S | Not started; requires a second engagement or department-standard adoption | [Main requirements section 8](requirements/requirements-secure-asset.md) |
-| Cloud baseline | Restored: no namespaced datasets/SAs/active IAM/state bucket/temporary variables; BigQuery enabled; Data Catalog and Vertex AI disabled | [Teardown evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md#teardown-and-residual-state) |
+| Cloud baseline | Restored: both verification projects have no BigQuery datasets including anonymous datasets and no active verification SA/IAM; the new project retains only its pre-existing SA and two GCS buckets | [Column-masking teardown](verification/2026-07-23-column-masking-live-evidence.md) |
 | Unrelated shared assets | `github-actions-pool` ACTIVE, `github-actions-deployer` enabled, and `TEMPLATE_SYNC_ENABLED=true` unchanged | Same teardown evidence |
 
 `gcp-cicd-workflows` v2 remains the external reusable-workflow dependency. The cost-gate
@@ -33,9 +34,10 @@ caller and WIF condition are pinned together to `v2.0.2`.
 
 ## Next work
 
-No cloud action is required for the current milestone. Continue in this order:
+No cloud action is required after Issue #232. Continue in this order:
 
-1. Review and merge repository-maintenance PRs only after their required checks pass.
+1. Review and merge the Issue #232 PR only after its required checks pass, then return
+   to repository maintenance.
    Protected workflows remain repository-owned and are never overwritten by Template
    Sync.
 2. Re-run the GET-only inheritance and governance planners before any future
@@ -67,7 +69,8 @@ Google's undelete window. Do not reuse that ID during the window.
 | Reporting | Deterministic JSON/CSV/Markdown inspection outputs and remediation plus one non-authoritative AI draft |
 | CHK-12 | Implemented through the specification, reporting, and inspection slices; no query jobs or additional cloud resources |
 | Service packaging | Versioned standard profile, customer-menu renderer, deterministic scope evaluator, and rollback-safe JSON/Markdown qualification publication |
-| Teardown | 25 Terraform resources plus three Dataform objects, all state versions, bucket, variables, and two temporary APIs removed |
+| Column masking | Default-off opt-in integrated; clear/masked/denied paths passed with 300 processed bytes and 31,457,280 billed bytes |
+| Teardown | Current 20-resource proof, its anonymous query datasets, and four historical anonymous verification datasets removed; both projects show zero BigQuery datasets |
 
 Artifact hashes and exact run links live only in the dated evidence to avoid duplicate
 sources of truth.
@@ -116,7 +119,7 @@ may be absent; CI remains authoritative.
 > `de7df1b760534644eb97b9bdd10ab72adb5f665c`. Keep the child-specific governance
 > planner authoritative with `iac-scan` preserved. Do not run governance `apply` or
 > mutate live GitHub/GCP state without a fresh GET-only plan and separate
-> target-specific approval. Technical Acceptance A, CHK-12,
+> target-specific approval. Technical Acceptance A, CHK-12, opt-in column masking,
 > service packaging, and release hardening are complete. Continue toward Acceptance S
 > only when a second engagement or department-standard owner, scope, customer-data
 > approval, and cloud-cost approval exist. Do not recreate the deleted verification

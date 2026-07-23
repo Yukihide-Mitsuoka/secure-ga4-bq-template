@@ -26,8 +26,37 @@ Rules:
 `envs/dev/` is the acceptance-criteria-B verification environment: three layer datasets
 (`staging` / `intermediate` / `marts`) plus the sensitivity taxonomy, wired to
 `bigquery-dataset` and `bigquery-policy-tags` at `?ref=v0.3.0`. Engagement parameters
-(FR-7) enter via `layer_iam_members` and `fine_grained_readers`; the raw `analytics_*`
-export dataset is Google-created and locked down out of band (requirements §3.3).
+(FR-7) enter via `layer_iam_members`, `fine_grained_readers`, and the opt-in
+`data_policies`; the raw `analytics_*` export dataset is Google-created and locked down
+out of band (requirements §3.3).
+
+### Optional column masking
+
+`data_policies` is empty by default and therefore creates no masking resources. Each map
+entry binds one supported predefined masking expression to one sensitivity level through
+`bigquery-data-policy` at `?ref=v0.4.0`:
+
+```hcl
+data_policies = {
+  mask_high_email = {
+    policy_tag_level      = "high"
+    predefined_expression = "EMAIL_MASK"
+    masked_readers = [
+      "serviceAccount:masked-reader@example-project.iam.gserviceaccount.com",
+    ]
+  }
+}
+```
+
+The root grants only `roles/bigquerydatapolicy.maskedReader` through the module. Configure
+dataset-level `roles/bigquery.dataViewer` separately with `layer_iam_members`, and grant
+`roles/datacatalog.categoryFineGrainedReader` through `fine_grained_readers` only to
+members that must see cleartext. Query identities also need an engagement-owned
+`bigquery.jobs.create` grant; the masking input never creates project-level IAM.
+
+Only one masking policy may target each `high`, `medium`, or `low` tag. Unsupported
+expressions, unknown levels, public principals, and invalid policy IDs fail during input
+validation.
 
 ### Verification data (FR-8)
 

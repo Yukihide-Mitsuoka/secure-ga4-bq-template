@@ -61,6 +61,65 @@ variable "fine_grained_readers" {
   default     = {}
 }
 
+variable "data_policies" {
+  description = "Optional column-masking policies keyed by data policy ID. Empty by default; dataset read and query-job permissions remain engagement-owned."
+  type = map(object({
+    policy_tag_level      = string
+    predefined_expression = string
+    masked_readers        = list(string)
+  }))
+  default = {}
+
+  validation {
+    condition = alltrue([
+      for policy_id in keys(var.data_policies) :
+      can(regex("^[a-zA-Z0-9_]+$", policy_id))
+    ])
+    error_message = "Every data policy ID must contain only letters, digits, and underscores."
+  }
+
+  validation {
+    condition = alltrue([
+      for policy in values(var.data_policies) :
+      contains(["high", "medium", "low"], policy.policy_tag_level)
+    ])
+    error_message = "Every data policy level must be high, medium, or low."
+  }
+
+  validation {
+    condition = length(var.data_policies) == length(toset([
+      for policy in values(var.data_policies) : policy.policy_tag_level
+    ]))
+    error_message = "Only one data masking policy may be configured for each policy-tag level."
+  }
+
+  validation {
+    condition = alltrue([
+      for policy in values(var.data_policies) : contains([
+        "SHA256",
+        "ALWAYS_NULL",
+        "DEFAULT_MASKING_VALUE",
+        "LAST_FOUR_CHARACTERS",
+        "FIRST_FOUR_CHARACTERS",
+        "EMAIL_MASK",
+        "DATE_YEAR_MASK",
+        "RANDOM_HASH",
+      ], policy.predefined_expression)
+    ])
+    error_message = "Every predefined expression must be supported by the shared bigquery-data-policy module."
+  }
+
+  validation {
+    condition = alltrue(flatten([
+      for policy in values(var.data_policies) : [
+        for member in policy.masked_readers :
+        !contains(["allUsers", "allAuthenticatedUsers"], member)
+      ]
+    ]))
+    error_message = "Public members (allUsers / allAuthenticatedUsers) are forbidden."
+  }
+}
+
 # --- WIF wiring (design B) ---
 
 variable "github_repository" {

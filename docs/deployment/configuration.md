@@ -92,3 +92,33 @@ replace the Dataform compile proof or the acceptance-A run against an approved s
 Do not substitute `WIF_PROVIDER`, `DEPLOYER_SA`, or `INSPECTOR_SA`. Compilation must be
 credential-free. When upgrading gcp-cicd-workflows, update the caller's immutable release
 and `cost_gate_workflow_ref` together; a mismatch intentionally fails WIF authentication.
+
+## Optional column masking
+
+Column masking is disabled when Terraform `data_policies` is empty. When an engagement
+approves masking, configure each authorization boundary independently:
+
+| Reader behavior | Dataset access | Policy access |
+|-----------------|----------------|---------------|
+| Cleartext | `roles/bigquery.dataViewer` | `roles/datacatalog.categoryFineGrainedReader` on the matching policy tag |
+| Masked | `roles/bigquery.dataViewer` | `roles/bigquerydatapolicy.maskedReader` on the matching data policy |
+| Denied control | `roles/bigquery.dataViewer` | Neither policy role |
+
+All three query identities need an engagement-owned permission containing
+`bigquery.jobs.create`; the template does not broaden project IAM when masking is enabled.
+Attach the selected policy tag to a materialized table column before testing. Views cannot
+carry policy tags.
+
+For a live proof, use synthetic values, estimate every query before execution, set a
+maximum-bytes-billed ceiling, and test cleartext, masked, and denied behavior separately.
+Save an explicit destroy plan, delete all temporary objects immediately after the proof,
+and verify the namespace is absent. Do not disable a project API unless the recorded
+before-state proves the proof enabled it and no unrelated dependency uses it.
+
+BigQuery stores successful query results in per-principal anonymous datasets, which are
+visible only with `bq ls -a`. Inspect and remove those datasets before deleting temporary
+query identities; after an identity is deleted, another principal cannot recursively
+delete its result tables. Cached result tables normally expire after approximately 24
+hours, but the empty anonymous dataset can remain visible and must still be included in
+the residual check. See the [live proof](../verification/2026-07-23-column-masking-live-evidence.md)
+for the verified teardown sequence.
