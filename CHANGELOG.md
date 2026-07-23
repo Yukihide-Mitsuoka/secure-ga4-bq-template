@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.1.0...v2.2.0) (2026-07-23)
+
+
+### Features
+
+* **infra:** add opt-in BigQuery column masking ([#233](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/233)) ([7db0ba4](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/7db0ba4698873a7d7bd126d2f7e08e9bad724b13))
+
 ## [2.1.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.0.1...v2.1.0) (2026-07-22)
 
 
