@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.2.0...v2.3.0) (2026-07-23)
+
+
+### Features
+
+* **inspection:** add structured promotion catalog ([#238](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/238)) ([7bcf6e2](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/7bcf6e207089c194b6bb60abb4f938f0eac64b5a))
+
 ## [2.2.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.1.0...v2.2.0) (2026-07-23)
 
 
