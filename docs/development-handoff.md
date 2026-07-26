@@ -15,10 +15,10 @@ authoritative in their linked documents.
 
 | Item | State on 2026-07-26 | Evidence or source |
 |------|---------------------|--------------------|
-| Default branch | Latest published release is v2.3.0; main additionally contains merged CHK-13 reporting and inspection changes, with Release PR #241 for v2.4.0 pending | [Release v2.3.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v2.3.0), [Release PR #241](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/241) |
+| Default branch | Release baseline v2.4.0 includes structured promotion-source catalog, CHK-13 reporting/inspection, and the completed documentation refresh | [Release v2.4.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v2.4.0) |
 | Direct parent lock | `terraform-gcp-template` at `de7df1b760534644eb97b9bdd10ab72adb5f665c` | [Inheritance lock](../.github/inheritance/lock.json) |
 | IaC governance prerequisite | Complete: exact `iac-scan` succeeded on PR #125 and its merged-main push | [PR run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29517379947), [main run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29518413106) |
-| Active work | No product implementation is in progress. Issue #235 implementation is merged; this documentation refresh completes Issues #235 and #236. Release PR #241 remains a human merge decision | [Issue #235](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/235), [Issue #236](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/236) |
+| Active work | No product implementation is in progress. Issues #235 and #236 are closed; the next product milestone remains externally gated Acceptance S | [Issue #235](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/235), [Issue #236](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/236), [roadmap](roadmap.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -37,18 +37,16 @@ caller and WIF condition are pinned together to `v2.0.2`.
 
 No cloud action is required. Continue in this order:
 
-1. Review Release PR #241 after this documentation PR is merged. It publishes v2.4.0;
-   the release remains a human merge decision.
-2. Re-run the GET-only inheritance and governance planners before any future
+1. Re-run the GET-only inheritance and governance planners before any future
    propagation or settings change. Treat every live target and run as separately
    approval-gated; implementation merge is not authorization for `apply`.
-3. Apply the asset to a second engagement only when an owner, target scope, customer
+2. Apply the asset to a second engagement only when an owner, target scope, customer
    data approval, and cloud-cost approval exist, then measure reuse effort for
    Acceptance S.
-4. Use the versioned standard-inspection profile, generated menu, and deterministic
+3. Use the versioned standard-inspection profile, generated menu, and deterministic
    qualification artifacts as the service-packaging baseline; change profile values in
    a reviewed PR rather than editing generated material.
-5. Keep customer delivery evidence and raw inspection artifacts outside this public
+4. Keep customer delivery evidence and raw inspection artifacts outside this public
    repository because complete inspection artifacts remain Internal.
 
 Do not recreate the deleted verification environment unless a new issue and approvals
@@ -115,8 +113,7 @@ may be absent; CI remains authoritative.
 ## Resume prompt
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
-> `docs/development-handoff.md`. Confirm the v2.3.0 published baseline, pending v2.4.0
-> Release PR #241, and direct-parent lock
+> `docs/development-handoff.md`. Confirm the v2.4.0 release baseline and direct-parent lock
 > `de7df1b760534644eb97b9bdd10ab72adb5f665c`. Keep the child-specific governance
 > planner authoritative with `iac-scan` preserved. Do not run governance `apply` or
 > mutate live GitHub/GCP state without a fresh GET-only plan and separate
