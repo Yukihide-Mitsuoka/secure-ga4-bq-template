@@ -1,5 +1,8 @@
 # secure-ga4-bq-template
 
+> 日本語での導入・点検・構築手順は
+> [secure-ga4-bq-template 利用ガイド](docs/usage.md)を参照してください。
+
 **Secure standard asset for GA4→BigQuery** — a template repository for engagements that
 build or inspect GA4→BQ **mart layers** with three security controls baked in:
 ① column-level security (policy tags) ② least-privilege IAM ③ cost-optimized audit
@@ -119,6 +122,9 @@ schedule. The workflow uploads `findings.json`, `findings.csv`, `summary.md`, an
 `remediation-draft.md`; it never applies remediation.
 
 ## Using this template
+
+The complete Japanese walkthrough, including inspect mode, build mode, outputs, and
+safety boundaries, is available in the [Japanese usage guide](docs/usage.md).
 
 1. **Create the engagement repo**: GitHub → "Use this template".
 2. **Repoint template sync**: in `.github/workflows/template-sync.yml`, change
