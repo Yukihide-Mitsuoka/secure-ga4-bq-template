@@ -1,7 +1,7 @@
 ---
 id: design-inspection-engine
 title: Implementation design — Inspection engine (FR-4, FR-9, and FR-10 deterministic checkpoints)
-status: implemented-v1.2-csv
+status: implemented-v1.3-promotion-source
 updated: 2026-07-26
 ---
 
@@ -16,9 +16,9 @@ updated: 2026-07-26
   security set or historical Acceptance B denominator. Delivery was split as described
   in §10.
 
-- CHK-13 extension status: **reporting compatibility prepared for Issue #235**
-  (2026-07-26). The inspection producer follows in a separate slice after its consumers
-  can safely validate and render the new finding, as described in §11.
+- CHK-13 extension status: **implemented for Issue #235** (2026-07-26). The reporting
+  consumer landed before the producer; the engine now evaluates observed promoted leaf
+  columns and the standard service profile includes the additive check (§11).
 
 - Status: **v1.0 — implemented** (2026-07-12). The §8 series landed on main as
   PRs #13/#14/#15/#19/#22/#23/#24/#25/#26/#27/#28: 11 checkpoints + registry,
@@ -61,7 +61,7 @@ src/modules/inspection/
       audit_logging.py    # CHK-06..07
       cost.py             # CHK-08..10
       dataset_hygiene.py  # CHK-11
-      metadata_documentation.py  # CHK-12
+      metadata_documentation.py  # CHK-12..13
   application/
     ports.py           # collection + output ports (see §3), Clock port
     collect_snapshot.py   # use case: assemble ProjectSnapshot via ports

@@ -1,15 +1,15 @@
 ---
 id: module-inspection
 title: Inspection Module
-updated: 2026-07-23
+updated: 2026-07-26
 ---
 
 # Inspection Module
 
 Purpose: the FR-4 inspection engine — collect a read-only configuration snapshot of a
 GCP project (BigQuery metadata, project IAM, taxonomies, logging config) and evaluate
-the 11 deterministic FR-4 security checkpoints plus additive FR-9 mart-description
-governance check into machine-readable findings. It does NOT own
+the 11 deterministic FR-4 security checkpoints plus additive FR-9 mart-description and
+FR-10 promotion-source governance checks into machine-readable findings. It does NOT own
 remediation application (FR-5: drafts only, humans apply), AI report generation
 (A-level, consumes this module's JSON output), or PII value scanning (A+).
 
@@ -24,7 +24,7 @@ Architecture decision: [ADR-0003](../../../docs/adr/0003-inspection-engine-pytho
 | `Finding`, `Severity`, `sorted_findings` | domain | Output vocabulary every consumer reads |
 | `Report`, `Coverage` | domain | The complete output frame: findings + §4.2 coverage + params echo |
 | `SensitivityCatalog`, `PromotedColumn`, `PromotionSource` | domain | Versioned sensitivity and declared promotion-origin vocabulary; source values remain vendor-neutral and do not prove SQL lineage |
-| `RunInspection.handle(params) -> Report` | application | snapshot → 12 checks → sorted report; Acceptance B remains CHK-01..CHK-11 |
+| `RunInspection.handle(params) -> Report` | application | snapshot → 13 checks → sorted report; Acceptance B remains CHK-01..CHK-11 |
 | `make inspect PARAMS=<yaml>` (`python -m src.modules.inspection.interface.cli`) | interface | engagement params in, `findings.json` + `findings.csv` + `summary.md` out; `--fail-on` gates CI |
 
 ## Events
@@ -49,17 +49,20 @@ flat finding-list projection. The module never mutates any GCP resource.
    Clock, never `datetime.now()` inside domain code.
 4. Checks are pure functions `(snapshot, params, catalog) -> list[Finding]`; `domain/`
    imports nothing outside the standard library (ARC-002).
-5. Every `Finding.check_id` is one of CHK-01..CHK-12. CHK-01..CHK-11 map 1:1 to the
-   closed FR-4 security set; CHK-12 maps to FR-9 and never changes the historical
-   Acceptance B denominator.
+5. Every `Finding.check_id` is one of CHK-01..CHK-13. CHK-01..CHK-11 map 1:1 to the
+   closed FR-4 security set; CHK-12 and CHK-13 map to FR-9 and FR-10 and never change
+   the historical Acceptance B denominator.
 6. CHK-12 evaluates only table/view and flattened leaf-column descriptions in MART or
    conservative UNMATCHED scope. It issues no query jobs and never grades or parses text.
-7. CSV uses the serialized finding vocabulary in a fixed column order, preserves report
+7. CHK-13 evaluates only observed promoted table/view leaf columns in MART or
+   conservative UNMATCHED scope. It checks non-empty structured source declarations,
+   reads no rows, SQL, or descriptions, and does not claim verified SQL lineage.
+8. CSV uses the serialized finding vocabulary in a fixed column order, preserves report
    order, emits a header for zero findings, and is byte-deterministic UTF-8 with LF line
    endings. It never duplicates parameters, coverage, or skipped-resource detail from JSON.
-8. Catalog version 1 promotion entries are read compatibly throughout 2.x; version 2
+9. Catalog version 1 promotion entries are read compatibly throughout 2.x; version 2
    records target level plus optional source field path/key without reading row data or
-   transformation SQL. Missing source values remain inert until CHK-13 lands.
+   transformation SQL. Missing source values for observed promoted columns produce CHK-13.
 
 ## Dependencies
 
@@ -70,7 +73,7 @@ flat finding-list projection. The module never mutates any GCP resource.
 ## Layout
 
 ```
-domain/                 # finding/snapshot/params/catalog/report models + checks/ (12 pure checkpoints)
+domain/                 # finding/snapshot/params/catalog/report models + checks/ (13 pure checkpoints)
 application/            # ports.py + collect_snapshot.py + run_inspection.py
 infrastructure/         # gcp/ adapters, YAML repos, JSON/CSV/Markdown writers, system clock
 interface/cli.py        # argparse CLI (make inspect)

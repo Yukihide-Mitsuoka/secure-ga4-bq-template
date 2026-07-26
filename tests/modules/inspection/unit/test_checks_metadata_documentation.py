@@ -1,11 +1,13 @@
-"""Unit tests for mart-description completeness checkpoint CHK-12."""
+"""Unit tests for additive mart-metadata checkpoints CHK-12 and CHK-13."""
 
 from dataclasses import replace
 
 import pytest
 
+from src.modules.inspection.domain.catalog import PromotedColumn, PromotionSource
 from src.modules.inspection.domain.checks.metadata_documentation import (
     check_chk12_missing_descriptions,
+    check_chk13_incomplete_promotion_sources,
 )
 from src.modules.inspection.domain.finding import Severity
 from src.modules.inspection.domain.snapshot import SchemaField
@@ -87,3 +89,94 @@ def test_non_empty_descriptions_are_not_semantically_scored() -> None:
     )
 
     assert findings == []
+
+
+def _run_chk13(
+    *,
+    dataset_id: str = "marts",
+    table_type: str = "TABLE",
+    exclude: tuple[str, ...] = (),
+    field_description: str | None = None,
+):
+    fields = (
+        SchemaField("customer_email", "STRING", description=field_description),
+        SchemaField("session_source", "STRING"),
+    )
+    table = a_table("customer_events", table_type=table_type, schema_fields=fields)
+    snapshot = a_snapshot(datasets=(a_dataset(dataset_id, tables=(table,)),))
+    catalog = a_catalog(
+        columns={},
+        promoted_columns={
+            "customer_email": PromotedColumn(level="high"),
+            "session_source": PromotedColumn(
+                level="medium",
+                source=PromotionSource(field_path="custom_attributes", key=" \t"),
+            ),
+            "catalog_only": PromotedColumn(level="low"),
+        },
+    )
+    return check_chk13_incomplete_promotion_sources(
+        snapshot,
+        params(exclude=exclude),
+        catalog,
+    )
+
+
+def test_incomplete_sources_for_observed_promoted_columns_emit_low_findings() -> None:
+    findings = _run_chk13(field_description="source.key=customer_email")
+
+    assert [(finding.severity, finding.resource, finding.observed) for finding in findings] == [
+        (
+            Severity.LOW,
+            "projects/verify-project/datasets/marts/tables/customer_events/columns/customer_email",
+            "promotion source declaration is missing source.field_path and source.key",
+        ),
+        (
+            Severity.LOW,
+            "projects/verify-project/datasets/marts/tables/customer_events/columns/session_source",
+            "promotion source declaration is missing source.key",
+        ),
+    ]
+    assert all(finding.rule_ref == "FR-10.1" for finding in findings)
+
+
+def test_complete_source_is_silent_and_values_are_source_agnostic() -> None:
+    field = SchemaField("customer_email", "STRING")
+    snapshot = a_snapshot(datasets=(a_dataset("marts", tables=(a_table(schema_fields=(field,)),)),))
+    catalog = a_catalog(
+        columns={},
+        promoted_columns={
+            "customer_email": PromotedColumn(
+                level="high",
+                source=PromotionSource(
+                    field_path="custom_attributes",
+                    key="primary_email",
+                ),
+            )
+        },
+    )
+
+    assert check_chk13_incomplete_promotion_sources(snapshot, params(), catalog) == []
+
+
+@pytest.mark.parametrize(
+    ("dataset_id", "table_type", "exclude"),
+    [
+        ("analytics_123", "TABLE", ()),
+        ("marts", "TABLE", ("marts",)),
+        ("marts", "EXTERNAL", ()),
+    ],
+)
+def test_chk13_skips_raw_excluded_and_non_table_view_resources(
+    dataset_id: str,
+    table_type: str,
+    exclude: tuple[str, ...],
+) -> None:
+    assert _run_chk13(dataset_id=dataset_id, table_type=table_type, exclude=exclude) == []
+
+
+def test_chk13_evaluates_views_and_unmatched_datasets_conservatively() -> None:
+    findings = _run_chk13(dataset_id="unclassified", table_type="VIEW")
+
+    assert len(findings) == 2
+    assert all("/datasets/unclassified/" in finding.resource for finding in findings)
