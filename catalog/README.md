@@ -1,7 +1,7 @@
 ---
 id: catalog
 title: GA4 Sensitivity Catalog
-updated: 2026-07-23
+updated: 2026-07-26
 ---
 
 # catalog/ — GA4 sensitivity catalog
@@ -31,9 +31,11 @@ Rules:
   interpreted as `field_path: event_params` with a source key equal to the target key.
   New or changed catalogs use version 2; version 1 removal can occur no earlier than an
   explicit 3.0.0 breaking change.
-- CHK-13 production is intentionally deferred to the next Issue #235 implementation
-  slice. Until then, the reader preserves missing source values but emits no lineage
-  finding.
+- CHK-13 emits a LOW finding when an observed promoted TABLE/VIEW leaf column in MART or
+  conservative UNMATCHED scope has a missing or blank `source.field_path` or `source.key`.
+  RAW, excluded, non-table/view, and undeployed catalog entries are not evaluated.
+- CHK-13 checks declaration completeness only. It does not parse descriptions, rows, or
+  SQL and does not prove that transformation SQL uses the declared source.
 
 Version 2 promotion example:
 
