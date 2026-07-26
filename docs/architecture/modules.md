@@ -1,7 +1,7 @@
 ---
 id: module-map
 title: Bounded-context map
-updated: 2026-07-15
+updated: 2026-07-26
 ---
 
 # Bounded-context map
@@ -19,7 +19,7 @@ flowchart LR
 
 | Context | Purpose | Depends on |
 |---------|---------|------------|
-| `inspection` | Collect metadata and decide CHK-01..CHK-12 deterministically | read-only GCP APIs |
+| `inspection` | Collect metadata and decide CHK-01..CHK-13 deterministically | read-only GCP APIs |
 | `reporting` | Validate the inspection artifact and render an advisory narrative | serialized artifact; Vertex AI through an application port |
 | `service_packaging` | Validate product profiles, render customer material, and qualify anonymous engagement scope | versioned local profiles and preflight scope inputs |
 

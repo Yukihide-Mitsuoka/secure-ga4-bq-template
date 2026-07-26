@@ -32,11 +32,11 @@ ai-dev-foundation ─sync▶ terraform-gcp-template ─sync▶ secure-ga4-bq-tem
 
 | Addition | Location | Status |
 |----------|----------|--------|
-| Normative requirements (build / inspect modes; 11 security checkpoints plus CHK-12 metadata governance; dbt/Dataform rail) | [`docs/requirements/`](docs/requirements/README.md) | implemented baseline |
-| GA4 sensitivity catalog + `event_params` unnest examples | [`catalog/ga4-sensitivity.yml`](catalog/README.md) + exemplar in [`profiles/dbt-bigquery/skeleton/`](profiles/dbt-bigquery/skeleton/) | imported |
+| Normative requirements (build / inspect modes; 11 security checkpoints plus CHK-12/CHK-13 metadata governance; dbt/Dataform rail) | [`docs/requirements/`](docs/requirements/README.md) | implemented baseline |
+| GA4 sensitivity catalog + structured promotion-source declarations and `event_params` unnest examples | [Catalog guide](catalog/README.md) + [`ga4-sensitivity.yml`](catalog/ga4-sensitivity.yml) + exemplar in [`profiles/dbt-bigquery/skeleton/`](profiles/dbt-bigquery/skeleton/) | implemented |
 | Secure-mart build rail (Terraform datasets/taxonomy plus profile-copy engine selection) | [`infra/envs/dev/`](infra/README.md); [`profiles/dbt-bigquery/`](profiles/dbt-bigquery/README.md); [`profiles/dataform-bigquery/`](profiles/dataform-bigquery/README.md) | implemented |
 | WIF wiring (deployer, read-only inspector, and isolated cost-gate SAs) | [inspection identities](infra/envs/dev/wif.tf); [cost-gate identity](infra/envs/dev/cost_gate_wif.tf) | implemented |
-| Read-only inspection engine (CHK-01..CHK-11 security plus CHK-12 table/leaf-column description completeness; JSON/CSV/Markdown output) | [src/modules/inspection/](src/modules/inspection/MODULE.md) | implemented |
+| Read-only inspection engine (CHK-01..CHK-11 security, CHK-12 description completeness, and CHK-13 promotion-source completeness; JSON/CSV/Markdown output) | [src/modules/inspection/](src/modules/inspection/MODULE.md) | implemented |
 | Reporting (deterministic remediation draft plus optional Vertex AI narrative) | [src/modules/reporting/](src/modules/reporting/MODULE.md) | implemented |
 | Reusable scheduled/on-demand inspection and PR dry-run cost gate | [BQ Inspect](.github/workflows/bq-inspect.yml) at `v1`; [BQ Cost Gate](.github/workflows/bq-cost-gate.yml) at `v2.0.2` | implemented, opt-in |
 | Configurable standard-inspection menu and deterministic scope qualification | [`service-packages/`](service-packages/inspection-standard.yml); [src/modules/service_packaging/](src/modules/service_packaging/MODULE.md) | implemented |
@@ -72,6 +72,12 @@ make report-ai FINDINGS=reports/<project>/<timestamp>/findings.json
 `ai-report.md` is a human-review draft; `findings.json` and `summary.md` are authoritative.
 A zero-finding summary applies only to the evaluated scope; skipped resources remain
 explicit and are never reported as passed.
+
+Declare promoted mart-column sensitivity and origin together by following the
+[catalog guide](catalog/README.md). CHK-13 reports an observed promoted TABLE/VIEW leaf
+column when `source.field_path` or `source.key` is missing or blank. It does not parse
+descriptions, rows, or SQL, and a complete declaration does not prove the
+transformation's SQL lineage.
 
 Render the separate non-applying remediation attachment without cloud credentials:
 

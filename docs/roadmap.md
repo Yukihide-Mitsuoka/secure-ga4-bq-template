@@ -1,7 +1,7 @@
 ---
 id: roadmap
 title: Roadmap
-updated: 2026-07-23
+updated: 2026-07-26
 ---
 
 # Roadmap
@@ -25,6 +25,14 @@ Keep `updated:` current; stale roadmaps mislead agents (DOC-040).
   baseline.
 - Revisit conditional service options only after engagement evidence establishes demand
   and an approved data-access boundary.
+
+## Completed on 2026-07-26
+
+- Source-agnostic promoted-column declarations and CHK-13 completeness inspection were
+  delivered through [Issue #235](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/235).
+  The implementation retains catalog version 1 compatibility throughout 2.x, does not
+  parse descriptions, rows, or SQL, and does not change the historical Acceptance B
+  denominator.
 
 ## Completed on 2026-07-23
 

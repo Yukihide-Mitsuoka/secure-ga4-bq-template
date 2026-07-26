@@ -35,9 +35,9 @@ updated: 2026-07-26
   [design-modules-wif-wiring.md](design-modules-wif-wiring.md) A-5 (inspector
   least-privilege role), FR-7 (engagement parameters), §4.2 (coverage denominator),
   §6 (idempotent, read-only, low scan cost).
-- Scope of this design: the **B-level engine plus additive CHK-12** — collect → evaluate
-  deterministic checkpoints → machine-readable findings + plain Markdown summary. Out
-  of scope: AI-generated
+- Scope of this design: the **B-level engine plus additive CHK-12/CHK-13** — collect →
+  evaluate deterministic checkpoints → machine-readable findings + plain Markdown
+  summary. Out of scope: AI-generated
   narrative reports and remediation drafts (A-level, consumes this engine's JSON),
   PII value scanning (A+), the `bq-inspect.yml` CI workflow (lives in
   gcp-cicd-workflows; its CLI contract is defined here).
