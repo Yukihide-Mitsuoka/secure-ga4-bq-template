@@ -1,4 +1,4 @@
-"""The deterministic FR-4 security checks plus additive FR-9 governance check.
+"""The deterministic FR-4 checks plus additive FR-9/FR-10 governance checks.
 
 Every check is a pure function with the uniform signature
 `(snapshot, params, catalog) -> list[Finding]` — unused context arguments are
@@ -6,8 +6,8 @@ accepted so the runner treats all checkpoints identically. Determinism and
 read-only-ness are module invariants (MODULE.md #1-#4).
 
 `ALL_CHECKS` is the canonical registry, ordered by check id. The historical B
-acceptance bar remains measured against CHK-01..CHK-11; additive CHK-12 does
-not change that denominator.
+acceptance bar remains measured against CHK-01..CHK-11; additive CHK-12 and
+CHK-13 do not change that denominator.
 """
 
 from collections.abc import Callable
@@ -34,6 +34,7 @@ from src.modules.inspection.domain.checks.iam import (
 )
 from src.modules.inspection.domain.checks.metadata_documentation import (
     check_chk12_missing_descriptions,
+    check_chk13_incomplete_promotion_sources,
 )
 from src.modules.inspection.domain.finding import Finding
 from src.modules.inspection.domain.params import InspectionParams
@@ -54,6 +55,7 @@ ALL_CHECKS: tuple[Check, ...] = (
     check_chk10_long_lived_without_expiration,
     check_chk11_dataset_hygiene,
     check_chk12_missing_descriptions,
+    check_chk13_incomplete_promotion_sources,
 )
 
 __all__ = ["ALL_CHECKS", "Check"]

@@ -29,7 +29,7 @@ def test_default_profile_matches_the_owner_approved_contract() -> None:
         "table_resources": 200,
         "leaf_columns": 2_000,
     }
-    assert profile.checks == tuple(f"CHK-{number:02d}" for number in range(1, 13))
+    assert profile.checks == tuple(f"CHK-{number:02d}" for number in range(1, 14))
     assert len(profile.checks) == len(ALL_CHECKS)
     assert tuple(item.item_id for item in profile.deliverables) == (
         "deterministic_report",

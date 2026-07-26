@@ -9,6 +9,7 @@ touching GCP.
 
 from datetime import timedelta
 
+from src.modules.inspection.domain.catalog import PromotedColumn
 from src.modules.inspection.domain.checks import ALL_CHECKS
 from src.modules.inspection.domain.finding import sorted_findings
 from src.modules.inspection.domain.snapshot import (
@@ -96,15 +97,21 @@ def worst_case_snapshot():  # type: ignore[no-untyped-def]
     )
 
 
-def test_registry_holds_eleven_fr4_checks_plus_chk12() -> None:
-    assert len(ALL_CHECKS) == 12
+def _worst_case_catalog():  # type: ignore[no-untyped-def]
+    return a_catalog(
+        promoted_columns={"page_location": PromotedColumn(level="high")},
+    )
+
+
+def test_registry_holds_eleven_fr4_checks_plus_two_governance_checks() -> None:
+    assert len(ALL_CHECKS) == 13
 
 
 def test_worst_case_project_triggers_every_supported_checkpoint() -> None:
-    snapshot, scoped, catalog = worst_case_snapshot(), params(), a_catalog()
+    snapshot, scoped, catalog = worst_case_snapshot(), params(), _worst_case_catalog()
     findings = [f for check in ALL_CHECKS for f in check(snapshot, scoped, catalog)]
     fired = {f.check_id for f in findings}
-    assert fired == {f"CHK-{i:02d}" for i in range(1, 13)}
+    assert fired == {f"CHK-{i:02d}" for i in range(1, 14)}
 
 
 def test_clean_project_triggers_almost_nothing() -> None:
@@ -116,7 +123,7 @@ def test_clean_project_triggers_almost_nothing() -> None:
 
 
 def test_full_run_output_order_is_deterministic() -> None:
-    snapshot, scoped, catalog = worst_case_snapshot(), params(), a_catalog()
+    snapshot, scoped, catalog = worst_case_snapshot(), params(), _worst_case_catalog()
     first = sorted_findings([f for check in ALL_CHECKS for f in check(snapshot, scoped, catalog)])
     second = sorted_findings(
         [f for check in reversed(ALL_CHECKS) for f in check(snapshot, scoped, catalog)]

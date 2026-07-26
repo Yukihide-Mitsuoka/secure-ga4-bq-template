@@ -10,7 +10,7 @@ limits:
   datasets: 10
   table_resources: 200
   leaf_columns: 2000
-checks: [CHK-01, CHK-02, CHK-03, CHK-04, CHK-05, CHK-06, CHK-07, CHK-08, CHK-09, CHK-10, CHK-11, CHK-12]
+checks: [CHK-01, CHK-02, CHK-03, CHK-04, CHK-05, CHK-06, CHK-07, CHK-08, CHK-09, CHK-10, CHK-11, CHK-12, CHK-13]
 deliverables:
   - id: deterministic_report
     label: 決定論点検レポート一式
