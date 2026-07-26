@@ -170,6 +170,20 @@ default_encryption_configuration {
             "Deploy through the reviewed workflow and rerun the inspection.",
         ),
     ),
+    "CHK-13": RemediationRecipe(
+        "PROMOTION_SOURCE_V1",
+        "Complete the promoted-column source declaration",
+        "manual",
+        ("owning_model", "target_column", "source_field_path", "source_key"),
+        None,
+        None,
+        (
+            "Identify the owning model and intended nested source field and key.",
+            "Add non-empty source.field_path and source.key to the promoted column entry.",
+            "Review the transformation separately; the declaration does not prove SQL lineage.",
+            "Rerun the inspection and confirm CHK-13 is absent.",
+        ),
+    ),
 }
 
 

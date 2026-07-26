@@ -71,6 +71,26 @@ def test_chk12_uses_static_mart_description_guidance(tmp_path) -> None:
     assert "F001: CHK-12" in output.read_text(encoding="utf-8")
 
 
+def test_chk13_uses_static_declared_lineage_guidance(tmp_path) -> None:
+    data = artifact_data()
+    data["findings"][0]["check_id"] = "CHK-13"
+    data["findings"][0]["severity"] = "LOW"
+    data["findings"][0]["rule_ref"] = "FR-10"
+    generator = FakeGenerator(_response())
+    use_case = GenerateAiReport(
+        reader=JsonArtifactReader(), generator=generator, writer=MarkdownReportWriter()
+    )
+
+    output = use_case.handle(write_artifact(tmp_path / "findings.json", data), tmp_path)
+
+    payload = json.loads(generator.payload)
+    assert payload["findings"][0]["guidance"] == (
+        "Complete the structured promotion source declaration and review the "
+        "transformation separately."
+    )
+    assert "F001: CHK-13" in output.read_text(encoding="utf-8")
+
+
 @pytest.mark.parametrize(
     "response",
     [
