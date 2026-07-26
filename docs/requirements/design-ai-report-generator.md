@@ -153,7 +153,7 @@ metadata. Every input finding ID must appear exactly once; unknown IDs are rejec
 ## 9. Slice 6 remediation contract
 
 - Input: the same complete, validated inspection artifact used by `report-ai`.
-- Selection: every CHK-01 through CHK-12 value maps to one immutable v1 local recipe.
+- Selection: every CHK-01 through CHK-13 value maps to one immutable v1 local recipe.
 - Trusted fields: recipe selection uses `check_id`; the report displays escaped local
   resource and rule identifiers. `observed`, `expected`, and `remediation_hint` never
   select or populate code.
@@ -163,3 +163,6 @@ metadata. Every input finding ID must appear exactly once; unknown IDs are rejec
   `REPLACE_ME_*` values, a Terraform/policy example when safe, and validation steps.
 - Side effects: no provider call, cloud mutation, Terraform execution, apply command, or
   pull-request creation.
+- CHK-13 uses approved static guidance and a manual recipe only. It asks the reviewer to
+  complete `source.field_path` and `source.key`, then inspect the transformation
+  separately; it does not infer or assert SQL lineage from artifact free text.

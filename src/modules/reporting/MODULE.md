@@ -13,7 +13,7 @@ and [ADR-0005](../../../docs/adr/0005-render-remediation-drafts-from-recipes.md)
 
 | Entry point | Layer | Description |
 |-------------|-------|-------------|
-| `InspectionArtifact`, `GeneratedNarrative` | domain | Validated CHK-01..CHK-12 input and provider-output vocabulary |
+| `InspectionArtifact`, `GeneratedNarrative` | domain | Validated CHK-01..CHK-13 input and provider-output vocabulary |
 | `GenerateAiReport.handle(input_path, out_dir)` | application | Read, pseudonymize, generate, validate, and write |
 | `GenerateRemediationDraft.handle(input_path, out_dir)` | application | Read, select versioned recipes, and write a deterministic draft |
 | `make report-ai FINDINGS=<json>` | interface | Opt-in Vertex AI CLI; writes `ai-report.md` |
@@ -39,9 +39,11 @@ directory.
 6. Remediation code and policy examples come only from versioned local recipes; the model
    and artifact free text never select or populate code.
 7. Remediation output is deterministic, non-applying Markdown with explicit placeholders.
-8. Unsupported check IDs fail closed. CHK-12 uses only static description guidance and
-   a local, non-applying remediation recipe; artifact free text never becomes guidance
-   or code.
+8. Unsupported check IDs fail closed. CHK-12 and CHK-13 use only static guidance and
+   local, non-applying remediation recipes; artifact free text never becomes guidance
+   or code. CHK-13 asks for a structured promotion-source declaration and separate
+   human review of the transformation; it never presents that declaration as verified
+   SQL lineage.
 
 ## Dependencies
 

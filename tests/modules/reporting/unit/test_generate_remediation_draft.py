@@ -47,6 +47,7 @@ def test_generation_is_deterministic_and_ignores_artifact_free_text(tmp_path) ->
     assert "Recipe version: `v1`" in first
     assert "F011: CHK-11" in first
     assert "F012: CHK-12" in first
+    assert "F013: CHK-13" in first
     assert "REPLACE_ME_" in first
     assert "terraform destroy" not in first
     assert "terraform apply -auto-approve" not in first

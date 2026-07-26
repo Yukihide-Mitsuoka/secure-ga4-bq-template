@@ -31,6 +31,10 @@ _CHECK_GUIDANCE = {
     "CHK-10": "Set expiration for long-lived tables where retention allows.",
     "CHK-11": "Align dataset location, expiration, and CMEK with engagement policy.",
     "CHK-12": "Add a BigQuery description to the undocumented mart table, view, or column.",
+    "CHK-13": (
+        "Complete the structured promotion source declaration and review the "
+        "transformation separately."
+    ),
 }
 
 _MAX_GENERATED_TEXT = 8_000

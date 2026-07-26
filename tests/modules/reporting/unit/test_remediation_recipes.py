@@ -24,3 +24,18 @@ def test_chk12_recipe_is_manual_and_non_applying() -> None:
     assert recipe.recipe_id == "MART_DESCRIPTION_V1"
     assert recipe.kind == "manual"
     assert recipe.example is None
+
+
+def test_chk13_recipe_requires_human_lineage_review_and_never_emits_code() -> None:
+    recipe = REMEDIATION_RECIPES["CHK-13"]
+
+    assert recipe.recipe_id == "PROMOTION_SOURCE_V1"
+    assert recipe.kind == "manual"
+    assert recipe.required_inputs == (
+        "owning_model",
+        "target_column",
+        "source_field_path",
+        "source_key",
+    )
+    assert recipe.example is None
+    assert any("transformation" in step for step in recipe.validation_steps)

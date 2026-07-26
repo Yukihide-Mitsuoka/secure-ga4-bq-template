@@ -1,8 +1,8 @@
 ---
 id: design-inspection-engine
-title: Implementation design — Inspection engine (FR-4 and FR-9 deterministic checkpoints)
+title: Implementation design — Inspection engine (FR-4, FR-9, and FR-10 deterministic checkpoints)
 status: implemented-v1.2-csv
-updated: 2026-07-23
+updated: 2026-07-26
 ---
 
 # Implementation design: Inspection engine
@@ -16,6 +16,10 @@ updated: 2026-07-23
   security set or historical Acceptance B denominator. Delivery was split as described
   in §10.
 
+- CHK-13 extension status: **reporting compatibility prepared for Issue #235**
+  (2026-07-26). The inspection producer follows in a separate slice after its consumers
+  can safely validate and render the new finding, as described in §11.
+
 - Status: **v1.0 — implemented** (2026-07-12). The §8 series landed on main as
   PRs #13/#14/#15/#19/#22/#23/#24/#25/#26/#27/#28: 11 checkpoints + registry,
   collection adapters, YAML config, use cases, `make inspect` CLI, JSON/Markdown
@@ -25,8 +29,9 @@ updated: 2026-07-23
   instead of a console script (non-packaged repo; make is the canonical entry).
   Remaining evidence step: a live run against the FR-8 verification environment.
 - Requirements: [requirements-secure-asset.md](requirements-secure-asset.md) FR-4 (11
-  security checkpoints), FR-9 (additive mart-description checkpoint), FR-5 (report
-  output — machine-readable part only), FR-6 /
+  security checkpoints), FR-9 (additive mart-description checkpoint), FR-10 (additive
+  structured promotion-source checkpoint), FR-5 (report output — machine-readable part
+  only), FR-6 /
   [design-modules-wif-wiring.md](design-modules-wif-wiring.md) A-5 (inspector
   least-privilege role), FR-7 (engagement parameters), §4.2 (coverage denominator),
   §6 (idempotent, read-only, low scan cost).
@@ -191,10 +196,11 @@ and listed with reasons.
 | CHK-10 | 10 | table age (Clock − creation_time) > `long_lived_days` **and** table `expiration_time` unset **and** dataset default expiration unset | LOW | TableMeta, DatasetMeta, Clock |
 | CHK-11 | 11 | (a) dataset location ≠ `expected_location`; (b) `default_table_expiration_ms` unset; (c) CMEK unset — severity per `require_cmek` | MEDIUM (a), LOW (b), INFO/HIGH (c) | DatasetMeta, params |
 | CHK-12 | FR-9 | table/view description or flattened leaf-column description is missing or whitespace-only in a MART or conservative UNMATCHED dataset | LOW | TableMeta.description, TableMeta.schema |
+| CHK-13 | FR-10 | an observed promoted leaf column in a MART or conservative UNMATCHED dataset has a missing or blank catalog `source.field_path` or `source.key` | LOW | TableMeta.schema, catalog promoted_columns |
 
-CHK-01..CHK-11 remain the closed FR-4 security set used by Acceptance B. CHK-12 is an
-additive governance check: it appears in the same deterministic report and remediation
-flow but is not counted in the historical 10-of-11 threshold.
+CHK-01..CHK-11 remain the closed FR-4 security set used by Acceptance B. CHK-12 and
+CHK-13 are additive governance checks: they appear in the same deterministic report and
+remediation flow but are not counted in the historical 10-of-11 threshold.
 
 ### 4.1 Description boundary
 
@@ -205,8 +211,19 @@ flow but is not counted in the historical 10-of-11 threshold.
 - RAW and EXCLUDED datasets are not evaluated. UNMATCHED remains full-inspection scope
   because the existing safe default treats it as MART.
 - The check does not grade prose, evaluate source lineage, or inspect row values.
-- A future lineage check requires a separate, structured, source-agnostic contract;
-  CHK-12 never parses free-text descriptions.
+- CHK-13 uses the separate, structured, source-agnostic FR-10 contract; CHK-12 never
+  parses free-text descriptions.
+
+### 4.2 Promotion-source boundary
+
+- Only table/view leaf columns observed in the existing REST snapshot are evaluated.
+- Catalog `promoted_columns` entries identify candidate target columns. A finding is
+  emitted only when that target exists in a MART or conservative UNMATCHED dataset and
+  either `source.field_path` or `source.key` is missing or blank.
+- RAW and EXCLUDED datasets and catalog entries with no observed target column are
+  skipped. This avoids treating reusable catalog declarations as deployed resources.
+- The check is source-agnostic and reads no rows, SQL, or description text. A complete
+  declaration records intent; it does not prove the transformation's SQL lineage.
 
 Known limitation (recorded, not silently dropped): CHK-07(b) retention is only
 verifiable for **BigQuery** sink destinations; GCS bucket lifecycle would need
@@ -293,3 +310,17 @@ Issue #70 is split to remain within GR-020:
 Each slice is independently releasable. No GCP resource, API enablement, IAM change, or
 new dependency is required. The check reuses existing `tables.get` calls, so fixed
 infrastructure cost and incremental BigQuery query-processing cost are both zero.
+
+## 11. CHK-13 delivery slices
+
+Issue #235 is split to remain within GR-020 and to update consumers before producers:
+
+| Slice | Contract |
+|-------|----------|
+| Specification | FR-10, source-agnostic CHK-13 behavior, Acceptance B preservation, and non-verification boundary |
+| Reporting compatibility | Accept CHK-13 artifacts and add deterministic AI guidance and a manual, non-applying remediation recipe before the producer emits it |
+| Inspection implementation | Evaluate observed promoted leaf columns, emit CHK-13, and cover the domain and registry boundaries with tests |
+
+Each slice is independently releasable. CHK-13 reuses the catalog and table schema
+already loaded by the inspector. It requires no GCP resource, API enablement, IAM
+change, query job, row access, or new dependency.
