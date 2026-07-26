@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.4.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.3.0...v2.4.0) (2026-07-26)
+
+
+### Features
+
+* **inspection:** detect incomplete promotion sources ([#242](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/242)) ([e1387fa](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/e1387faad853ea7b88297c6656a0292ad6a4b24c))
+* **reporting:** accept CHK-13 findings ([#240](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/240)) ([fc31c90](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/fc31c90ea5ce4577534954aa70f9430be654019c))
+
 ## [2.3.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.2.0...v2.3.0) (2026-07-23)
 
 
