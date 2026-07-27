@@ -58,6 +58,9 @@ do not commit them to this repository. See the
 
 ## Inspection and AI reporting
 
+See the Japanese [inspection capabilities and report guide](docs/inspection-capabilities.md)
+for the 13 concrete checks, expected effects, sample findings, deliverables, and limits.
+
 Run the deterministic, read-only inspection first:
 
 ```bash
