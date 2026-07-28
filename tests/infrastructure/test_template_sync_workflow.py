@@ -21,6 +21,12 @@ class TemplateSyncWorkflowTest(unittest.TestCase):
         )
         self.assertIn("gh pr edit", workflow)
 
+    def test_template_sync_runs_daily_off_the_hour(self):
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+
+        self.assertIn('cron: "17 7 * * *"', workflow)
+        self.assertNotIn('cron: "0 7 * * 1"', workflow)
+
     def test_sync_pr_body_stays_inside_the_run_block(self):
         workflow = WORKFLOW.read_text(encoding="utf-8")
 
