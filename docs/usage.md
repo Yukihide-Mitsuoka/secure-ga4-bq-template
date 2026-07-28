@@ -134,7 +134,8 @@ make report-ai \
   FINDINGS=reports/example-project/20260726T000000Z/findings.json
 ```
 
-`ai-report.md` はレビュー用の草案です。判定の正準は `findings.json` と `summary.md` です。
+Issue #253では`REPORT_LANGUAGE=en|ja`を設計済みですが、実装PRがmergeされるまでは指定できません。
+`ai-report.md`はレビュー用の草案です。判定の正準は`findings.json`と`summary.md`です。
 詳細な入出力と終了コードは
 [AI レポート CLI 契約](api/report-ai-cli.md)を参照してください。
 

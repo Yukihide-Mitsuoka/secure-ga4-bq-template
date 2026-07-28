@@ -73,10 +73,12 @@ AI reporting is optional. Configure ADC plus the variables in `.env.example`, th
 it at the generated artifact:
 
 ```bash
-make report-ai FINDINGS=reports/<project>/<timestamp>/findings.json
+make report-ai \
+  FINDINGS=reports/<project>/<timestamp>/findings.json
 ```
 
-`findings.csv` is a deterministic spreadsheet projection of the finding list.
+Issue #253 designs `REPORT_LANGUAGE=en|ja`; it remains unavailable until the implementation
+PR merges. `findings.csv` is a deterministic spreadsheet projection of the finding list.
 `ai-report.md` is a human-review draft; `findings.json` and `summary.md` are authoritative.
 A zero-finding summary applies only to the evaluated scope; skipped resources remain
 explicit and are never reported as passed.
