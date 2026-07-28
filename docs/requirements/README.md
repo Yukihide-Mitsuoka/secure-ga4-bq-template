@@ -16,7 +16,7 @@ for **what** to build; `.ai/` stays the source of truth for **how** to work.
 | [requirements-service-packaging.md](requirements-service-packaging.md) | Service packaging: evidenced common core, inspection-menu limits and qualification, 3 standard presets, conditional options, pricing rationale, and proposal-draft AI | v1.2 draft |
 | [design-modules-wif-wiring.md](design-modules-wif-wiring.md) | Implementation design: interfaces of the 5 new Terraform modules, WIF wiring (deployer SA / inspector SA), new CI workflows | baseline implemented v1; cost-gate extension in ADR-0006 |
 | [design-inspection-engine.md](design-inspection-engine.md) | Implementation design: FR-4, FR-9, and FR-10 inspection engine — module layout, snapshot model, deterministic rules for CHK-01..CHK-13, engagement params, CLI/report contract, delivery slices (ADR-0003/ADR-0011) | **implemented through CHK-13** |
-| [design-ai-report-generator.md](design-ai-report-generator.md) | A-level AI narrative report design: deterministic input frame, security boundary, CLI/output contract, and delivery slices (ADR-0004) | implemented-live-v1 |
+| [design-ai-report-generator.md](design-ai-report-generator.md) | A-level AI narrative report design: deterministic input frame, security boundary, CLI/output contract, and delivery slices (ADR-0004) | implemented-live-v1; `en`/`ja` language extension designed in Issue #253 |
 
 ## Reading notes
 

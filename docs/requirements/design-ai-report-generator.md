@@ -1,7 +1,7 @@
 ---
 id: design-ai-report-generator
 title: AレベルAI点検レポート生成の実装設計
-status: implemented-live-v1
+status: implemented-live-v1-language-extension-designed
 updated: 2026-07-28
 ---
 
@@ -9,7 +9,10 @@ updated: 2026-07-28
 
 - 状態: スライス1〜7を実装済み。スライス5の実環境証跡は
   [Vertex AI実環境証跡](../verification/2026-07-12-ai-report-live-evidence.md)を参照。
-- 公開エントリーポイント: `make report-ai FINDINGS=<findings.json> [OUT=<directory>]`と
+- 言語拡張の状態: Issue #253で設計済み、未実装。本書§10の実装PRがmergeされるまでは
+  `REPORT_LANGUAGE`を利用できない。
+- 公開エントリーポイント: `make report-ai FINDINGS=<findings.json> [OUT=<directory>]
+  [REPORT_LANGUAGE=en|ja]`と
   `make remediation-draft FINDINGS=<findings.json> [OUT=<directory>]`。
 - 要件: `requirements-secure-asset.md`のFR-5、§4.2、§7.1、§8のAcceptance A。
 - アーキテクチャゲート: [ADR-0004](../adr/0004-isolate-ai-report-generation.md)と
@@ -37,6 +40,8 @@ updated: 2026-07-28
    しない。プロンプト本文とレスポンス本文も既定ではログへ出さない。
 8. 単体テストは偽プロバイダーを使い、ネットワークへ接続しない。敵対的メタデータ、プロンプト
    インジェクション文字列、出力パス、秘密情報の非開示をセキュリティテストで確認する。
+9. AIレポート言語は`en`または`ja`から選択する。既定値は後方互換のため`en`とし、任意文字列を
+   言語指示として受け取らない。選択言語はAI生成文とローカル描画する固定見出しの両方へ適用する。
 
 ## 2. スコープ
 
@@ -51,6 +56,11 @@ updated: 2026-07-28
 
 - 決定論的・非適用の是正ドラフト。
 - `gcp-cicd-workflows@v1`とopt-inの`bq-inspect.yml`による再利用ワークフロー統合と成果物アップロード。
+
+Issue #253の言語拡張で実装する範囲:
+
+- AI生成文と`ai-report.md`の固定見出しに対する英語・日本語の選択。
+- 既定の英語経路と既存のframe検証を維持した、CLI・Makefileの追加パラメータ。
 
 対象外:
 
@@ -93,6 +103,7 @@ src/modules/reporting/
 - AI生成はopt-inとする。
 - 上限を超えるファイルは、解析前に拒否する。
 - すべての文字列を命令ではなくデータとして扱い、レコードを構造で区切る。
+- 言語は固定enumから選び、利用者が指定した自由記述をプロンプト命令へ追加しない。
 - 送信前にプロジェクトIDとリソースIDを決定論的な別名へ置換する。
 - 観測値、`catalog_path`、スキップ時のエラー詳細をプロバイダー入力から除外する。
 - 最終Markdownの描画時だけ、ローカルで正確な識別子を再結合する。
@@ -107,9 +118,9 @@ src/modules/reporting/
 TextGenerator.generate(payload) -> ProviderText
 ```
 
-`payload`は、検証済みフレームとプロンプトテンプレートのバージョンを含む。結果は構造化JSON、
-プロバイダー名、モデル名、取得できる場合はrequest IDを含む。プロンプト本文とレスポンス本文は
-最終レポート以外へ保存しない。
+`payload`は、検証済みフレーム、プロンプトテンプレートのバージョン、固定enumから解決した
+出力言語コード・言語名を含む。結果は構造化JSON、プロバイダー名、モデル名、取得できる場合は
+request IDを含む。プロンプト本文とレスポンス本文は最終レポート以外へ保存しない。
 
 最初のアダプターは、公式`google-genai` SDK、安定版API `v1`、ADC/WIFを通じてVertex AI上の
 Geminiを利用する。制限付きタイムアウトとJSONレスポンススキーマを設定し、toolを渡さず、
@@ -139,6 +150,7 @@ Geminiを利用する。制限付きタイムアウトとJSONレスポンスス�
 | 5        | 合成findingを使うopt-inの実環境生成                             | 2026-07-12に検証済み                                                            |
 | 6        | Terraform・ポリシー是正ドラフトの設計と実装                     | [ADR-0005](../adr/0005-render-remediation-drafts-from-recipes.md)に従い実装済み |
 | 7        | 再利用ワークフロー統合                                          | `gcp-cicd-workflows@v1`とopt-inの`bq-inspect.yml` callerで実装済み              |
+| 8        | `en` / `ja`のAIレポート言語契約                                 | Issue #253の単体テストと全品質gate                                             |
 
 ## 8. 所有者判断
 
@@ -146,6 +158,7 @@ Geminiを利用する。制限付きタイムアウトとJSONレスポンスス�
 2. 初期プロバイダー: `google-genai`とADC/WIFを使うVertex AI上のGemini。
 3. プロバイダーへ送るプロジェクト・リソース識別子: 決定論的な仮名。
 4. 既存`ai-report.md`: fail closed。上書きオプションを提供しない。
+5. 言語: `en`と`ja`だけを許可し、既定値は`en`とする。
 
 ## 9. スライス6の是正契約
 
@@ -163,3 +176,18 @@ Geminiを利用する。制限付きタイムアウトとJSONレスポンスス�
 - CHK-13は承認済みの固定ガイダンスと手動レシピだけを使う。レビュー担当者へ
   `source.field_path`と`source.key`の記入、および変換処理の別途確認を求める。成果物の自由記述から
   SQLリネージを推論または断定しない。
+
+## 10. AIレポート言語契約
+
+| 項目 | `en` | `ja` |
+|------|------|------|
+| Providerへ渡す固定言語名 | `English` | `Japanese` |
+| AI生成対象 | executive summary、explanation、next action | 同左 |
+| ローカル描画 | 英語の見出し・注意書き・metadata label | 日本語の見出し・注意書き・metadata label |
+| 決定論finding | ID、重大度、resource、rule、是正ヒントを原文のまま保持 | 同左 |
+
+- Makefileは`REPORT_LANGUAGE`をCLIの`--language`へ渡す。
+- 未指定時は`en`を使い、既存利用者の呼び出しを維持する。
+- CLIは許可値以外をprovider呼び出し前に終了コード2で拒否する。
+- 言語指定は、findingの追加・削除・並べ替え・重大度変更を許可しない。
+- `remediation-draft.md`は決定論レシピの原文を維持し、本契約の対象外とする。
