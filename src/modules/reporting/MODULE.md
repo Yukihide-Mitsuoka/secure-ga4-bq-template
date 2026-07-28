@@ -13,8 +13,8 @@ and [ADR-0005](../../../docs/adr/0005-render-remediation-drafts-from-recipes.md)
 
 | Entry point | Layer | Description |
 |-------------|-------|-------------|
-| `InspectionArtifact`, `GeneratedNarrative` | domain | Validated CHK-01..CHK-13 input and provider-output vocabulary |
-| `GenerateAiReport.handle(input_path, out_dir)` | application | Read, pseudonymize, generate, validate, and write |
+| `InspectionArtifact`, `GeneratedNarrative`, `ReportLanguage` | domain | Validated CHK-01..CHK-13 input, fixed `en` / `ja` language, and provider-output vocabulary |
+| `GenerateAiReport.handle(input_path, out_dir, language=en)` | application | Read, pseudonymize, generate in the fixed language, validate, and write |
 | `GenerateRemediationDraft.handle(input_path, out_dir)` | application | Read, select versioned recipes, and write a deterministic draft |
 | `make report-ai FINDINGS=<json>` | interface | Opt-in Vertex AI CLI; writes `ai-report.md` |
 | `make remediation-draft FINDINGS=<json>` | interface | Offline deterministic CLI; writes `remediation-draft.md` |
@@ -45,6 +45,8 @@ directory.
    or code. CHK-13 asks for a structured promotion-source declaration and separate
    human review of the transformation; it never presents that declaration as verified
    SQL lineage.
+9. Report language is the fixed `en` / `ja` enum; caller-provided free text never becomes
+   a language instruction. English remains the default for backward compatibility.
 
 ## Dependencies
 

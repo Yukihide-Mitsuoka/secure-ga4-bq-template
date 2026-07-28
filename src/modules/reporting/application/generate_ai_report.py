@@ -16,6 +16,7 @@ from src.modules.reporting.domain.model import (
     GeneratedNarrative,
     InspectionArtifact,
     ProviderText,
+    ReportLanguage,
 )
 
 _CHECK_GUIDANCE = {
@@ -38,6 +39,18 @@ _CHECK_GUIDANCE = {
 }
 
 _MAX_GENERATED_TEXT = 8_000
+_LANGUAGE_INSTRUCTIONS = {
+    ReportLanguage.ENGLISH: {
+        "code": "en",
+        "name": "English",
+        "instruction": "Write every narrative string field in English.",
+    },
+    ReportLanguage.JAPANESE: {
+        "code": "ja",
+        "name": "Japanese",
+        "instruction": "Write every narrative string field in Japanese.",
+    },
+}
 
 
 class GenerateAiReport:
@@ -48,16 +61,23 @@ class GenerateAiReport:
         self._generator = generator
         self._writer = writer
 
-    def handle(self, input_path: Path, out_dir: Path) -> Path:
+    def handle(
+        self,
+        input_path: Path,
+        out_dir: Path,
+        *,
+        language: ReportLanguage = ReportLanguage.ENGLISH,
+    ) -> Path:
         artifact = self._reader.read(input_path)
-        response = self._generator.generate(_provider_payload(artifact))
-        narrative = _parse_response(response, artifact)
+        response = self._generator.generate(_provider_payload(artifact, language))
+        narrative = _parse_response(response, artifact, language)
         return self._writer.write(artifact, narrative, out_dir)
 
 
-def _provider_payload(artifact: InspectionArtifact) -> str:
+def _provider_payload(artifact: InspectionArtifact, language: ReportLanguage) -> str:
     payload = {
         "prompt_version": PROMPT_VERSION,
+        "output_language": _LANGUAGE_INSTRUCTIONS[language],
         "project": "PROJECT",
         "coverage": {
             "datasets": artifact.coverage.datasets,
@@ -78,7 +98,11 @@ def _provider_payload(artifact: InspectionArtifact) -> str:
     return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
 
 
-def _parse_response(response: ProviderText, artifact: InspectionArtifact) -> GeneratedNarrative:
+def _parse_response(
+    response: ProviderText,
+    artifact: InspectionArtifact,
+    language: ReportLanguage,
+) -> GeneratedNarrative:
     try:
         raw = json.loads(response.text)
     except (json.JSONDecodeError, TypeError) as error:
@@ -111,6 +135,7 @@ def _parse_response(response: ProviderText, artifact: InspectionArtifact) -> Gen
     return GeneratedNarrative(
         executive_summary=summary,
         findings=tuple(by_ref[ref] for ref in expected_refs),
+        language=language,
         provider=response.provider,
         model=response.model,
         request_id=response.request_id,
