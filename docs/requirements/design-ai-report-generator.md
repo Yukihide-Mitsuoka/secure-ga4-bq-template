@@ -1,7 +1,7 @@
 ---
 id: design-ai-report-generator
 title: AレベルAI点検レポート生成の実装設計
-status: implemented-live-v1-language-extension-designed
+status: implemented-live-v1-language-extension
 updated: 2026-07-28
 ---
 
@@ -9,8 +9,7 @@ updated: 2026-07-28
 
 - 状態: スライス1〜7を実装済み。スライス5の実環境証跡は
   [Vertex AI実環境証跡](../verification/2026-07-12-ai-report-live-evidence.md)を参照。
-- 言語拡張の状態: Issue #253で設計済み、未実装。本書§10の実装PRがmergeされるまでは
-  `REPORT_LANGUAGE`を利用できない。
+- 言語拡張の状態: Issue #253で実装済み。`REPORT_LANGUAGE=en|ja`を利用できる。
 - 公開エントリーポイント: `make report-ai FINDINGS=<findings.json> [OUT=<directory>]
   [REPORT_LANGUAGE=en|ja]`と
   `make remediation-draft FINDINGS=<findings.json> [OUT=<directory>]`。
@@ -57,7 +56,7 @@ updated: 2026-07-28
 - 決定論的・非適用の是正ドラフト。
 - `gcp-cicd-workflows@v1`とopt-inの`bq-inspect.yml`による再利用ワークフロー統合と成果物アップロード。
 
-Issue #253の言語拡張で実装する範囲:
+Issue #253の言語拡張で実装した範囲:
 
 - AI生成文と`ai-report.md`の固定見出しに対する英語・日本語の選択。
 - 既定の英語経路と既存のframe検証を維持した、CLI・Makefileの追加パラメータ。

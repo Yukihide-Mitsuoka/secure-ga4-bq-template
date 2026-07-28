@@ -1,7 +1,7 @@
 ---
 id: report-ai-cli
 title: AI点検レポートCLI契約
-status: language-extension-designed
+status: implemented
 updated: 2026-07-28
 ---
 
@@ -10,14 +10,12 @@ updated: 2026-07-28
 この文書は、完全な点検成果物から任意のAI説明草案と決定論的な是正ドラフトを生成するCLI契約を
 定義します。AI説明文は正準の判定ではなく、人によるレビューが必要です。
 
-> Issue #253の言語拡張は設計済み・未実装です。実装PRがmergeされるまでは
-> `REPORT_LANGUAGE`を指定できず、現在の英語経路だけを利用できます。
-
 ## AIレポートコマンド
 
 ```bash
 make report-ai \
-  FINDINGS=reports/project/timestamp/findings.json
+  FINDINGS=reports/project/timestamp/findings.json \
+  REPORT_LANGUAGE=ja
 ```
 
 このコマンドはopt-inであり、ADCまたはWIFを通じてVertex AIを使います。最大1 MiBの完全な
@@ -30,7 +28,7 @@ make report-ai \
 |------------|------|--------|------|
 | `FINDINGS` | はい | `findings.json` | 点検成果物のパス |
 | `OUT` | いいえ | 入力ファイルのディレクトリ | 出力先 |
-| `REPORT_LANGUAGE` | いいえ | `en` | **Issue #253で実装予定**。`en`または`ja`。AI生成文と固定見出しの言語 |
+| `REPORT_LANGUAGE` | いいえ | `en` | `en`または`ja`。AI生成文と固定見出しの言語 |
 
 許可値以外はprovider呼び出し前に拒否します。利用者が指定した自由記述をプロンプト命令として
 渡しません。

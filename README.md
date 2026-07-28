@@ -74,11 +74,13 @@ it at the generated artifact:
 
 ```bash
 make report-ai \
-  FINDINGS=reports/<project>/<timestamp>/findings.json
+  FINDINGS=reports/<project>/<timestamp>/findings.json \
+  REPORT_LANGUAGE=ja
 ```
 
-Issue #253 designs `REPORT_LANGUAGE=en|ja`; it remains unavailable until the implementation
-PR merges. `findings.csv` is a deterministic spreadsheet projection of the finding list.
+`REPORT_LANGUAGE` accepts only `en` or `ja` and defaults to `en`. It controls the AI narrative
+and fixed report labels; deterministic finding fields remain unchanged. `findings.csv` is a
+deterministic spreadsheet projection of the finding list.
 `ai-report.md` is a human-review draft; `findings.json` and `summary.md` are authoritative.
 A zero-finding summary applies only to the evaluated scope; skipped resources remain
 explicit and are never reported as passed.

@@ -131,10 +131,12 @@ AI レポートは任意です。ADC、`GOOGLE_CLOUD_PROJECT`、
 
 ```bash
 make report-ai \
-  FINDINGS=reports/example-project/20260726T000000Z/findings.json
+  FINDINGS=reports/example-project/20260726T000000Z/findings.json \
+  REPORT_LANGUAGE=ja
 ```
 
-Issue #253では`REPORT_LANGUAGE=en|ja`を設計済みですが、実装PRがmergeされるまでは指定できません。
+`REPORT_LANGUAGE`は`en`または`ja`だけを受け付け、未指定時は`en`です。AI生成文と固定見出しを
+選択言語で出力しますが、finding ID、重大度、resource、rule、決定論的な是正ヒントは変更しません。
 `ai-report.md`はレビュー用の草案です。判定の正準は`findings.json`と`summary.md`です。
 詳細な入出力と終了コードは
 [AI レポート CLI 契約](api/report-ai-cli.md)を参照してください。
