@@ -16,7 +16,7 @@ authoritative in their linked documents.
 | Item | State on 2026-07-28 | Evidence or source |
 |------|---------------------|--------------------|
 | Default branch | Release baseline v2.5.0 | [Release v2.5.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v2.5.0) |
-| Direct parent lock | `terraform-gcp-template` at `3e8180cec2b03c6bd8b7fdc99dd1c707ba5f644a` | [Inheritance lock](../.github/inheritance/lock.json) |
+| Direct parent lock | `terraform-gcp-template` at `48b8cc97cd76984c75773de395270a4a3454f38b` | [Inheritance lock](../.github/inheritance/lock.json) |
 | IaC governance prerequisite | Complete: exact `iac-scan` succeeded on PR #125 and its merged-main push | [PR run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29517379947), [main run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29518413106) |
 | Active work | PR #255 adds the report-language domain contract; its CI is green and it remains open for review | [PR #255](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/255) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
@@ -114,7 +114,7 @@ may be absent; CI remains authoritative.
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
 > `docs/development-handoff.md`. Confirm the v2.5.0 release baseline and direct-parent lock
-> `3e8180cec2b03c6bd8b7fdc99dd1c707ba5f644a`. Keep the child-specific governance
+> `48b8cc97cd76984c75773de395270a4a3454f38b`. Keep the child-specific governance
 > planner authoritative with `iac-scan` preserved. Do not run governance `apply` or
 > mutate live GitHub/GCP state without a fresh GET-only plan and separate
 > target-specific approval. Technical Acceptance A, CHK-12, CHK-13, opt-in column
