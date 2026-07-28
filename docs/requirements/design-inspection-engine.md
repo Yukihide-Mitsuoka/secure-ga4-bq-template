@@ -1,61 +1,52 @@
 ---
 id: design-inspection-engine
-title: Implementation design — Inspection engine (FR-4, FR-9, and FR-10 deterministic checkpoints)
+title: 点検エンジンの実装設計（FR-4、FR-9、FR-10の決定論チェック）
 status: implemented-v1.3-promotion-source
-updated: 2026-07-26
+updated: 2026-07-28
 ---
 
-# Implementation design: Inspection engine
+# 実装設計: 点検エンジン
 
-- FR-5 CSV extension status: **implemented for Issue #228** (2026-07-23). It adds a
-  deterministic flat finding-list projection without changing the authoritative JSON
-  artifact, the Markdown summary, collection behavior, or query cost.
+- FR-5 CSV拡張の状態: **Issue #228で実装済み**（2026-07-23）。正準JSON成果物、Markdown要約、
+  収集動作、クエリ費用を変更せず、決定論的なfinding一覧のフラットな投影を追加した。
+- CHK-12拡張の状態: **Issue #70で実装済み**（2026-07-15）。実装済みFR-4セキュリティ集合と
+  過去のAcceptance B分母を変更せず、汎用的なマートのテーブル・列description完全性を追加した。
+  デリバリーは§10のとおり分割した。
+- CHK-13拡張の状態: **Issue #235で実装済み**（2026-07-26）。producerより先にreporting consumerを
+  導入した後、現在は観測した昇格leaf列をエンジンが評価し、標準サービスプロファイルにも追加
+  チェックを含めている（§11）。
+- 基準実装の状態: **v1.0実装済み**（2026-07-12）。§8のPR
+  #13/#14/#15/#19/#22/#23/#24/#25/#26/#27/#28で、11チェックとregistry、収集アダプター、
+  YAML設定、ユースケース、`make inspect` CLI、JSON・Markdownレポートをmainへ導入した。
+  CLIはconsole scriptではなく`make inspect` / `python -m`として提供する。非パッケージ型リポジトリ
+  ではmakeが正準エントリーポイントである。実環境証跡は
+  [Acceptance B証跡](../verification/2026-07-12-inspection-engine-b-evidence.md)と
+  [技術的Acceptance A証跡](../verification/2026-07-15-public-ga4-acceptance-a-evidence.md)に記録済み。
+- 要件: [requirements-secure-asset.md](requirements-secure-asset.md)のFR-4（11のセキュリティ
+  チェック）、FR-9（追加のマートdescriptionチェック）、FR-10（追加の構造化された昇格元チェック）、
+  FR-5（レポート出力のうち機械可読部分）、FR-6、
+  [design-modules-wif-wiring.md](design-modules-wif-wiring.md) A-5（点検用最小権限ロール）、
+  FR-7（案件パラメータ）、§4.2（カバレッジ分母）、§6（冪等・読み取り専用・低スキャン費用）。
+- 本設計の範囲: **Bレベルエンジンと追加のCHK-12・CHK-13**。収集し、決定論チェックを評価し、
+  機械可読findingとプレーンなMarkdown要約を生成する。AI生成の説明レポートと是正ドラフト
+  （Aレベル。本エンジンのJSONを消費）、PII値検査（A+）、`bq-inspect.yml` CIワークフローは
+  対象外とする。ワークフローはgcp-cicd-workflowsに置き、そのCLI契約だけを本書で定義する。
 
-- CHK-12 extension status: **implemented for Issue #70** (2026-07-15). It adds generic
-  mart table/column description completeness without changing the implemented FR-4
-  security set or historical Acceptance B denominator. Delivery was split as described
-  in §10.
+## 1. 配置と構成
 
-- CHK-13 extension status: **implemented for Issue #235** (2026-07-26). The reporting
-  consumer landed before the producer; the engine now evaluates observed promoted leaf
-  columns and the standard service profile includes the additive check (§11).
-
-- Status: **v1.0 — implemented** (2026-07-12). The §8 series landed on main as
-  PRs #13/#14/#15/#19/#22/#23/#24/#25/#26/#27/#28: 11 checkpoints + registry,
-  collection adapters, YAML config, use cases, `make inspect` CLI, JSON/Markdown
-  reports. 140 unit tests, 98% coverage; the worst-case registry test proves
-  all 11 checkpoints fire (B bar ≥10, requirements §8, at unit scale). One
-  documented deviation from §6: the CLI ships as `make inspect` / `python -m`
-  instead of a console script (non-packaged repo; make is the canonical entry).
-  Remaining evidence step: a live run against the FR-8 verification environment.
-- Requirements: [requirements-secure-asset.md](requirements-secure-asset.md) FR-4 (11
-  security checkpoints), FR-9 (additive mart-description checkpoint), FR-10 (additive
-  structured promotion-source checkpoint), FR-5 (report output — machine-readable part
-  only), FR-6 /
-  [design-modules-wif-wiring.md](design-modules-wif-wiring.md) A-5 (inspector
-  least-privilege role), FR-7 (engagement parameters), §4.2 (coverage denominator),
-  §6 (idempotent, read-only, low scan cost).
-- Scope of this design: the **B-level engine plus additive CHK-12/CHK-13** — collect →
-  evaluate deterministic checkpoints → machine-readable findings + plain Markdown
-  summary. Out of scope: AI-generated
-  narrative reports and remediation drafts (A-level, consumes this engine's JSON),
-  PII value scanning (A+), the `bq-inspect.yml` CI workflow (lives in
-  gcp-cicd-workflows; its CLI contract is defined here).
-
-## 1. Placement and shape
-
-A new bounded context `src/modules/inspection/` (Python, Clean Architecture per
-ARC-001/002). Decision and alternatives: ADR-0003.
+`src/modules/inspection/`にPythonのbounded contextを配置する。ARC-001/002に従うClean
+Architectureであり、判断と代替案はADR-0003に記録している。
 
 ```
 src/modules/inspection/
   MODULE.md
   domain/
-    snapshot.py        # ProjectSnapshot and sub-models (frozen dataclasses, stdlib only)
-    catalog.py         # sensitivity catalog model + effective-level resolution (FR-1.2)
-    params.py          # InspectionParams model (validated engagement parameters, FR-7)
-    finding.py         # Finding, Severity, CheckResult, coverage counters
-    checks/            # one pure function per checkpoint category
+    snapshot.py        # ProjectSnapshotと下位モデル（frozen dataclass、標準ライブラリのみ）
+    catalog.py         # 機密度カタログモデルとeffective level解決（FR-1.2）
+    params.py          # InspectionParams（検証済み案件パラメータ、FR-7）
+    finding.py         # FindingとSeverity
+    report.py          # Reportとカバレッジカウンター
+    checks/            # チェックカテゴリごとに1つの純粋関数
       iam.py           # CHK-01..03
       column_security.py  # CHK-04..05
       audit_logging.py    # CHK-06..07
@@ -63,84 +54,81 @@ src/modules/inspection/
       dataset_hygiene.py  # CHK-11
       metadata_documentation.py  # CHK-12..13
   application/
-    ports.py           # collection + output ports (see §3), Clock port
-    collect_snapshot.py   # use case: assemble ProjectSnapshot via ports
-    run_inspection.py     # use case: snapshot → run checks → Report
+    ports.py           # 収集・出力port（§3）とClock port
+    collect_snapshot.py   # port経由でProjectSnapshotを組み立てるユースケース
+    run_inspection.py     # snapshot → チェック実行 → Report
   infrastructure/
-    gcp/               # one adapter per Google API, wraps the HTTP client (COD-041)
+    gcp/               # Google APIごとのアダプター。HTTP clientをラップする（COD-041）
       bigquery_metadata.py   # datasets.list/get, tables.list/get
       resource_manager.py    # projects.getIamPolicy (policy v3, incl. auditConfigs)
       data_catalog.py        # taxonomies.list, policyTags.list
       logging_config.py      # sinks.list, exclusions.list
-    yaml_catalog_repository.py   # loads catalog/ga4-sensitivity.yml
-    yaml_params_repository.py    # loads engagement params file
-    json_report_writer.py        # findings.json (authoritative full artifact)
-    csv_report_writer.py         # findings.csv (stable flat finding projection)
-    markdown_report_writer.py    # deterministic summary.md rendering
+    yaml_catalog_repository.py   # catalog/ga4-sensitivity.ymlを読み込む
+    yaml_params_repository.py    # 案件パラメータファイルを読み込む
+    json_report_writer.py        # findings.json（正準の完全成果物）
+    csv_report_writer.py         # findings.csv（安定したフラットfinding投影）
+    markdown_report_writer.py    # 決定論的なsummary.md描画
   interface/
-    cli.py             # argparse entry point; boundary validation (COD-011)
-tests/modules/inspection/        # mirrors the tree (TST-001)
-  unit/                          # pure checks over snapshot builders — no I/O
-  integration/                   # adapters against recorded/live responses (flagged)
+    cli.py             # argparseエントリーポイントと境界検証（COD-011）
+tests/modules/inspection/        # 実装ツリーと対応（TST-001）
+  unit/                          # snapshot builderを使う純粋チェック。I/Oなし
+  integration/                   # 記録済み・実環境レスポンスに対するアダプター（flag付き）
 ```
 
-Design invariant (mirrors the repo-wide principle): **the deterministic engine decides;
-AI only ever writes text inside the frame of `findings.json`.** Nothing in this module
-calls an LLM.
+設計不変条件はリポジトリ全体の原則と同じである。**決定論エンジンが判定し、AIは
+`findings.json`のフレーム内で文章だけを書く。** 本モジュールからLLMを呼び出さない。
 
-## 2. Data model
+## 2. データモデル
 
-### 2.1 ProjectSnapshot (domain)
+### 2.1 ProjectSnapshot（domain）
 
-Everything the checks need, collected once, immutable afterwards. Checks are pure
-functions `(snapshot, params, catalog) -> list[Finding]`, which makes determinism and
-the ≥80% domain coverage target (TST-003) straightforward.
+チェックに必要な情報を1回だけ収集し、以後は不変とする。チェックは
+`(snapshot, params, catalog) -> list[Finding]`の純粋関数であり、決定論とdomainカバレッジ80%以上
+（TST-003）を直接検証できる。
 
-| Model | Key fields | Collected via |
-|-------|-----------|---------------|
-| `ProjectIam` | `bindings[{role, members[]}]`, `audit_configs[{service, log_types[], exempted_members[]}]` | `cloudresourcemanager.projects.getIamPolicy` (requestedPolicyVersion=3) |
+| モデル | 主なフィールド | 収集元 |
+|--------|----------------|--------|
+| `ProjectIam` | `bindings[{role, members[]}]`、`audit_configs[{service, log_configs[]}]` | `cloudresourcemanager.projects.getIamPolicy`（requestedPolicyVersion=3） |
 | `DatasetMeta` | `dataset_id, location, default_table_expiration_ms, default_partition_expiration_ms, cmek_key, access[{role, member}], labels` | `bigquery.datasets.get` |
-| `TableMeta` | `table_id, type, description, num_bytes, creation_time, expiration_time, time_partitioning, range_partitioning, require_partition_filter, clustering_fields, schema_fields[{path, type, description, policy_tag_ids[]}]` | `bigquery.tables.get` (schema carries descriptions and `policyTags`; nested fields flattened to dotted leaf paths) |
-| `Taxonomy` | `name, location, policy_tags[{id, display_name}]` | `datacatalog.taxonomies.list` + `policyTags.list` |
-| `LoggingConfig` | `sinks[{name, destination, filter, disabled}]`, `exclusions[{name, filter, disabled}]` | `logging.sinks.list`, `logging.exclusions.list` |
-| `SnapshotMeta` | `project_id, captured_at, skipped[{resource, reason}]` | injected Clock; collection bookkeeping |
+| `TableMeta` | `table_id, table_type, description, num_bytes, creation_time, expiration_time, time_partitioning_field, range_partitioning_field, require_partition_filter, clustering_fields, schema_fields[{path, field_type, description, policy_tag_ids[]}]` | `bigquery.tables.get`。schemaはdescriptionと`policyTags`を含み、nested fieldをドット区切りのleaf pathへ平坦化する |
+| `Taxonomy` | `name, location, policy_tags[{name, display_name}]` | `datacatalog.taxonomies.list`と`policyTags.list` |
+| `LoggingConfig` | `sinks[{name, destination, filter, disabled}]`、`exclusions[{name, filter, disabled}]` | `logging.sinks.list`、`logging.exclusions.list` |
+| `ProjectSnapshot`メタデータ | `project_id, captured_at, skipped[{resource, reason}]` | 注入したClockと収集時の記録 |
 
-**No BigQuery query jobs.** All checkpoints are decidable from REST metadata
-alone (`datasets.get` / `tables.get` return partitioning, clustering, expirations,
-`numBytes`, and per-field `policyTags`). Consequences:
+**BigQueryクエリジョブは発行しない。** すべてのチェックはRESTメタデータだけで判定できる。
+`datasets.get` / `tables.get`は、パーティション、クラスタリング、期限、`numBytes`、列ごとの
+`policyTags`を返す。この結果、次の性質を持つ。
 
-- Inspection scan cost is **zero bytes billed** — stronger than the NFR "prefer
-  INFORMATION_SCHEMA" (§6).
-- `bigquery.jobs.create` is **not needed for the B path** and the B environment
-  explicitly omits it from the inspector role. The shared A-5 module keeps an
-  INFORMATION_SCHEMA-ready default for future A+ consumers; those consumers require a
-  separate permission review (design-modules-wif-wiring §D-3).
-- Trade-off: one `tables.get` per table instead of one `INFORMATION_SCHEMA` query per
-  dataset. Acceptable at ICP scale (hundreds of tables); if a future engagement has
-  thousands, add an INFORMATION_SCHEMA-backed adapter behind the same port — the domain
-  does not change.
+- 点検のスキャン費用は **課金バイト0** であり、NFRの「INFORMATION_SCHEMAを優先」（§6）より
+  強い境界となる。
+- B経路に`bigquery.jobs.create`は **不要** であり、B環境の点検ロールから明示的に除外する。
+  共有A-5モジュールは、将来のA+ consumer向けにINFORMATION_SCHEMA対応の既定値を保持する。
+  そのconsumerには別途権限レビューが必要である（design-modules-wif-wiring §D-3）。
+- トレードオフとして、データセットごとに1回の`INFORMATION_SCHEMA`クエリを実行する代わりに、
+  テーブルごとに1回の`tables.get`を呼ぶ。数百テーブルのICP規模では許容する。将来数千テーブルの
+  案件が現れた場合は、同じportの背後へINFORMATION_SCHEMAアダプターを追加し、domainは変更しない。
 
-### 2.2 Engagement parameters (FR-7)
+### 2.2 案件パラメータ（FR-7）
 
-One YAML file per engagement (default `inspection-params.yml`), validated at the CLI
-boundary. The template ships defaults; engagements override the file, never the code —
-same philosophy as `catalog/ga4-sensitivity.yml`.
+案件ごとに1つのYAMLファイル（既定`inspection-params.yml`）を使い、CLI境界で検証する。
+テンプレートは既定値を提供し、案件はコードではなくファイルをoverrideする。
+`catalog/ga4-sensitivity.yml`と同じ方針である。
 
 ```yaml
 version: 1
-project_id: my-project            # required
-expected_location: asia-northeast1  # CHK-11 baseline
+project_id: my-project            # 必須
+expected_location: asia-northeast1  # CHK-11の基準
 datasets:
-  mart_patterns: ["mart_*", "stg_*"]     # full column-level inspection (coverage denominator)
-  raw_patterns: ["analytics_*"]          # containment-only: IAM checks, no column checks
-  exclude: []                            # explicitly out of scope, listed in the report
+  mart_patterns: ["mart_*", "stg_*"]     # 完全な列レベル点検（カバレッジ分母）
+  raw_patterns: ["analytics_*"]          # 封じ込めのみ: IAM点検、列点検なし
+  exclude: []                            # 明示的な対象外。レポートへ記録
 audit:
-  high_sensitivity_datasets: []          # FR-3: the only place Data Access logs should target
-  retention_max_days: 365                # CHK-07 sink-destination retention ceiling
+  high_sensitivity_datasets: []          # FR-3: Data Accessログの唯一の対象
+  retention_max_days: 365                # CHK-07シンク出力先の保持上限
 thresholds:
   large_table_bytes: 10737418240         # 10 GiB — CHK-08
   long_lived_days: 90                    # CHK-10
-  require_cmek: false                    # CHK-11: false → CMEK absence is INFO, true → HIGH
+  require_cmek: false                    # CHK-11: falseならCMEKなしはINFO、trueならHIGH
 catalog_path: catalog/ga4-sensitivity.yml
 ```
 
@@ -148,32 +136,32 @@ catalog_path: catalog/ga4-sensitivity.yml
 
 ```
 Finding:
-  check_id: "CHK-04"          # stable ID, maps 1:1 to FR-4 row number
+  check_id: "CHK-04"          # 安定ID。FR-4の行番号と1対1対応
   severity: HIGH | MEDIUM | LOW | INFO
-  resource: "projects/p/datasets/d/tables/t/columns/user_id"   # canonical path
-  observed: "no policy tag"                                    # fact
-  expected: "policy tag level=high (catalog: user_id -> high)" # rule
+  resource: "projects/p/datasets/d/tables/t/columns/user_id"   # 正準パス
+  observed: "no policy tag"                                    # 観測事実
+  expected: "policy tag level=high (catalog: user_id -> high)" # 期待ルール
   rule_ref: "FR-4 #4"
-  remediation_hint: "attach policy_tags in the model config"   # one line, deterministic
+  remediation_hint: "attach policy_tags in the model config"   # 1行の決定論的ヒント
 ```
 
-Findings are sorted by `(check_id, resource)` before output — identical environment ⇒
-byte-identical report (idempotence, §6).
+出力前にfindingを`(check_id, resource)`で並べ替える。同一スナップショット・パラメータ・
+カタログからはバイト単位で同一のレポートを生成する（冪等性、§6）。
 
-## 3. Ports (application layer)
+## 3. Port（application layer）
 
-| Port | Methods | Implemented by |
-|------|---------|----------------|
+| Port | メソッド | 実装 |
+|------|----------|------|
 | `BigQueryMetadataPort` | `list_datasets`, `get_dataset`, `list_tables`, `get_table` | `infrastructure/gcp/bigquery_metadata.py` |
 | `IamPolicyPort` | `get_project_iam_policy` | `resource_manager.py` |
 | `TaxonomyPort` | `list_taxonomies(location)` | `data_catalog.py` |
 | `LoggingConfigPort` | `list_sinks`, `list_exclusions` | `logging_config.py` |
 | `CatalogRepository` | `load() -> SensitivityCatalog` | `yaml_catalog_repository.py` |
 | `ParamsRepository` | `load(path) -> InspectionParams` | `yaml_params_repository.py` |
-| `ReportWriter` | `write(report, out_dir)` | JSON + Markdown writers |
-| `Clock` | `now() -> datetime` | real clock / fixed clock in tests (TST-010) |
+| `ReportWriter` | `write(report, out_dir)` | JSON、CSV、Markdown writer |
+| `Clock` | `now() -> datetime` | 実Clock、テストでは固定Clock（TST-010） |
 
-Unit tests fake the collection ports with builders; no GCP, no network, deterministic.
+単体テストはbuilderで収集portを偽装する。GCPやネットワークを使わず、決定論的に実行する。
 
 ## 4. Deterministic rules
 
