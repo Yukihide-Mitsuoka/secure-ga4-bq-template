@@ -60,6 +60,8 @@ do not commit them to this repository. See the
 
 See the Japanese [inspection capabilities and report guide](docs/inspection-capabilities.md)
 for the 13 concrete checks, expected effects, sample findings, deliverables, and limits.
+The [synthetic report pack](examples/reporting/README.md) shows all five output formats
+without GCP credentials, customer data, or an AI request.
 
 Run the deterministic, read-only inspection first:
 

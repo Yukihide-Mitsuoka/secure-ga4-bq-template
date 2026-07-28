@@ -1,0 +1,4 @@
+check_id,severity,resource,observed,expected,rule_ref,remediation_hint
+CHK-04,HIGH,projects/sample-project/datasets/sample_mart/tables/customer_daily/columns/customer_email,no policy tag attached,policy tag level=high (catalog: customer_email -> high),FR-4 #4,declare policy_tags/bigqueryPolicyTags for this column in the model config
+CHK-12,LOW,projects/sample-project/datasets/sample_mart/tables/customer_daily,table description is missing or blank,mart tables and views declare non-empty descriptions,FR-9,add an approved description in the owning model
+CHK-13,LOW,projects/sample-project/datasets/sample_mart/tables/customer_daily/columns/campaign_name,promotion source declaration is missing source.key,promoted column declares non-empty source.field_path and source.key,FR-10.1,complete the structured promotion source declaration and review the transformation separately

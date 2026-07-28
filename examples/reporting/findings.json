@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "meta": {
+    "project_id": "sample-project",
+    "captured_at": "2026-01-01T00:00:00+00:00",
+    "params": {
+      "expected_location": "US",
+      "mart_patterns": ["sample_mart"],
+      "raw_patterns": ["sample_raw"],
+      "exclude": [],
+      "audit": {
+        "high_sensitivity_datasets": ["sample_mart"],
+        "retention_max_days": 90
+      },
+      "thresholds": {
+        "large_table_bytes": 10737418240,
+        "long_lived_days": 90,
+        "require_cmek": false
+      },
+      "catalog_path": "catalog/example-sensitivity.yml"
+    }
+  },
+  "coverage": {
+    "datasets": 1,
+    "tables": 1,
+    "columns": 6,
+    "skipped": []
+  },
+  "findings": [
+    {
+      "check_id": "CHK-04",
+      "severity": "HIGH",
+      "resource": "projects/sample-project/datasets/sample_mart/tables/customer_daily/columns/customer_email",
+      "observed": "no policy tag attached",
+      "expected": "policy tag level=high (catalog: customer_email -> high)",
+      "rule_ref": "FR-4 #4",
+      "remediation_hint": "declare policy_tags/bigqueryPolicyTags for this column in the model config"
+    },
+    {
+      "check_id": "CHK-12",
+      "severity": "LOW",
+      "resource": "projects/sample-project/datasets/sample_mart/tables/customer_daily",
+      "observed": "table description is missing or blank",
+      "expected": "mart tables and views declare non-empty descriptions",
+      "rule_ref": "FR-9",
+      "remediation_hint": "add an approved description in the owning model"
+    },
+    {
+      "check_id": "CHK-13",
+      "severity": "LOW",
+      "resource": "projects/sample-project/datasets/sample_mart/tables/customer_daily/columns/campaign_name",
+      "observed": "promotion source declaration is missing source.key",
+      "expected": "promoted column declares non-empty source.field_path and source.key",
+      "rule_ref": "FR-10.1",
+      "remediation_hint": "complete the structured promotion source declaration and review the transformation separately"
+    }
+  ]
+}
