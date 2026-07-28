@@ -79,10 +79,12 @@ inspect: ## Run the FR-4 inspection (PARAMS=<engagement yaml> [OUT=reports] [FAI
 		--params "$(PARAMS)" --out-dir "$(OUT)" $(if $(FAIL_ON),--fail-on $(FAIL_ON))
 
 FINDINGS ?= findings.json
+REPORT_LANGUAGE ?= en
 
-report-ai: ## Generate advisory AI Markdown (FINDINGS=<findings.json> [OUT=<dir>])
+report-ai: ## Generate advisory AI Markdown (FINDINGS=<json> [OUT=<dir>] [REPORT_LANGUAGE=en|ja])
 	uv run python -m src.modules.reporting.interface.cli \
-		--input "$(FINDINGS)" $(if $(filter command line environment,$(origin OUT)),--out-dir "$(OUT)")
+		--input "$(FINDINGS)" --language "$(REPORT_LANGUAGE)" \
+		$(if $(filter command line environment,$(origin OUT)),--out-dir "$(OUT)")
 
 remediation-draft: ## Render non-applying remediation Markdown (FINDINGS=<json> [OUT=<dir>])
 	uv run python -m src.modules.reporting.interface.remediation_cli \

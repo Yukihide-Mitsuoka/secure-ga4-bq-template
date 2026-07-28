@@ -12,6 +12,7 @@ from src.modules.reporting.application.ports import (
     ProviderError,
     TextGenerator,
 )
+from src.modules.reporting.domain.model import ReportLanguage
 from src.modules.reporting.infrastructure.json_artifact_reader import JsonArtifactReader
 from src.modules.reporting.infrastructure.markdown_report_writer import MarkdownReportWriter
 from src.modules.reporting.infrastructure.vertex_ai_generator import VertexAiGenerator
@@ -39,13 +40,14 @@ def main(
 
     input_path = Path(args.input)
     out_dir = Path(args.out_dir) if args.out_dir else input_path.parent
+    language = ReportLanguage(args.language)
     use_case = GenerateAiReport(
         reader=JsonArtifactReader(),
         generator=generator_factory(project, location, model),
         writer=MarkdownReportWriter(),
     )
     try:
-        path = use_case.handle(input_path, out_dir)
+        path = use_case.handle(input_path, out_dir, language=language)
     except (FileNotFoundError, FileExistsError, OSError, ValueError) as error:
         print(f"ga4-bq-report: invalid input or output: {error}", file=sys.stderr)
         return 2
@@ -63,6 +65,12 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--input", required=True, help="path to findings.json")
     parser.add_argument("--out-dir", help="output directory (default: input directory)")
+    parser.add_argument(
+        "--language",
+        choices=tuple(language.value for language in ReportLanguage),
+        default=ReportLanguage.ENGLISH.value,
+        help="report language (default: en)",
+    )
     return parser
 
 
