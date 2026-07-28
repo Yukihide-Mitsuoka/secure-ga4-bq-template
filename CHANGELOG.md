@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.5.0...v2.6.0) (2026-07-28)
+
+
+### Features
+
+* **reporting:** add report language domain contract ([#255](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/255)) ([bd7571a](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/bd7571a095fc75eaee613bdd9a209110191c0d88))
+
 ## [2.5.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.4.0...v2.5.0) (2026-07-28)
 
 
