@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.4.0...v2.5.0) (2026-07-28)
+
+
+### Features
+
+* **reporting:** add synthetic offline report pack ([#251](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/251)) ([55669fc](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/55669fc456d5212a08aed948085dc765970d0747))
+
 ## [2.4.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.3.0...v2.4.0) (2026-07-26)
 
 
