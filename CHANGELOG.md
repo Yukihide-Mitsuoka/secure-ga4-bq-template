@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.7.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.6.0...v2.7.0) (2026-07-28)
+
+
+### Features
+
+* **reporting:** expose report language selection ([#258](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/258)) ([17bd566](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/17bd566996425ee54486413707eadbf2f74950d2))
+
 ## [2.6.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.5.0...v2.6.0) (2026-07-28)
 
 
