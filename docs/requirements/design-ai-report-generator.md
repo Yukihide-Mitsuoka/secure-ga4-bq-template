@@ -1,73 +1,72 @@
 ---
 id: design-ai-report-generator
-title: Implementation design - A-level AI inspection report generator
+title: AレベルAI点検レポート生成の実装設計
 status: implemented-live-v1
-updated: 2026-07-15
+updated: 2026-07-28
 ---
 
-# Implementation design: A-level AI inspection report generator
+# 実装設計: AレベルAI点検レポート生成
 
-- Status: slices 1-6 implemented; slice 5 live evidence:
-  [live Vertex AI evidence](../verification/2026-07-12-ai-report-live-evidence.md).
-- Public entry points: `make report-ai FINDINGS=<findings.json> [OUT=<directory>]` and `make remediation-draft FINDINGS=<findings.json> [OUT=<directory>]`.
-- Requirements: `requirements-secure-asset.md` FR-5, section 4.2, section 7.1, and
-  acceptance level A in section 8.
-- Architecture gates: [ADR-0004](../adr/0004-isolate-ai-report-generation.md) and [ADR-0005](../adr/0005-render-remediation-drafts-from-recipes.md).
-- Input: the B-level inspection engine's deterministic `findings.json`.
-- Outputs: a customer-readable AI narrative and a separate deterministic, non-applying remediation draft. Machine-readable remediation actions remain deferred.
+- 状態: スライス1〜7を実装済み。スライス5の実環境証跡は
+  [Vertex AI実環境証跡](../verification/2026-07-12-ai-report-live-evidence.md)を参照。
+- 公開エントリーポイント: `make report-ai FINDINGS=<findings.json> [OUT=<directory>]`と
+  `make remediation-draft FINDINGS=<findings.json> [OUT=<directory>]`。
+- 要件: `requirements-secure-asset.md`のFR-5、§4.2、§7.1、§8のAcceptance A。
+- アーキテクチャゲート: [ADR-0004](../adr/0004-isolate-ai-report-generation.md)と
+  [ADR-0005](../adr/0005-render-remediation-drafts-from-recipes.md)。
+- 入力: Bレベル点検エンジンが決定論で生成した`findings.json`。
+- 出力: 顧客が読めるAI説明文と、別ファイルの決定論的・非適用の是正ドラフト。機械可読な
+  是正アクションは引き続き対象外とする。
 
-## 1. Acceptance criteria
+## 1. 受け入れ基準
 
-1. A local CLI accepts one `findings.json` and writes one `ai-report.md`.
-2. Input is validated before a provider call. Unknown schema versions, malformed
-   findings, unsupported check IDs or severities, excessive size, and incomplete coverage
-   fail with exit code 2 and a non-sensitive error.
-3. The provider receives only the validated report frame. The implementation never reads
-   environment files, credentials, table rows, raw GA4 values, or unrelated files into
-   the prompt.
-4. The provider returns structured JSON keyed by pseudonymous finding references.
-   Generated content cannot add, remove, reclassify, or resolve findings. A deterministic
-   validator rejects output outside the frame and local code renders the Markdown.
-5. Output is labeled as an AI-generated draft requiring human review and contains scope,
-   coverage, an executive summary, finding explanations, and next actions. Slice 1
-   contains no executable remediation.
-6. Authentication, timeout, rate-limit, malformed-response, and refusal failures are
-   explicit. Failure never alters deterministic artifacts or leaves a partial report.
-7. Credentials come from the provider's standard credential chain (for example, ADC/WIF
-   or an environment variable), and are never CLI values, persisted, or logged. Prompt
-   and response bodies are not logged by default.
-8. Unit tests use a fake provider and no network. Security tests cover hostile metadata,
-   prompt injection text, output paths, and secret non-disclosure.
+1. ローカルCLIは1つの`findings.json`を受け取り、1つの`ai-report.md`を書き出す。
+2. プロバイダー呼び出し前に入力を検証する。未知のスキーマバージョン、不正なfinding、未対応の
+   check IDまたは重大度、上限超過サイズ、不完全なカバレッジは、機密情報を含まないエラーと
+   終了コード2で失敗する。
+3. プロバイダーへ渡すのは、検証済みレポートフレームだけである。環境ファイル、認証情報、
+   テーブル行、GA4の生値、無関係なファイルをプロンプトへ読み込まない。
+4. プロバイダーは、仮名化したfinding参照をキーに持つ構造化JSONを返す。生成内容によるfindingの
+   追加・削除・重大度変更・解決済み判定を認めない。決定論バリデーターがフレーム外の出力を拒否し、
+   ローカルコードがMarkdownを描画する。
+5. 出力には、人によるレビューが必要なAI生成ドラフトであることを明記し、対象範囲、カバレッジ、
+   エグゼクティブサマリー、findingごとの説明、次のアクションを含める。実行可能な是正処理は含めない。
+6. 認証、タイムアウト、レート制限、不正レスポンス、拒否の失敗を明示する。失敗しても決定論的な
+   成果物を変更せず、不完全なレポートを残さない。
+7. 認証情報はADCまたはWIFの標準認証チェーンから取得し、CLI引数として受け取らず、永続化・ログ出力
+   しない。プロンプト本文とレスポンス本文も既定ではログへ出さない。
+8. 単体テストは偽プロバイダーを使い、ネットワークへ接続しない。敵対的メタデータ、プロンプト
+   インジェクション文字列、出力パス、秘密情報の非開示をセキュリティテストで確認する。
 
-## 2. Scope
+## 2. スコープ
 
-Included in slice 1:
+スライス1で実装した範囲:
 
-- Versioned input validation for the existing `findings.json` shape.
-- Bounded, pseudonymized prompt construction from validated fields.
-- A provider-neutral application port and Vertex AI adapter using `google-genai`.
-- Markdown validation, atomic output writing, local CLI, tests, and module docs.
+- 既存`findings.json`形式のバージョン付き入力検証。
+- 検証済みフィールドから作る、上限付き・仮名化済みプロンプト。
+- プロバイダー非依存のapplication portと、`google-genai`を使うVertex AIアダプター。
+- Markdown出力検証、アトミック書き込み、ローカルCLI、テスト、モジュール文書。
 
-Deferred:
+後続スライスで実装した範囲:
 
-- Machine-readable remediation actions.
-- Reusable workflow integration and artifact upload.
+- 決定論的・非適用の是正ドラフト。
+- `gcp-cicd-workflows@v1`とopt-inの`bq-inspect.yml`による再利用ワークフロー統合と成果物アップロード。
 
-Out of scope:
+対象外:
 
-- Changing inspection findings, severity, or coverage.
-- Applying remediation or creating pull requests.
-- PII value scanning and scheduled Cloud Run execution (A+).
-- Sending BigQuery rows or raw GA4 event values to an LLM.
+- 機械可読な是正アクション。
+- 点検finding、重大度、カバレッジの変更。
+- 是正の適用またはPull Requestの作成。
+- PII値検査とCloud Run定期実行（A+）。
+- BigQueryの行またはGA4イベントの生値をLLMへ送信すること。
 
-## 3. Module boundary
+## 3. モジュール境界
 
-```
+```text
 src/modules/reporting/
   MODULE.md
   domain/
-    inspection_artifact.py
-    generated_report.py
+    model.py
     remediation.py
   application/
     ports.py
@@ -75,7 +74,7 @@ src/modules/reporting/
     generate_remediation_draft.py
   infrastructure/
     json_artifact_reader.py
-    <provider>_generator.py
+    vertex_ai_generator.py
     markdown_report_writer.py
     markdown_remediation_writer.py
   interface/
@@ -83,86 +82,84 @@ src/modules/reporting/
     remediation_cli.py
 ```
 
-The module consumes the serialized public artifact, not
-`src.modules.inspection` internals. This keeps the contract usable across processes and
-repositories and prevents coupling to private inspection objects.
+このモジュールは`src.modules.inspection`内部へ依存せず、シリアライズ済みの公開成果物を
+受け取る。この境界により、プロセスやリポジトリをまたいで契約を利用でき、点検モジュールの
+非公開オブジェクトとの結合を防ぐ。
 
-## 4. Data and security boundary
+## 4. データとセキュリティの境界
 
-Treat the complete artifact as **Internal** under SEC-011.
+完全な点検成果物はSEC-011の **Internal** として扱う。
 
-- AI generation is opt-in.
-- Reject oversized files before parsing.
-- Treat every string as data, never instructions, and delimit records structurally.
-- Replace project/resource identifiers with deterministic aliases before submission.
-- Omit observed values, `catalog_path`, and skipped error details from provider input.
-- Reattach exact local identifiers only while rendering the final Markdown.
-- Write atomically to a fixed filename beneath the selected output directory.
-- Fail if output exists unless an explicit overwrite policy is approved.
-- Log only event names, counts, provider/model identifiers, and timing.
-- Verify TLS; bound timeouts and retries to transient failures.
+- AI生成はopt-inとする。
+- 上限を超えるファイルは、解析前に拒否する。
+- すべての文字列を命令ではなくデータとして扱い、レコードを構造で区切る。
+- 送信前にプロジェクトIDとリソースIDを決定論的な別名へ置換する。
+- 観測値、`catalog_path`、スキップ時のエラー詳細をプロバイダー入力から除外する。
+- 最終Markdownの描画時だけ、ローカルで正確な識別子を再結合する。
+- 選択した出力ディレクトリ配下の固定ファイル名へアトミックに書き込む。
+- 明示的な上書き方針が承認されない限り、既存出力があれば失敗する。
+- ログへ残すのは、イベント名、件数、プロバイダー・モデル識別子、所要時間だけとする。
+- TLSを検証し、タイムアウトを制限する。現在の実装は自動リトライを行わない。
 
-## 5. Provider port
+## 5. プロバイダーport
 
+```text
+TextGenerator.generate(payload) -> ProviderText
 ```
-ReportGenerator.generate(request) -> GeneratedText
-```
 
-The request contains the validated frame and prompt-template version. The result contains
-structured JSON, provider/model names, and a request ID when available. Aggregate token
-counts may be retained; prompt and response bodies are not retained outside the final
-report.
+`payload`は、検証済みフレームとプロンプトテンプレートのバージョンを含む。結果は構造化JSON、
+プロバイダー名、モデル名、取得できる場合はrequest IDを含む。プロンプト本文とレスポンス本文は
+最終レポート以外へ保存しない。
 
-The first adapter uses Gemini on Vertex AI through the official `google-genai` SDK,
-stable API `v1`, and ADC/WIF. It sets a bounded timeout, requests a JSON response schema,
-does not supply tools, and closes the SDK client after generation.
+最初のアダプターは、公式`google-genai` SDK、安定版API `v1`、ADC/WIFを通じてVertex AI上の
+Geminiを利用する。制限付きタイムアウトとJSONレスポンススキーマを設定し、toolを渡さず、
+生成後にSDKクライアントを閉じる。
 
-## 6. Output and exit contract
+## 6. 出力と終了コードの契約
 
-`ai-report.md` contains a draft notice, deterministic scope/coverage, executive summary,
-findings without changed IDs or severity, next actions from existing hints, and generation
-metadata. Every input finding ID must appear exactly once; unknown IDs are rejected.
-`summary.md` remains the audit source of truth.
+`ai-report.md`は、ドラフト注意書き、決定論的な対象範囲・カバレッジ、エグゼクティブサマリー、
+変更されていないID・重大度を持つfinding、AIが生成した説明と次のアクション、点検エンジンの
+決定論的な是正ヒント、生成メタデータを含む。すべての入力finding参照は正確に1回ずつ現れ、
+未知のIDは拒否する。`findings.json`と`summary.md`が監査上の正準である。
 
-| Exit | Meaning |
-|------|---------|
-| 0 | report generated and atomically written |
-| 1 | provider or generated-output failure; deterministic artifacts remain valid |
-| 2 | invalid CLI/config, unsafe path, or invalid/unsupported input |
+| 終了コード | 意味                                                           |
+| ---------- | -------------------------------------------------------------- |
+| 0          | レポートを生成し、アトミックに書き込んだ                       |
+| 1          | プロバイダーまたは生成出力の失敗。決定論的成果物は引き続き有効 |
+| 2          | CLI・設定・パスが不正、または入力が不正・未対応                |
 
-## 7. Delivery slices
+## 7. デリバリースライス
 
-| Slice | Content | Gate |
-|-------|---------|------|
-| 1 | ADR-0004 + this design + indexes | owner approves ADR and provider |
-| 2 | skeleton, input domain/schema validation, fake provider, tests | unit suite green |
-| 3 | use case, prompt framing, output validator/writer, CLI | security tests green |
-| 4 | approved provider adapter and dependency | lint/test/security scan green |
-| 5 | live opt-in generation from synthetic findings | verified 2026-07-12 |
-| 6 | Terraform/policy draft design and implementation | implemented per [ADR-0005](../adr/0005-render-remediation-drafts-from-recipes.md) |
-| 7 | reusable workflow integration | implemented via `gcp-cicd-workflows@v1` and the opt-in `bq-inspect.yml` caller |
+| スライス | 内容                                                            | ゲート                                                                          |
+| -------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| 1        | ADR-0004、本設計、索引                                          | 所有者がADRとプロバイダーを承認                                                 |
+| 2        | スケルトン、入力domain・スキーマ検証、偽プロバイダー、テスト    | 単体テスト成功                                                                  |
+| 3        | ユースケース、プロンプトフレーム、出力バリデーター・writer、CLI | セキュリティテスト成功                                                          |
+| 4        | 承認済みプロバイダーアダプターと依存関係                        | lint・test・security scan成功                                                   |
+| 5        | 合成findingを使うopt-inの実環境生成                             | 2026-07-12に検証済み                                                            |
+| 6        | Terraform・ポリシー是正ドラフトの設計と実装                     | [ADR-0005](../adr/0005-render-remediation-drafts-from-recipes.md)に従い実装済み |
+| 7        | 再利用ワークフロー統合                                          | `gcp-cicd-workflows@v1`とopt-inの`bq-inspect.yml` callerで実装済み              |
 
-## 8. Owner rulings
+## 8. 所有者判断
 
-1. Separate `reporting` bounded context: approved.
-2. Initial provider: Gemini on Vertex AI via `google-genai` and ADC/WIF.
-3. Provider-bound project/resource identifiers: deterministic pseudonyms.
-4. Existing `ai-report.md`: fail closed; no overwrite option in slice 1.
+1. 独立した`reporting` bounded context: 承認済み。
+2. 初期プロバイダー: `google-genai`とADC/WIFを使うVertex AI上のGemini。
+3. プロバイダーへ送るプロジェクト・リソース識別子: 決定論的な仮名。
+4. 既存`ai-report.md`: fail closed。上書きオプションを提供しない。
 
+## 9. スライス6の是正契約
 
-## 9. Slice 6 remediation contract
-
-- Input: the same complete, validated inspection artifact used by `report-ai`.
-- Selection: every CHK-01 through CHK-13 value maps to one immutable v1 local recipe.
-- Trusted fields: recipe selection uses `check_id`; the report displays escaped local
-  resource and rule identifiers. `observed`, `expected`, and `remediation_hint` never
-  select or populate code.
-- Output: one atomic, byte-deterministic `remediation-draft.md`. Existing output fails
-  closed. The file is Markdown so Terraform and policy tooling cannot discover it.
-- Content: human-review warning, recipe ID/version, required inputs, explicit
-  `REPLACE_ME_*` values, a Terraform/policy example when safe, and validation steps.
-- Side effects: no provider call, cloud mutation, Terraform execution, apply command, or
-  pull-request creation.
-- CHK-13 uses approved static guidance and a manual recipe only. It asks the reviewer to
-  complete `source.field_path` and `source.key`, then inspect the transformation
-  separately; it does not infer or assert SQL lineage from artifact free text.
+- 入力: `report-ai`と同じ、完全かつ検証済みの点検成果物。
+- 選択: CHK-01〜CHK-13を、それぞれ不変のローカルv1レシピへ対応付ける。
+- 信頼するフィールド: レシピ選択には`check_id`だけを使う。レポートにはエスケープ済みのローカル
+  リソース識別子とルール識別子を表示する。`observed`、`expected`、`remediation_hint`をコードの
+  選択や値設定には使わない。
+- 出力: 1つのアトミックかつバイト決定論的な`remediation-draft.md`。既存出力があればfail closed。
+  MarkdownなのでTerraformやポリシーツールの自動検出対象にならない。
+- 内容: 人によるレビューの注意書き、レシピID・バージョン、必須入力、明示的な`REPLACE_ME_*`値、
+  安全に提示できる場合のTerraform・ポリシー例、検証手順。
+- 副作用: プロバイダー呼び出し、クラウド変更、Terraform実行、applyコマンド、Pull Request作成を
+  行わない。
+- CHK-13は承認済みの固定ガイダンスと手動レシピだけを使う。レビュー担当者へ
+  `source.field_path`と`source.key`の記入、および変換処理の別途確認を求める。成果物の自由記述から
+  SQLリネージを推論または断定しない。
