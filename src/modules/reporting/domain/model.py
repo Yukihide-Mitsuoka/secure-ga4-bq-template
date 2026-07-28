@@ -1,10 +1,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 
 CHECK_IDS = frozenset(f"CHK-{number:02d}" for number in range(1, 14))
 SEVERITIES = frozenset({"CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"})
-PROMPT_VERSION = "v1"
+PROMPT_VERSION = "v2"
+
+
+class ReportLanguage(Enum):
+    ENGLISH = "en"
+    JAPANESE = "ja"
 
 
 @dataclass(frozen=True)
@@ -53,6 +59,7 @@ class ProviderText:
 class GeneratedNarrative:
     executive_summary: str
     findings: tuple[GeneratedFinding, ...]
+    language: ReportLanguage
     provider: str
     model: str
     request_id: str | None = None

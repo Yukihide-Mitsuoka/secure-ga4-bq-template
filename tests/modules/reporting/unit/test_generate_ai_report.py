@@ -1,12 +1,18 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
 from src.modules.reporting.application.generate_ai_report import GenerateAiReport
 from src.modules.reporting.application.ports import GeneratedOutputError
-from src.modules.reporting.domain.model import ProviderText
+from src.modules.reporting.domain.model import (
+    GeneratedNarrative,
+    InspectionArtifact,
+    ProviderText,
+    ReportLanguage,
+)
 from src.modules.reporting.infrastructure.json_artifact_reader import JsonArtifactReader
 from src.modules.reporting.infrastructure.markdown_report_writer import MarkdownReportWriter
 from tests.modules.reporting.unit.builders import artifact_data, write_artifact
@@ -20,6 +26,20 @@ class FakeGenerator:
     def generate(self, payload: str) -> ProviderText:
         self.payload = payload
         return ProviderText(json.dumps(self.response), "fake", "fake-model", "req-1")
+
+
+class CapturingWriter:
+    def __init__(self) -> None:
+        self.narrative: GeneratedNarrative | None = None
+
+    def write(
+        self,
+        artifact: InspectionArtifact,
+        narrative: GeneratedNarrative,
+        out_dir: Path,
+    ) -> Path:
+        self.narrative = narrative
+        return out_dir / "ai-report.md"
 
 
 def _response(
@@ -42,6 +62,13 @@ def test_generation_pseudonymizes_provider_input_and_renders_local_identifiers(t
 
     assert "secret-project" not in generator.payload
     assert "private@example.com" not in generator.payload
+    payload = json.loads(generator.payload)
+    assert payload["prompt_version"] == "v2"
+    assert payload["output_language"] == {
+        "code": "en",
+        "name": "English",
+        "instruction": "Write every narrative string field in English.",
+    }
     assert "RESOURCE_001" in generator.payload
     report = output.read_text(encoding="utf-8")
     assert "Dataset-scoped access" not in generator.payload
@@ -50,6 +77,27 @@ def test_generation_pseudonymizes_provider_input_and_renders_local_identifiers(t
     assert "F001: CHK-03" in report
     assert "![remote](" not in report
     assert "\\!\\[remote\\]\\(https://example\\.invalid\\)" in report
+
+
+def test_japanese_language_uses_a_fixed_provider_instruction(tmp_path) -> None:
+    generator = FakeGenerator(_response())
+    writer = CapturingWriter()
+    use_case = GenerateAiReport(reader=JsonArtifactReader(), generator=generator, writer=writer)
+
+    use_case.handle(
+        write_artifact(tmp_path / "findings.json"),
+        tmp_path,
+        language=ReportLanguage.JAPANESE,
+    )
+
+    payload = json.loads(generator.payload)
+    assert payload["output_language"] == {
+        "code": "ja",
+        "name": "Japanese",
+        "instruction": "Write every narrative string field in Japanese.",
+    }
+    assert writer.narrative is not None
+    assert writer.narrative.language is ReportLanguage.JAPANESE
 
 
 def test_chk12_uses_static_mart_description_guidance(tmp_path) -> None:
