@@ -21,11 +21,15 @@ and **optimized for AI readers** — explicit, structured, unambiguous.
 - Every doc starts with YAML frontmatter (`id`, `title`, plus `status`/`updated` where
   meaningful) and states its purpose in the first paragraph.
 - Concrete examples for every rule or API. Fake credentials only (GR-002).
-- Foundation-owned instructions and documentation remain English. After template
-  instantiation, AI agents MUST write new project-specific documents under `docs/` in
-  Japanese unless the repository owner or an external contract explicitly requires
-  another language. Do not create a translated sibling solely to duplicate the same
-  facts (ADR-0005).
+- Foundation-owned instructions and documentation remain English. The only Japanese
+  foundation-document exceptions are the descriptive, human-facing
+  `docs/foundation/guides/usage.ja.md` and
+  `docs/foundation/guides/ai-instruction-files.ja.md`; they never override their English
+  authorities, and another exception requires a superseding ADR (ADR-0008). After
+  template instantiation, AI agents MUST write new project-specific documents under
+  `docs/` in Japanese unless the repository owner or an external contract explicitly
+  requires another language. Do not create another translated sibling solely to
+  duplicate the same facts (ADR-0005).
 - Files use kebab-case names; headings form a strict hierarchy (one `#`, then `##`...).
 
 ## DOC-002: Objective, structured prose
@@ -61,6 +65,7 @@ Governs all prose in `.ai/` and `docs/`. `.skills/requirements.skill.md` and
 | `docs/requirements.md`, `docs/requirements/` | whole-project and initiative requirements | contract |
 | `docs/glossary.md` | project-specific ubiquitous language | descriptive |
 | `docs/roadmap.md` | project direction and sequencing | descriptive |
+| `docs/development-handoff.md` | resumable current development snapshot | descriptive |
 | `docs/architecture/` | diagrams, flows, C4 | descriptive |
 | `docs/domain/` | domain model, ubiquitous language | descriptive |
 | `docs/api/` | API contracts (OpenAPI etc.) | contract |
@@ -73,6 +78,60 @@ The structure and update triggers for project-owned `docs/` paths are defined on
 directory MUST NOT contain a foundation-owned placeholder README. A repository MAY add
 a local README only when it describes actual project content and is maintained by that
 repository.
+
+## DOC-011: Project document singleton and collection placement
+
+Choose a project-owned path by document scope
+([ADR-0009](../docs/foundation/adr/0009-place-project-document-singletons-and-collections.md)):
+
+| Scope | Required path | Example |
+|-------|---------------|---------|
+| One authoritative project-wide document | `docs/<category>.md` | `docs/requirements.md` |
+| Independently maintained documents that repeat by subject | `docs/<category>/<subject>.md` | `docs/requirements/account-recovery.md` |
+| Both project-wide and subject scopes | Use both paths, with distinct ownership | `docs/requirements.md` and `docs/requirements/account-recovery.md` |
+
+The project-wide singleton MUST own cross-subject facts and link to narrower documents.
+A subject document MUST own only its narrower facts. Authors MUST NOT repeat the same
+fact between the singleton and collection (DOC-001). Create a project-owned directory or
+local index only when it contains actual maintained project content; do not create empty
+scaffolding or a foundation-owned placeholder in a project namespace.
+
+## DOC-012: Development handoff snapshot
+
+An active project whose work continues across sessions or agents SHOULD maintain the
+project-wide singleton `docs/development-handoff.md` from the foundation template
+([ADR-0010](../docs/foundation/adr/0010-separate-roadmap-work-tracking-and-handoff.md)).
+Every agent MUST read it during task intake when it exists.
+
+The handoff MUST contain only information needed to resume safely: active issue and pull
+request links, lifecycle phase, material progress since the previous handoff, blockers,
+ordered next actions, last verified baseline and results, and required reading. GitHub
+issues and milestones remain authoritative for task status and checklists; the roadmap
+owns direction; ADRs and the decision log own durable decisions. Link to those sources
+instead of copying their histories (DOC-001).
+
+Update the handoff before transferring work and whenever the active issue, pull request,
+blocker, next action, or verified baseline materially changes. Remove completed detail
+once it no longer affects the next action. If the project stops maintaining the handoff,
+delete it rather than leave a stale restart instruction (DOC-040).
+
+## DOC-013: Roadmap completion and review
+
+`docs/roadmap.md` MUST describe direction and milestone outcomes, not duplicate the live
+task queue. Each current outcome SHOULD link to a GitHub milestone or tracking issue with
+an explicit completion checklist. During active development, the repository SHOULD
+declare and follow a review cadence; use weekly when no project-specific cadence is set.
+
+At each review:
+
+- reconcile roadmap outcomes with the linked issue or milestone status;
+- record completed outcomes with an absolute completion date and evidence link;
+- re-sequence `Now`, `Next`, and `Later` when priorities changed;
+- remove stale or duplicated task detail; and
+- update `last_reviewed` even when direction did not change, and `updated` when it did.
+
+Also review immediately when a milestone completes or project scope, priority, or
+direction changes. Detailed completed-task history remains in GitHub and release records.
 
 ## DOC-030: Doc-update matrix (binding — GR-024)
 
@@ -89,6 +148,8 @@ When a PR contains a change of type X, it MUST update the docs listed:
 | New error state / failure mode | `docs/troubleshooting/`, `docs/runbook/` if ops action needed |
 | New or changed reusable foundation term | `docs/foundation/glossary.md` |
 | New domain term | `docs/glossary.md` |
+| Active work, blocker, next action, or verified baseline changes when a handoff is maintained | `docs/development-handoff.md` |
+| Milestone completes or project direction, priority, or scope changes | `docs/roadmap.md` |
 | Decision that constrains the future | ADR + `.ai/decision-log.md` |
 | Change to how AI should behave | `.ai/*` (via reviewed PR) |
 
