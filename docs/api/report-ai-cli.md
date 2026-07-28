@@ -1,60 +1,77 @@
 ---
 id: report-ai-cli
-title: AI inspection report CLI contract
+title: AI点検レポートCLI契約
+status: language-extension-designed
+updated: 2026-07-28
 ---
 
-# AI inspection report CLI
+# AI点検レポートCLI
 
-## Command
+この文書は、完全な点検成果物から任意のAI説明草案と決定論的な是正ドラフトを生成するCLI契約を
+定義します。AI説明文は正準の判定ではなく、人によるレビューが必要です。
+
+> Issue #253の言語拡張は設計済み・未実装です。実装PRがmergeされるまでは
+> `REPORT_LANGUAGE`を指定できず、現在の英語経路だけを利用できます。
+
+## AIレポートコマンド
 
 ```bash
-make report-ai FINDINGS=reports/project/timestamp/findings.json
+make report-ai \
+  FINDINGS=reports/project/timestamp/findings.json
 ```
 
-The command is opt-in and uses Vertex AI through ADC/WIF. It reads one complete
-`findings.json` (maximum 1 MiB) and writes `ai-report.md` beside it, or beneath
-`OUT=<directory>`.
+このコマンドはopt-inであり、ADCまたはWIFを通じてVertex AIを使います。最大1 MiBの完全な
+`findings.json`を1つ読み、同じディレクトリまたは`OUT=<directory>`配下へ`ai-report.md`を
+書き出します。
 
-## Contract
+### パラメータ
 
-- Accepted schema: inspection artifact v1; the current unversioned B artifact is treated as
-  v1 for backward compatibility.
-- Required coverage: `coverage.skipped` is empty.
-- Provider input: deterministic aliases and finding metadata only. Project/resource IDs,
-  observed values, rows, credentials, and skipped details are excluded.
-- Output: an advisory draft. `summary.md` and `findings.json` remain authoritative.
-- Idempotency: existing `ai-report.md` is never overwritten.
+| パラメータ | 必須 | 既定値 | 意味 |
+|------------|------|--------|------|
+| `FINDINGS` | はい | `findings.json` | 点検成果物のパス |
+| `OUT` | いいえ | 入力ファイルのディレクトリ | 出力先 |
+| `REPORT_LANGUAGE` | いいえ | `en` | **Issue #253で実装予定**。`en`または`ja`。AI生成文と固定見出しの言語 |
 
-| Exit | Meaning | Caller action |
-|------|---------|---------------|
-| 0 | report written | review the draft against `summary.md` |
-| 1 | provider or generated-output failure | retain deterministic artifacts; retry after diagnosis |
-| 2 | invalid config, input, coverage, path, or existing output | correct the local input/config |
+許可値以外はprovider呼び出し前に拒否します。利用者が指定した自由記述をプロンプト命令として
+渡しません。
 
-Authentication requires `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION`, ADC, and
-Vertex AI invocation permission. The model defaults to `gemini-2.5-flash` and can be
-changed through `GA4_BQ_REPORT_MODEL`.
+### 契約
 
-## Deterministic remediation command
+- 受理するschema: 点検成果物v1。versionなしの既存B成果物は後方互換のためv1として扱う。
+- 必須coverage: `coverage.skipped`が空であること。
+- Provider入力: 決定論的な別名、finding metadata、固定enumから解決した言語だけ。project・
+  resource ID、observed value、行、認証情報、skipped詳細は除外する。
+- 出力: 人がレビューする草案。`summary.md`と`findings.json`が正準である。
+- 冪等性: 既存の`ai-report.md`を上書きしない。
+- 言語によらずfinding ID、重大度、resource、rule、決定論的な是正ヒントを変更しない。
+
+| 終了コード | 意味 | 呼び出し側の対応 |
+|------------|------|------------------|
+| 0 | レポートを書き込んだ | `summary.md`と照合して草案をレビューする |
+| 1 | providerまたは生成出力の失敗 | 決定論成果物を保持し、原因を確認する |
+| 2 | 設定、入力、coverage、path、言語、既存出力が不正 | ローカル入力・設定を修正する |
+
+認証には`GOOGLE_CLOUD_PROJECT`、`GOOGLE_CLOUD_LOCATION`、ADC、Vertex AI invoke権限が
+必要です。modelの既定値は`gemini-2.5-flash`であり、`GA4_BQ_REPORT_MODEL`で変更できます。
+
+## 決定論的な是正ドラフトコマンド
 
 ```bash
 make remediation-draft FINDINGS=reports/project/timestamp/findings.json
 ```
 
-This command uses no AI provider and needs no cloud credentials. It validates the same
-complete inspection artifact and writes `remediation-draft.md` beside it, or beneath
-`OUT=<directory>`. CHK-01 through CHK-11 map to versioned local recipes.
+このコマンドはAI providerやクラウド認証を使いません。同じ完全な点検成果物を検証し、入力と同じ
+ディレクトリまたは`OUT=<directory>`配下へ`remediation-draft.md`を書き出します。CHK-01〜
+CHK-13をversion管理されたローカルレシピへ対応付けます。
 
-The output is byte-deterministic, non-applying Markdown. It contains required inputs,
-`REPLACE_ME_*` placeholders, Terraform or policy examples where safe, and validation
-steps. Artifact free text never selects or populates code. Existing output is never
-overwritten.
+出力はバイト決定論的であり、自動適用しません。必須入力、`REPLACE_ME_*` placeholder、安全に
+提示できるTerraform・policy例、検証手順を含みます。成果物の自由記述をコード選択や値設定に
+使わず、既存出力を上書きしません。
 
-| Exit | Meaning | Caller action |
-|------|---------|---------------|
-| 0 | remediation draft written | complete placeholders and review against the authoritative findings |
-| 2 | invalid input, coverage, path, or existing output | correct the local input or output location |
+| 終了コード | 意味 | 呼び出し側の対応 |
+|------------|------|------------------|
+| 0 | 是正ドラフトを書き込んだ | placeholderを埋め、正準findingと照合してレビューする |
+| 2 | 入力、coverage、path、既存出力が不正 | ローカル入力または出力先を修正する |
 
-The command never runs Terraform, applies policy, creates a pull request, or calls Vertex
-AI. Converting the Markdown into repository code remains behind the engagement's normal
-review, plan, and approval gates.
+このコマンドはTerraform実行、policy適用、Pull Request作成、Vertex AI呼び出しを行いません。
+Markdownをリポジトリのコードへ変換する作業は、案件の通常のレビュー・plan・承認gateに従います。
