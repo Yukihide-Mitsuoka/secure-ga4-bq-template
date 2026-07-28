@@ -18,6 +18,7 @@ and [ADR-0005](../../../docs/adr/0005-render-remediation-drafts-from-recipes.md)
 | `GenerateRemediationDraft.handle(input_path, out_dir)` | application | Read, select versioned recipes, and write a deterministic draft |
 | `make report-ai FINDINGS=<json>` | interface | Opt-in Vertex AI CLI; writes `ai-report.md` |
 | `make remediation-draft FINDINGS=<json>` | interface | Offline deterministic CLI; writes `remediation-draft.md` |
+| `examples/reporting/` | example | Public synthetic report pack for offline review; never Acceptance evidence |
 
 ## Owned data
 
