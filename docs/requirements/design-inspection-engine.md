@@ -163,152 +163,159 @@ Finding:
 
 単体テストはbuilderで収集portを偽装する。GCPやネットワークを使わず、決定論的に実行する。
 
-## 4. Deterministic rules
+## 4. 決定論チェック
 
-Scope note: "in-scope datasets" = matched by `mart_patterns`; `raw_patterns` datasets
-get **containment checks only** (CHK-01/02/03 at dataset grain — per §4.2 they are in
-the coverage denominator only for closure confirmation); `exclude` datasets are skipped
-and listed with reasons.
+本節で「点検対象データセット」とは、`mart_patterns`に一致するデータセットを指す。
+`raw_patterns`に一致するデータセットには **封じ込めチェックだけ** を適用する。データセット粒度の
+CHK-01〜03を実行し、要件§4.2のカバレッジ分母には封じ込め確認の完了を示す目的でだけ含める。
+`exclude`のデータセットは点検を省略し、理由とともに記録する。
 
-| ID | Requirement | Flag when (deterministic rule) | Severity | Inputs |
-|----|-------------|--------------------------------|----------|--------|
-| CHK-01 | 1 | `roles/owner` or `roles/editor` in project bindings or dataset `access`; `roles/viewer` likewise | HIGH (owner/editor), MEDIUM (viewer) | ProjectIam, DatasetMeta.access |
-| CHK-02 | 2 | any member `allUsers` / `allAuthenticatedUsers` in project bindings or dataset access | HIGH | same |
-| CHK-03 | 3 | BigQuery data roles (`roles/bigquery.dataViewer/dataEditor/dataOwner/admin`) bound at **project** level (should be dataset/table grain) | MEDIUM | ProjectIam |
-| CHK-04 | 4 | column in an in-scope table whose **effective catalog level** (columns ∪ promoted_columns ∪ overrides, FR-1.2) is high/medium and the schema field has no `policyTags` | HIGH (high-level col), MEDIUM (medium) | TableMeta.schema, catalog |
-| CHK-05 | 5 | (a) a column references a policy-tag ID not present in any collected taxonomy (dangling); (b) taxonomy location ≠ dataset location of tagged columns (breaks CLS — design doc cross-cutting constraint); (c) taxonomy defines a tag no column uses (orphan) | HIGH (a,b), INFO (c) | schema, Taxonomy |
-| CHK-06 | 6 | `audit_configs` enable `DATA_READ`/`DATA_WRITE` for `allServices`, or for `bigquery.googleapis.com` while `audit.high_sensitivity_datasets` is empty; any sink filter ingesting BigQuery data-access entries without restricting to the declared high-sensitivity datasets | MEDIUM | ProjectIam.audit_configs, sinks, params |
-| CHK-07 | 7 | (a) no enabled sink whose filter matches BigQuery audit logs (sink未設定); (b) sink destination is a BQ dataset whose `default_table_expiration_ms` is unset or exceeds `retention_max_days` (保持過大); (c) zero enabled exclusions project-wide (除外フィルタ不在) | MEDIUM (a,b), LOW (c) | sinks, exclusions, DatasetMeta |
-| CHK-08 | 8 | `num_bytes ≥ large_table_bytes` and neither time nor range partitioning (missing clustering on such tables → INFO) | MEDIUM | TableMeta, thresholds |
-| CHK-09 | 9 | partitioned table with `require_partition_filter` false/unset | LOW | TableMeta |
-| CHK-10 | 10 | table age (Clock − creation_time) > `long_lived_days` **and** table `expiration_time` unset **and** dataset default expiration unset | LOW | TableMeta, DatasetMeta, Clock |
-| CHK-11 | 11 | (a) dataset location ≠ `expected_location`; (b) `default_table_expiration_ms` unset; (c) CMEK unset — severity per `require_cmek` | MEDIUM (a), LOW (b), INFO/HIGH (c) | DatasetMeta, params |
-| CHK-12 | FR-9 | table/view description or flattened leaf-column description is missing or whitespace-only in a MART or conservative UNMATCHED dataset | LOW | TableMeta.description, TableMeta.schema |
-| CHK-13 | FR-10 | an observed promoted leaf column in a MART or conservative UNMATCHED dataset has a missing or blank catalog `source.field_path` or `source.key` | LOW | TableMeta.schema, catalog promoted_columns |
+| ID | 要件 | findingを出す条件（決定論ルール） | 重大度 | 入力 |
+|----|------|-----------------------------------|--------|------|
+| CHK-01 | 1 | プロジェクトbindingまたはデータセット`access`に`roles/owner`か`roles/editor`がある。`roles/viewer`も検出する | HIGH（owner/editor）、MEDIUM（viewer） | ProjectIam、DatasetMeta.access |
+| CHK-02 | 2 | プロジェクトbindingまたはデータセットaccessに`allUsers` / `allAuthenticatedUsers`がある | HIGH | 同上 |
+| CHK-03 | 3 | データセット・テーブル粒度にすべきBigQueryデータロール（`roles/bigquery.dataViewer/dataEditor/dataOwner/admin`）が **プロジェクト** 粒度で付与されている | MEDIUM | ProjectIam |
+| CHK-04 | 4 | 点検対象テーブルの列について、**effective catalog level**（columns ∪ promoted_columns ∪ overrides、FR-1.2）がhigh/mediumであり、schema fieldに`policyTags`がない | HIGH（high列）、MEDIUM（medium列） | TableMeta.schema、catalog |
+| CHK-05 | 5 | (a) 収集したtaxonomyに存在しないpolicy tag IDを列が参照している（dangling）、(b) taxonomyのlocationとtag付き列のデータセットlocationが異なる（横断的制約であるCLSが機能しない）、(c) taxonomyにどの列からも使われていないtagがある（orphan） | HIGH（a、b）、INFO（c） | schema、Taxonomy |
+| CHK-06 | 6 | `audit_configs`が`allServices`の`DATA_READ` / `DATA_WRITE`を有効にしている。または`audit.high_sensitivity_datasets`が空の状態で`bigquery.googleapis.com`について有効にしている。あるいはsink filterが、宣言した高機密データセットに限定せずBigQuery data-access entryを取り込んでいる | MEDIUM | ProjectIam.audit_configs、sinks、params |
+| CHK-07 | 7 | (a) BigQuery監査ログに一致する有効なsinkがない、(b) sink転送先がBigQueryデータセットで、その`default_table_expiration_ms`が未設定または`retention_max_days`を超える、(c) プロジェクト全体で有効なexclusionがない | MEDIUM（a、b）、LOW（c） | sinks、exclusions、DatasetMeta |
+| CHK-08 | 8 | `num_bytes ≥ large_table_bytes`かつ時間・範囲パーティションのいずれもない。該当テーブルにclusteringもなければINFOも出す | MEDIUM | TableMeta、thresholds |
+| CHK-09 | 9 | パーティションテーブルの`require_partition_filter`がfalseまたは未設定 | LOW | TableMeta |
+| CHK-10 | 10 | テーブル経過日数（Clock − creation_time）が`long_lived_days`を超え、かつテーブル`expiration_time`とデータセット既定期限がどちらも未設定 | LOW | TableMeta、DatasetMeta、Clock |
+| CHK-11 | 11 | (a) データセットlocationが`expected_location`と異なる、(b) `default_table_expiration_ms`が未設定、(c) CMEKが未設定。cの重大度は`require_cmek`に従う | MEDIUM（a）、LOW（b）、INFO/HIGH（c） | DatasetMeta、params |
+| CHK-12 | FR-9 | MARTまたは安全側にMARTとして扱うUNMATCHEDデータセットで、テーブル・viewのdescription、または平坦化したleaf列のdescriptionが未設定か空白だけである | LOW | TableMeta.description、TableMeta.schema |
+| CHK-13 | FR-10 | MARTまたは安全側にMARTとして扱うUNMATCHEDデータセットで観測した昇格leaf列について、catalogの`source.field_path`か`source.key`が未設定または空白である | LOW | TableMeta.schema、catalog promoted_columns |
 
-CHK-01..CHK-11 remain the closed FR-4 security set used by Acceptance B. CHK-12 and
-CHK-13 are additive governance checks: they appear in the same deterministic report and
-remediation flow but are not counted in the historical 10-of-11 threshold.
+CHK-01〜CHK-11は、Acceptance Bで使用する閉じたFR-4セキュリティ集合として維持する。
+CHK-12とCHK-13は追加のガバナンスチェックである。同じ決定論レポートと是正フローに含めるが、
+過去の「11項目中10項目」の閾値には算入しない。
 
-### 4.1 Description boundary
+### 4.1 Descriptionの境界
 
-- BigQuery table and field descriptions are preserved exactly at the adapter boundary;
-  CHK-12 uses `strip()` only to decide whether text is empty.
-- Tables and views are evaluated. Nested schemas are evaluated at flattened leaf paths,
-  matching the existing column coverage denominator.
-- RAW and EXCLUDED datasets are not evaluated. UNMATCHED remains full-inspection scope
-  because the existing safe default treats it as MART.
-- The check does not grade prose, evaluate source lineage, or inspect row values.
-- CHK-13 uses the separate, structured, source-agnostic FR-10 contract; CHK-12 never
-  parses free-text descriptions.
+- BigQueryのテーブル・field descriptionは、アダプター境界で原文のまま保持する。CHK-12は
+  空かどうかの判定にだけ`strip()`を使用する。
+- テーブルとviewを評価する。nested schemaは既存の列カバレッジ分母と同じく、平坦化したleaf
+  pathで評価する。
+- RAWとEXCLUDEDデータセットは評価しない。UNMATCHEDは既存の安全側の既定動作でMARTとして
+  扱うため、完全な点検対象に残す。
+- 文章の品質評価、source lineageの評価、行値の検査は行わない。
+- CHK-13は独立した構造化済み・source非依存のFR-10契約を使用する。CHK-12は自由記述の
+  descriptionを解析しない。
 
-### 4.2 Promotion-source boundary
+### 4.2 昇格元情報の境界
 
-- Only table/view leaf columns observed in the existing REST snapshot are evaluated.
-- Catalog `promoted_columns` entries identify candidate target columns. A finding is
-  emitted only when that target exists in a MART or conservative UNMATCHED dataset and
-  either `source.field_path` or `source.key` is missing or blank.
-- RAW and EXCLUDED datasets and catalog entries with no observed target column are
-  skipped. This avoids treating reusable catalog declarations as deployed resources.
-- The check is source-agnostic and reads no rows, SQL, or description text. A complete
-  declaration records intent; it does not prove the transformation's SQL lineage.
+- 既存のREST snapshotで観測したテーブル・viewのleaf列だけを評価する。
+- Catalogの`promoted_columns` entryから候補となるtarget列を特定する。MARTまたは安全側に扱う
+  UNMATCHEDデータセットにtargetが存在し、`source.field_path`か`source.key`が未設定または
+  空白の場合だけfindingを出す。
+- RAW・EXCLUDEDデータセットと、target列を観測していないcatalog entryは省略する。これにより、
+  再利用可能なcatalog宣言をデプロイ済みリソースとして扱うことを避ける。
+- このチェックはsource非依存であり、行、SQL、descriptionテキストを読み取らない。完全な宣言は
+  意図を記録するが、変換SQLのlineageを証明するものではない。
 
-Known limitation (recorded, not silently dropped): CHK-07(b) retention is only
-verifiable for **BigQuery** sink destinations; GCS bucket lifecycle would need
-`storage.buckets.get`, which the A-5 role deliberately does not include. GCS
-destinations are reported as `INFO: retention not verifiable with inspector role`.
+既知の制約として、CHK-07(b)の保持期間を検証できるのは **BigQuery** sink転送先だけである。
+GCSバケットのライフサイクル検証には`storage.buckets.get`が必要だが、A-5ロールは意図的に
+この権限を含めていない。GCS転送先は、バケットのライフサイクルを点検ロールで読み取れないことを
+INFO findingとして報告する。
 
-## 5. Output (FR-5, machine-readable part)
+## 5. 出力（FR-5の機械可読部分）
 
-`inspect` produces into `--out-dir` (default `reports/<project>/<timestamp>/`):
+`inspect`は`--out-dir`配下（既定値`reports/<project>/<timestamp>/`）に次を生成する。
 
-- `findings.json` — `{meta: SnapshotMeta+params digest, coverage: {datasets, tables,
-  columns, skipped[]}, findings[]}`. Stable key order and finding sort. This is the
-  **frame** the A-level AI report generator will consume.
-- `findings.csv` — the finding list only, using the fixed serialized field order
-  `check_id,severity,resource,observed,expected,rule_ref,remediation_hint`. CSV quoting
-  preserves commas, quotes, newlines, and non-ASCII text; UTF-8 bytes and LF endings are
-  deterministic. A clean report contains the header and no data rows. JSON remains the
-  complete authoritative artifact; parameters, coverage, and skipped details are not
-  duplicated into CSV.
-- `summary.md` — deterministic template rendering: coverage table, findings grouped by
-  check, severity counts. No LLM involved.
+- `findings.json`: `{meta: {project_id, captured_at, params}, coverage: {datasets, tables,
+  columns, skipped[]}, findings[]}`。key順とfinding順は安定している。AレベルのAIレポート生成器が
+  消費する **フレーム** である。
+- `findings.csv`: finding一覧だけを、固定されたfield順
+  `check_id,severity,resource,observed,expected,rule_ref,remediation_hint`で出力する。CSVのquoteにより
+  カンマ、引用符、改行、非ASCII文字を保持し、UTF-8 byteとLF改行を決定論的に生成する。
+  findingがない場合はheaderだけとなる。完全な正準成果物は引き続きJSONであり、parameter、
+  coverage、skippedの詳細はCSVに重複させない。
+- `summary.md`: coverage表、check別finding、重大度件数を決定論テンプレートで描画する。
+  LLMは使用しない。
 
-Coverage counters implement §4.2's 100%-coverage denominator: every in-scope dataset,
-table, and column is either evaluated or listed in `skipped[]` with a reason.
+カバレッジカウンターは要件§4.2の100%カバレッジ分母を実装する。点検対象のデータセット、テーブル、
+列はすべて、評価するか、理由付きで`skipped[]`に記録する。
 
-## 6. CLI contract (consumed by bq-inspect.yml later)
+## 6. CLI契約
 
+正準エントリーポイントは次のとおりである。
+
+```bash
+make inspect PARAMS=inspection-params.yml OUT=reports
 ```
-uv run ga4-bq-inspect --params inspection-params.yml [--out-dir reports/] [--fail-on HIGH]
+
+同じCLIを直接呼び出す場合は、次の契約に従う。
+
+```bash
+uv run python -m src.modules.inspection.interface.cli \
+  --params inspection-params.yml --out-dir reports [--fail-on HIGH]
 ```
 
-- Exit 0 = ran to completion (findings themselves do not fail the run); `--fail-on`
-  optionally gates CI on a severity floor.
-- Read-only by construction: the module contains no mutating API call (FR-6 / GR-030).
-- Auth: Application Default Credentials — works with `gcloud auth` locally and WIF in
-  CI unchanged.
+- 完了時の終了コードは0とする。finding自体は実行失敗にしない。`--fail-on`を指定した場合だけ、
+  指定した重大度以上のfindingをCI gateとして終了コード1にする。
+- 構造上読み取り専用であり、モジュールに変更系API callは含まれない（FR-6 / GR-030）。
+- 認証にはApplication Default Credentialsを使う。ローカルの`gcloud auth`とCIのWIFで同じ
+  コード経路を使用する。
 
-## 7. Toolchain integration
+## 7. ツールチェーン統合
 
-- Root gains `pyproject.toml` managed with **uv** (python-uv profile), dependencies per
-  ADR-0003.
-- Root Makefile merges python-uv targets with the existing terraform ones:
-  `format` = terraform fmt + ruff format; `lint` = terraform fmt-check/tflint + ruff
-  check + mypy; `test-unit` = pytest unit tier + terraform fmt-check; `test-integration`
-  = terraform test + pytest integration tier; `coverage` = pytest --cov (ratchet,
-  TST-003). Contract semantics (profiles/README.md) unchanged.
-- New extension target: `make inspect PARAMS=<file>`.
+- ルートの`pyproject.toml`は **uv**（python-uv profile）で管理し、依存関係はADR-0003に従う。
+- ルートMakefileは既存のTerraform targetとpython-uv targetを統合する。`format`はterraform fmtと
+  ruff format、`lint`はterraform fmt-check・tflint・ruff check・mypy、`test-unit`はpytest unit
+  tierとterraform fmt-check、`test-integration`はterraform testとpytest integration tier、
+  `coverage`はpytest --covによるratchet（TST-003）を実行する。`profiles/README.md`の契約上の
+  意味は変更しない。
+- 拡張targetとして`make inspect PARAMS=<file>`を提供する。
 
-## 8. Delivery plan (GR-020-sized slices)
+## 8. デリバリー計画（GR-020に収まる分割）
 
-| PR | Content | ~size |
-|----|---------|-------|
-| 1 | ADR-0003 + this design + index updates | docs only |
-| 2 | pyproject/uv + Makefile python wiring + module skeleton + MODULE.md | small |
-| 3 | domain models (snapshot/params/catalog/finding) + builders + unit tests | medium |
-| 4 | CHK-01..05 (IAM + column security) + tests | medium |
-| 5 | CHK-06..11 (audit + cost + hygiene) + tests | medium |
-| 6 | collection adapters + integration tests | medium |
-| 7 | use cases + CLI + report writers + E2E against FR-8 verification env | medium |
+以下の7つのPRはすべて実装済みである。
 
-Each PR lands green and releasable; effort tracks requirements §9.2 (点検エンジン
-8–12 person-days: collection 3–4, checks 3–5, report 2–3).
+| PR | 内容 | 規模 |
+|----|------|------|
+| 1 | ADR-0003、本設計、index更新 | 文書のみ |
+| 2 | pyproject/uv、MakefileのPython接続、module skeleton、MODULE.md | 小 |
+| 3 | domain model（snapshot/params/catalog/finding）、builder、単体テスト | 中 |
+| 4 | CHK-01〜05（IAM・列セキュリティ）とテスト | 中 |
+| 5 | CHK-06〜11（監査・費用・衛生状態）とテスト | 中 |
+| 6 | 収集アダプターとintegration test | 中 |
+| 7 | ユースケース、CLI、report writer、FR-8検証環境に対するE2E | 中 |
 
-## 9. Open points carried into implementation
+各PRはgreenかつリリース可能な状態で導入した。工数は要件§9.2の点検エンジン8〜12人日に対応する
+（収集3〜4、チェック3〜5、レポート2〜3）。
 
-1. CHK-06 sink-filter matching: exact BigQuery data-access filter grammar to recognize
-   (start with the two house patterns from FR-3 layer 2/3; extend by evidence).
-2. ~~`roles/viewer` severity~~ **Settled 2026-07-11 (owner)**: viewer IS detected,
-   at MEDIUM; owner/editor stay HIGH (LOG-0014).
-3. ~~Placeholder `src/modules/catalog/` deletion~~ **Settled 2026-07-11 (owner)**:
-   delete as soon as it is no longer needed — i.e. in the PR that lands the real
-   inspection module skeleton (LOG-0014).
+## 9. 実装時の検討事項
 
-## 10. CHK-12 delivery slices
+1. CHK-06のsink-filter照合: 認識するBigQuery data-access filter文法は、FR-3 layer 2/3の2つの
+   標準パターンから開始し、証跡に基づいて拡張する。
+2. ~~`roles/viewer`の重大度~~ **2026-07-11にownerが決定済み**: viewerをMEDIUMとして検出する。
+   owner/editorはHIGHのままとする（LOG-0014）。
+3. ~~placeholder `src/modules/catalog/`の削除~~ **2026-07-11にownerが決定済み**: 実際の
+   inspection module skeletonを導入するPRで不要になった時点で削除する（LOG-0014）。
 
-Issue #70 is split to remain within GR-020:
+## 10. CHK-12のデリバリー分割
 
-| Slice | Contract |
-|-------|----------|
-| Specification | FR-9, CHK-12 behavior, Acceptance B preservation, and content/lineage non-scope |
-| Reporting compatibility | Accept CHK-12 artifacts and add deterministic AI guidance and a non-applying remediation recipe before the producer emits it |
-| Inspection implementation | Collect descriptions, emit CHK-12, and cover adapters/domain boundaries with tests |
+Issue #70はGR-020に収めるため、次のように分割して実装した。
 
-Each slice is independently releasable. No GCP resource, API enablement, IAM change, or
-new dependency is required. The check reuses existing `tables.get` calls, so fixed
-infrastructure cost and incremental BigQuery query-processing cost are both zero.
+| 分割 | 契約 |
+|------|------|
+| 仕様 | FR-9、CHK-12の動作、Acceptance Bの維持、内容・lineageを対象外とする境界 |
+| レポート互換性 | producerが出力する前にCHK-12成果物を受け入れ、決定論的なAIガイダンスと自動適用しない是正手順を追加する |
+| 点検実装 | descriptionを収集してCHK-12を出力し、アダプター・domain境界をテストする |
 
-## 11. CHK-13 delivery slices
+各分割は独立してリリース可能である。GCPリソース、API有効化、IAM変更、新規依存関係は不要である。
+既存の`tables.get` callを再利用するため、固定インフラ費用と追加のBigQueryクエリ処理費用は
+いずれも0である。
 
-Issue #235 is split to remain within GR-020 and to update consumers before producers:
+## 11. CHK-13のデリバリー分割
 
-| Slice | Contract |
-|-------|----------|
-| Specification | FR-10, source-agnostic CHK-13 behavior, Acceptance B preservation, and non-verification boundary |
-| Reporting compatibility | Accept CHK-13 artifacts and add deterministic AI guidance and a manual, non-applying remediation recipe before the producer emits it |
-| Inspection implementation | Evaluate observed promoted leaf columns, emit CHK-13, and cover the domain and registry boundaries with tests |
+Issue #235はGR-020に収め、producerより先にconsumerを更新するため、次のように分割して実装した。
 
-Each slice is independently releasable. CHK-13 reuses the catalog and table schema
-already loaded by the inspector. It requires no GCP resource, API enablement, IAM
-change, query job, row access, or new dependency.
+| 分割 | 契約 |
+|------|------|
+| 仕様 | FR-10、source非依存のCHK-13動作、Acceptance Bの維持、検証しない範囲の境界 |
+| レポート互換性 | producerが出力する前にCHK-13成果物を受け入れ、決定論的なAIガイダンスと手動・自動適用しない是正手順を追加する |
+| 点検実装 | 観測した昇格leaf列を評価してCHK-13を出力し、domain・registry境界をテストする |
+
+各分割は独立してリリース可能である。CHK-13は、点検時に読み込み済みのcatalogとtable schemaを
+再利用する。GCPリソース、API有効化、IAM変更、query job、行アクセス、新規依存関係は不要である。
