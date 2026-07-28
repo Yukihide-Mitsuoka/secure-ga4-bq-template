@@ -1,7 +1,7 @@
 ---
 id: secure-ga4-bq-usage
 title: secure-ga4-bq-template 利用ガイド
-updated: 2026-07-26
+updated: 2026-07-28
 ---
 
 # secure-ga4-bq-template 利用ガイド
@@ -26,6 +26,9 @@ updated: 2026-07-26
 評価するものではなく、主に利用者が参照するマート層の IAM、列保護、コスト設定、
 description、昇格列の由来宣言などを評価します。正式な要件は
 [要件索引](requirements/README.md)にあります。
+
+点検項目ごとの検出条件、得られる効果、レポートの具体例は
+[BigQueryセキュリティ点検の内容・効果・レポート](inspection-capabilities.md)を参照してください。
 
 ## 1. 案件リポジトリを作る
 
@@ -228,6 +231,7 @@ make security-scan
 | 共通基盤、新しい PC、GitHub 設定      | [共通基盤の日本語セットアップ手順](foundation/guides/usage.ja.md)                               |
 | この資産が満たす要件                  | [要件索引](requirements/README.md)                                                              |
 | 点検パラメータ、WIF、AI、コストゲート | [実行時設定](deployment/configuration.md)                                                       |
+| 点検内容、効果、レポート例            | [点検内容・効果・レポート](inspection-capabilities.md)                                         |
 | 機密度と昇格列の由来                  | [カタログガイド](../catalog/README.md)                                                          |
 | Terraform と列マスキング              | [Terraform 構成](../infra/README.md)                                                            |
 | dbt / Dataform の選択                 | [dbt](../profiles/dbt-bigquery/README.md) / [Dataform](../profiles/dataform-bigquery/README.md) |

@@ -21,6 +21,7 @@ Foundation-owned documentation inherited from `terraform-gcp-template` and its
 | [troubleshooting/](troubleshooting/) | `secure-ga4-bq-template` | local failure modes and governance adaptations |
 | [verification/](verification/) | `secure-ga4-bq-template` | dated live-execution evidence for acceptance criteria |
 | [usage.md](usage.md) | `secure-ga4-bq-template` | 日本語の導入・点検・構築手順と安全境界 |
+| [inspection-capabilities.md](inspection-capabilities.md) | `secure-ga4-bq-template` | 日本語の点検項目、効果、レポート例、制約 |
 | [development-handoff.md](development-handoff.md) | `secure-ga4-bq-template` | current state, source index, decisions, and resume sequence |
 | [glossary.md](glossary.md) | `secure-ga4-bq-template` | project ubiquitous language |
 | [roadmap.md](roadmap.md) | `secure-ga4-bq-template` | project direction and planned milestones |
