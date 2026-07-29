@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.9.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.8.0...v2.9.0) (2026-07-29)
+
+
+### Features
+
+* **ai:** add context budget engine ([#269](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/269)) ([7ce97e0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/7ce97e0f80db3cdeb5c571958d73f1710ea49b0a))
+
 ## [2.8.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.7.0...v2.8.0) (2026-07-29)
 
 
