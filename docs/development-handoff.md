@@ -16,9 +16,9 @@ authoritative in their linked documents.
 | Item | State on 2026-07-28 | Evidence or source |
 |------|---------------------|--------------------|
 | Default branch | Release baseline v2.5.0 | [Release v2.5.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v2.5.0) |
-| Direct parent lock | `terraform-gcp-template` at `a2ff79c0b6dfa1c194eee325ce1cb41113f50ffb` | [Inheritance lock](../.github/inheritance/lock.json) |
+| Direct parent lock | `terraform-gcp-template` at `5e2f1f451c463955ef2df36ef1fd09c779c08f8b` | [Inheritance lock](../.github/inheritance/lock.json) |
 | IaC governance prerequisite | Complete: exact `iac-scan` succeeded on PR #125 and its merged-main push | [PR run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29517379947), [main run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29518413106) |
-| Active work | Issue #263 reviews the direct-parent inheritance backlog; PR #264 accepts the daily-sync parent commit already ported by PR #262 | [Issue #263](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/263), [PR #264](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/264), [PR #262](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/262) |
+| Active work | Issue #263 reviews the direct-parent inheritance backlog; the current slice synchronizes accepted foundation ADR-0011 through ADR-0013 | [Issue #263](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/263), [Foundation ADR index](foundation/adr/README.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -114,7 +114,7 @@ may be absent; CI remains authoritative.
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
 > `docs/development-handoff.md`. Confirm the v2.5.0 release baseline and direct-parent lock
-> `a2ff79c0b6dfa1c194eee325ce1cb41113f50ffb`. Keep the child-specific governance
+> `5e2f1f451c463955ef2df36ef1fd09c779c08f8b`. Keep the child-specific governance
 > planner authoritative with `iac-scan` preserved. Do not run governance `apply` or
 > mutate live GitHub/GCP state without a fresh GET-only plan and separate
 > target-specific approval. Technical Acceptance A, CHK-12, CHK-13, opt-in column
