@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.8.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.7.0...v2.8.0) (2026-07-29)
+
+
+### Features
+
+* **ai:** audit root README ownership ([#267](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/267)) ([4bd7287](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/4bd7287e2cd13ffcbc45ca0bcff03410b8398fb8))
+
 ## [2.7.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.6.0...v2.7.0) (2026-07-28)
 
 
