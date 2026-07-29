@@ -10,5 +10,8 @@ def test_doctor_validates_the_actual_child_inheritance_contract():
     assert 'if [ -f ".github/inheritance/manifest.json" ]; then' in script
     assert "python3 scripts/template_inheritance.py validate --root ." in script
     assert "Template inheritance and legacy sync protection contract is invalid" in script
+    assert "python3 scripts/context_budget.py validate --root ." in script
+    assert "--enforce-budget" not in script
+    assert "AI context routes or budgets are invalid (ADR-0012)" in script
     assert "python3 scripts/readme_ownership.py audit --root ." in script
     assert "Root README ownership is invalid (ADR-0011)" in script
