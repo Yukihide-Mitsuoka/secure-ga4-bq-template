@@ -1,5 +1,7 @@
 # secure-ga4-bq-template
 
+<!-- repository-readme-owner: Yukihide-Mitsuoka/secure-ga4-bq-template -->
+
 > 日本語での導入・点検・構築手順は
 > [secure-ga4-bq-template 利用ガイド](docs/usage.md)を参照してください。
 

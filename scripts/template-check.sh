@@ -11,6 +11,7 @@
 #   3. The PR size guard excludes generated package-manager lockfiles at any depth.
 #   4. Child repositories with a manifest satisfy the local inheritance and legacy
 #      Template Sync protection contract.
+#   5. Root README ownership is valid when marked; legacy missing markers remain warnings.
 
 set -u
 cd "$(dirname "$0")/.." || exit 9
@@ -51,6 +52,13 @@ if [ -f ".github/inheritance/manifest.json" ]; then
   python3 scripts/template_inheritance.py validate --root . >/dev/null || \
     err "Template inheritance and legacy sync protection contract is invalid"
 fi
+
+# 5. ADR-0011: detect ownership mismatches without moving or rewriting files. Existing
+# repositories without a marker receive a warning so rule propagation does not force a
+# fleet-wide migration. An unpacked repository without an origin also remains auditable
+# by the other doctor checks.
+python3 scripts/readme_ownership.py audit --root . --allow-missing-marker \
+  --allow-unknown-repository || err "Root README ownership is invalid (ADR-0011)"
 
 if [ "$errors" -eq 0 ]; then
   echo "doctor: OK — template invariants hold"
