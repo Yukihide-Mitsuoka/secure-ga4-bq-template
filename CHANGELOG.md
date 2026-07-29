@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.10.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.9.0...v2.10.0) (2026-07-29)
+
+
+### Features
+
+* **ai:** enforce context budget contract ([#271](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/271)) ([010c6c0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/010c6c0e18a721a44893107b070300064227535d))
+
 ## [2.9.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.8.0...v2.9.0) (2026-07-29)
 
 
