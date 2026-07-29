@@ -176,7 +176,11 @@ def test_cli_reports_valid_and_invalid_contracts(tmp_path, capsys):
 
 def test_repository_contract_and_legacy_ignore_are_consistent():
     result = inheritance.validate_inheritance(REPOSITORY_ROOT)
-    assert result["parent"]["commit"] == "5e2f1f451c463955ef2df36ef1fd09c779c08f8b"
+    assert result["parent"]["commit"] == "9ad2e1a72dfdd4f1aaa97a3db90c90877acdb4c5"
+    assert {
+        ".ai/project-document-maintenance.md",
+        ".claude/README.md",
+    } <= set(result["ownership"]["inherited"])
     ignored = {
         line.strip()
         for line in (REPOSITORY_ROOT / ".templatesyncignore").read_text().splitlines()
@@ -194,3 +198,14 @@ def test_repository_contract_and_legacy_ignore_are_consistent():
     assert ":!docs/foundation/**" in ignored
     assert "!docs/foundation/" not in ignored
     assert "!docs/foundation/**" not in ignored
+
+
+def test_protected_entry_contract_preserves_the_project_profile():
+    entry = (REPOSITORY_ROOT / "CLAUDE.md").read_text(encoding="utf-8")
+
+    assert "| Project | secure-ga4-bq-template" in entry
+    assert "| Stack | Terraform >=1.5 + Python 3.12 via uv" in entry
+    assert "## 2. Start every task" in entry
+    assert "## 3. Change protocol" in entry
+    assert "[`.claude/README.md`](.claude/README.md)" in entry
+    assert "## 3. Architecture rules (summary)" not in entry
