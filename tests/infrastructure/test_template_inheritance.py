@@ -176,11 +176,13 @@ def test_cli_reports_valid_and_invalid_contracts(tmp_path, capsys):
 
 def test_repository_contract_and_legacy_ignore_are_consistent():
     result = inheritance.validate_inheritance(REPOSITORY_ROOT)
-    assert result["parent"]["commit"] == "e17b1b177dd1bd84c2540e072ae3a6e835adf193"
+    assert result["parent"]["commit"] == "2e2b516189c28de72e9b930318a36b5bdb3085c7"
     assert {
         ".ai/project-document-maintenance.md",
         ".claude/README.md",
     } <= set(result["ownership"]["inherited"])
+    assert "CHANGELOG.md" in result["ownership"]["protected"]
+    assert "CHANGELOG.md" not in result["ownership"]["inherited"]
     ignored = {
         line.strip()
         for line in (REPOSITORY_ROOT / ".templatesyncignore").read_text().splitlines()
