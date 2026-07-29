@@ -11,7 +11,8 @@
 #   3. The PR size guard excludes generated package-manager lockfiles at any depth.
 #   4. Child repositories with a manifest satisfy the local inheritance and legacy
 #      Template Sync protection contract.
-#   5. Root README ownership is valid when marked; legacy missing markers remain warnings.
+#   5. Declared AI context routes remain structurally valid and report measured budgets.
+#   6. Root README ownership is valid when marked; legacy missing markers remain warnings.
 
 set -u
 cd "$(dirname "$0")/.." || exit 9
@@ -53,7 +54,12 @@ if [ -f ".github/inheritance/manifest.json" ]; then
     err "Template inheritance and legacy sync protection contract is invalid"
 fi
 
-# 5. ADR-0011: detect ownership mismatches without moving or rewriting files. Existing
+# 5. ADR-0012: descendants enforce route safety and mandatory authorities while reporting
+# byte and word ceiling excess as compatibility warnings for protected entry documents.
+python3 scripts/context_budget.py validate --root . || \
+  err "AI context routes or budgets are invalid (ADR-0012)"
+
+# 6. ADR-0011: detect ownership mismatches without moving or rewriting files. Existing
 # repositories without a marker receive a warning so rule propagation does not force a
 # fleet-wide migration. An unpacked repository without an origin also remains auditable
 # by the other doctor checks.
