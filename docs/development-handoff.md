@@ -13,12 +13,12 @@ authoritative in their linked documents.
 
 ## Snapshot
 
-| Item | State on 2026-07-28 | Evidence or source |
+| Item | State on 2026-07-29 | Evidence or source |
 |------|---------------------|--------------------|
-| Default branch | Release baseline v2.5.0 | [Release v2.5.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v2.5.0) |
-| Direct parent lock | `terraform-gcp-template` at `cb7d8358e7e283399d0d27ece8511505aa3b08be` | [Inheritance lock](../.github/inheritance/lock.json) |
+| Default branch | Release baseline v2.8.0 | [Release v2.8.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v2.8.0) |
+| Direct parent lock | `terraform-gcp-template` at `93a48f40e80d2fe24e14d65bdf84929f20626f65` | [Inheritance lock](../.github/inheritance/lock.json) |
 | IaC governance prerequisite | Complete: exact `iac-scan` succeeded on PR #125 and its merged-main push | [PR run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29517379947), [main run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29518413106) |
-| Active work | Issue #263 reviews the direct-parent inheritance backlog; PR #267 establishes and audits root README ownership | [Issue #263](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/263), [PR #267](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/267), [README ownership rule](../.ai/project-document-maintenance.md#doc-014-root-readme-ownership) |
+| Active work | Issue #263 reviews the direct-parent inheritance backlog; the current slice adds the parent-reviewed context-budget engine without activating it in `make doctor` | [Issue #263](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/263), [AI context guide](foundation/guides/ai-context.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -113,8 +113,8 @@ may be absent; CI remains authoritative.
 ## Resume prompt
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
-> `docs/development-handoff.md`. Confirm the v2.5.0 release baseline and direct-parent lock
-> `cb7d8358e7e283399d0d27ece8511505aa3b08be`. Keep the child-specific governance
+> `docs/development-handoff.md`. Confirm the v2.8.0 release baseline and direct-parent lock
+> `93a48f40e80d2fe24e14d65bdf84929f20626f65`. Keep the child-specific governance
 > planner authoritative with `iac-scan` preserved. Do not run governance `apply` or
 > mutate live GitHub/GCP state without a fresh GET-only plan and separate
 > target-specific approval. Technical Acceptance A, CHK-12, CHK-13, opt-in column
