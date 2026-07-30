@@ -16,7 +16,7 @@ Every task follows these phases. Do not skip phases; do report which phase you a
 
 ```
 1. INTAKE     — restate goal; read routing table and handoff if present; locate an issue
-2. CLARIFY    — list assumptions & open questions; escalate blockers (CLAUDE.md §13)
+2. CLARIFY    — list assumptions & open questions; escalate via the loaded contract
 3. DESIGN     — impact classification (ARC-020); ADR if architectural (GR-022)
 4. IMPLEMENT  — branch → code + tests together → docs in same PR (GR-024)
 5. SELF-REVIEW— run .ai/review-checklist.md against your own diff
