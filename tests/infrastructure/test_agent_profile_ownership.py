@@ -12,6 +12,8 @@ TEMPLATE_OVERLAY = (
 )
 CLAUDE_ADAPTER = ROOT / "CLAUDE.md"
 
+GOVERNANCE_SCRIPT = ROOT / "scripts/github_governance.py"
+
 EXPECTED_INPUTS = [
     {
         "layer": "foundation",
@@ -81,3 +83,14 @@ def test_foundation_bugfix_skill_is_inherited_and_transportable() -> None:
     assert "Sibling occurrences searched; results reported" in skill
     for trigger in ("バグ修正", "不具合修正", "バグ", "障害"):
         assert trigger in skill
+
+
+def test_guardrail_adapter_and_governance_tool_share_canonical_rule_source() -> None:
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    governance = GOVERNANCE_SCRIPT.read_text(encoding="utf-8")
+
+    assert ".ai/guardrails.md" in manifest["inherited_paths"]
+    assert ".ai/contracts/foundation/" in manifest["inherited_paths"]
+    assert "scripts/" in manifest["protected_paths"]
+    assert "CANONICAL_GUARDRAILS_PATH" in governance
+    assert ".ai/contracts/foundation/guardrails.md" in governance
