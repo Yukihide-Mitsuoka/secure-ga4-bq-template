@@ -91,6 +91,9 @@ def test_guardrail_adapter_and_governance_tool_share_canonical_rule_source() -> 
 
     assert ".ai/guardrails.md" in manifest["inherited_paths"]
     assert ".ai/contracts/foundation/" in manifest["inherited_paths"]
-    assert "scripts/" in manifest["protected_paths"]
+    assert "scripts/actions/" in manifest["inherited_paths"]
+    assert "scripts/" not in manifest["protected_paths"]
+    assert "scripts/github_governance.py" in manifest["protected_paths"]
+    assert "scripts/context_budget.py" in manifest["protected_paths"]
     assert "CANONICAL_GUARDRAILS_PATH" in governance
     assert ".ai/contracts/foundation/guardrails.md" in governance
