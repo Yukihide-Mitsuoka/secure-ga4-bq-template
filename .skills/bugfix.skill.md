@@ -1,7 +1,7 @@
 ---
 name: bugfix
 description: Diagnose and fix incorrect behavior with a regression test that pins the fix
-triggers: [bug, defect, incorrect behavior, crash, regression]
+triggers: [bug, defect, incorrect behavior, crash, regression, バグ修正, 不具合修正, バグ, 障害]
 reads: [.ai/workflow.md, .ai/testing.md]
 ---
 
