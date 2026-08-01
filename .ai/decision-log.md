@@ -17,6 +17,7 @@ old one. One line per entry. AI agents append entries in the same PR as the chan
 
 | Date | ID | Decision | Link |
 |------|----|----------|------|
+| 2026-08-01 | LOG-0088 | 直接親lockを `7f420ea` からplannerが選択した次のfirst-parent checkpoint `49936af`（terraform-gcp-template #98）へ進める。親差分は親自身のfoundation lockとdecision logだけであり、両パスを末端所有として保護し、内容変更なしで直接親の証跡だけを受理する | [Issue #282](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/282) |
 | 2026-08-01 | LOG-0087 | 直接親lockを `037d38a` からplannerが選択した次のfirst-parent checkpoint `7f420ea`（terraform-gcp-template #97）へ進める。親差分は親自身のfoundation lockとdecision logだけであり、両パスを末端所有として保護し、内容変更なしで直接親の証跡だけを受理する | [Issue #282](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/282) |
 | 2026-08-01 | LOG-0086 | 直接親lockを `5f3e831` からplannerが選択した次のfirst-parent checkpoint `037d38a`（terraform-gcp-template release 1.2.0）へ進める。親差分はrelease履歴 `CHANGELOG.md` だけであり、末端の独立したrelease履歴として保護し、内容変更なしで親証跡だけを受理する | [Issue #282](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/282) |
 | 2026-08-01 | LOG-0085 | 直接親lockを `4e99074` からplannerが選択した次のfirst-parent checkpoint `5f3e831`（terraform-gcp-template #95）へ進める。共通workflow規則は受理済み内容と一致し、親固有のmission、overlay、CLAUDE adapter、Makefile、decision log、ownership testは保護する。末端adapterの有効化は親 #103のowner-qualified overlay受理後に行う | [Issue #282](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/282) |
