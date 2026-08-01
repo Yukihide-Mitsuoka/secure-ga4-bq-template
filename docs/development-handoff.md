@@ -16,9 +16,9 @@ authoritative in their linked documents.
 | Item | State on 2026-08-01 | Evidence or source |
 |------|---------------------|--------------------|
 | Default branch | Release baseline v2.10.1 | [Release v2.10.1](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v2.10.1) |
-| Direct parent lock | `terraform-gcp-template` at `88d8dba9509629051028c25aca9934f33795f8dc` | [Inheritance lock](../.github/inheritance/lock.json) |
+| Direct parent lock | `terraform-gcp-template` at `6864b33889da80122f6dab4e4c5ebd5f2433007a` | [Inheritance lock](../.github/inheritance/lock.json) |
 | IaC governance prerequisite | Complete: exact `iac-scan` succeeded on PR #125 and its merged-main push | [PR run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29517379947), [main run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29518413106) |
-| Active work | ADR-0014 migration is complete. PR #295 propagates the read-only fleet report through the final Terraform-family hop, records direct-parent commit `88d8dba`, and keeps the protected leaf validator behavior covered by local pytest tests. Acceptance S remains condition-gated. | [PR #295](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/295), [Foundation ADR-0014](foundation/adr/0014-separate-inherited-agent-contracts-from-project-overlays.md), [Inheritance contract](../.github/inheritance/README.md) |
+| Active work | PR #296 accepts direct-parent checkpoint `6864b33`, synchronizes the foundation-owned `bugfix` skill, and fixes its ownership and sibling-sweep contract with a protected leaf regression. The protected release checkpoint `cba091f` remains a separate lock-only follow-up. Acceptance S remains condition-gated. | [Issue #297](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/297), [Foundation ADR-0014](foundation/adr/0014-separate-inherited-agent-contracts-from-project-overlays.md), [Inheritance contract](../.github/inheritance/README.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -116,7 +116,9 @@ may be absent; CI remains authoritative.
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
 > `docs/development-handoff.md`. Confirm the v2.10.1 release baseline and direct-parent lock
-> `88d8dba9509629051028c25aca9934f33795f8dc`. Verify PR #295's read-only fleet report,
+> `6864b33889da80122f6dab4e4c5ebd5f2433007a`. Verify PR #296's inherited bugfix skill,
+> protected leaf regression, and one-first-parent lock acceptance; then review the
+> protected release checkpoint `cba091f` separately. Preserve PR #295's read-only fleet report,
 > schema v2 profile, and identity-free adapter without regressing PR #280's accepted contract
 > contents. Keep the child-specific governance
 > planner authoritative with `iac-scan` preserved. Do not run governance `apply` or
