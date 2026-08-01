@@ -7,6 +7,8 @@ docs/**
 profiles/**
 catalog/**
 scripts/**
+:!scripts/actions/
+:!scripts/actions/**
 service-packages/**
 CLAUDE.md
 README.md
