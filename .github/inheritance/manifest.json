@@ -7,6 +7,7 @@
   "lock_file": ".github/inheritance/lock.json",
   "inherited_paths": [
     ".ai/README.md",
+    ".ai/contracts/foundation/",
     ".ai/coding-rules.md",
     ".ai/documentation.md",
     ".ai/project-document-maintenance.md",
@@ -46,6 +47,7 @@
     ".ai/architecture.md",
     ".ai/decision-log.md",
     ".ai/mission.md",
+    ".ai/project/",
     ".ai/release.md",
     ".devcontainer/",
     ".env.example",
@@ -53,6 +55,7 @@
     ".github/governance/repository.json",
     ".github/inheritance/lock.json",
     ".github/inheritance/manifest.json",
+    ".github/inheritance/agent-profile.json",
     ".github/workflows/ai-review.yml",
     ".github/workflows/bq-cost-gate.yml",
     ".github/workflows/bq-inspect.yml",
