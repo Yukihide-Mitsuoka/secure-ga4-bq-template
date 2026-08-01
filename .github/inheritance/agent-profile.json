@@ -8,6 +8,11 @@
       "path": ".ai/contracts/foundation/agent-entry.md"
     },
     {
+      "layer": "template",
+      "repository": "Yukihide-Mitsuoka/terraform-gcp-template",
+      "path": ".ai/contracts/templates/yukihide-mitsuoka/terraform-gcp-template/agent-overlay.md"
+    },
+    {
       "layer": "project",
       "repository": "Yukihide-Mitsuoka/secure-ga4-bq-template",
       "path": ".ai/project/agent-overlay.md"

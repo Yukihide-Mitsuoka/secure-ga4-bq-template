@@ -176,7 +176,7 @@ def test_cli_reports_valid_and_invalid_contracts(tmp_path, capsys):
 
 def test_repository_contract_and_legacy_ignore_are_consistent():
     result = inheritance.validate_inheritance(REPOSITORY_ROOT)
-    assert result["parent"]["commit"] == "40f914b13ade25af21ded599db8e551a73eaf111"
+    assert result["parent"]["commit"] == "331a724dc112f9390c3f2d3322394cb6cd133984"
     assert {
         ".ai/project-document-maintenance.md",
         ".claude/README.md",
@@ -202,12 +202,11 @@ def test_repository_contract_and_legacy_ignore_are_consistent():
     assert "!docs/foundation/**" not in ignored
 
 
-def test_protected_entry_contract_preserves_the_project_profile():
+def test_protected_entry_adapter_loads_the_explicit_profile():
     entry = (REPOSITORY_ROOT / "CLAUDE.md").read_text(encoding="utf-8")
 
-    assert "| Project | secure-ga4-bq-template" in entry
-    assert "| Stack | Terraform >=1.5 + Python 3.12 via uv" in entry
-    assert "## 2. Start every task" in entry
-    assert "## 3. Change protocol" in entry
-    assert "[`.claude/README.md`](.claude/README.md)" in entry
-    assert "## 3. Architecture rules (summary)" not in entry
+    assert ".github/inheritance/agent-profile.json" in entry
+    assert "inputs[].path" in entry
+    assert "parent-to-child templates" in entry
+    assert "secure-ga4-bq-template" not in entry
+    assert "Terraform >=1.5 + Python 3.12 via uv" not in entry
