@@ -2,7 +2,7 @@
 id: development-handoff
 title: Development Handoff
 status: active
-updated: 2026-07-29
+updated: 2026-08-01
 ---
 
 # Development Handoff
@@ -13,12 +13,12 @@ authoritative in their linked documents.
 
 ## Snapshot
 
-| Item | State on 2026-07-29 | Evidence or source |
+| Item | State on 2026-08-01 | Evidence or source |
 |------|---------------------|--------------------|
 | Default branch | Release baseline v2.10.0 | [Release v2.10.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v2.10.0) |
-| Direct parent lock | `terraform-gcp-template` at `f3a565db97509397e1d6a777bf2d3773e093ced6` | [Inheritance lock](../.github/inheritance/lock.json) |
+| Direct parent lock | `terraform-gcp-template` at `1a917e2d36814e3153d5b1f53f684f34d435678b` | [Inheritance lock](../.github/inheritance/lock.json) |
 | IaC governance prerequisite | Complete: exact `iac-scan` succeeded on PR #125 and its merged-main push | [PR run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29517379947), [main run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29518413106) |
-| Active work | No direct-parent inheritance work is pending. PR #276 accepted parent commit `f3a565db97509397e1d6a777bf2d3773e093ced6`, and the inheritance planner reports `up_to_date`. Acceptance S remains condition-gated. | [Issue #263](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/263), [PR #276](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/276), [Inheritance contract](../.github/inheritance/README.md) |
+| Active work | ADR-0014 grandchild migration is active in Issue #282. PR #283 advances checkpoint 1 to `1a917e2`; continue one first-parent commit per reviewed PR through Terraform parent PR #103, then add the owner-qualified Terraform overlay and migrate the leaf profile to schema v2. Acceptance S remains condition-gated. | [Issue #282](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/282), [PR #283](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/283), [Foundation ADR-0014](foundation/adr/0014-separate-inherited-agent-contracts-from-project-overlays.md), [Inheritance contract](../.github/inheritance/README.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -37,16 +37,19 @@ caller and WIF condition are pinned together to `v2.0.2`.
 
 No cloud action is required. Continue in this order:
 
-1. Re-run the GET-only inheritance and governance planners before any future
-   propagation or settings change. Treat every live target and run as separately
-   approval-gated; implementation merge is not authorization for `apply`.
-2. Apply the asset to a second engagement only when an owner, target scope, customer
+1. Merge each Issue #282 lock checkpoint only after the GET-only inheritance planner
+   selects it. Preserve PR #280's newer accepted contract contents while advancing
+   provenance through Terraform parent PR #103, then migrate the profile to schema v2.
+2. Re-run the GET-only governance planner before any settings change. Treat every live
+   target and run as separately approval-gated; implementation merge is not
+   authorization for `apply`.
+3. Apply the asset to a second engagement only when an owner, target scope, customer
    data approval, and cloud-cost approval exist, then measure reuse effort for
    Acceptance S.
-3. Use the versioned standard-inspection profile, generated menu, and deterministic
+4. Use the versioned standard-inspection profile, generated menu, and deterministic
    qualification artifacts as the service-packaging baseline; change profile values in
    a reviewed PR rather than editing generated material.
-4. Keep customer delivery evidence and raw inspection artifacts outside this public
+5. Keep customer delivery evidence and raw inspection artifacts outside this public
    repository because complete inspection artifacts remain Internal.
 
 Do not recreate the deleted verification environment unless a new issue and approvals
@@ -114,7 +117,9 @@ may be absent; CI remains authoritative.
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
 > `docs/development-handoff.md`. Confirm the v2.10.0 release baseline and direct-parent lock
-> `f3a565db97509397e1d6a777bf2d3773e093ced6`. Keep the child-specific governance
+> `1a917e2d36814e3153d5b1f53f684f34d435678b`. Continue Issue #282 one
+> planner-selected first-parent checkpoint per reviewed PR through Terraform parent PR #103,
+> without regressing PR #280's accepted contract contents. Keep the child-specific governance
 > planner authoritative with `iac-scan` preserved. Do not run governance `apply` or
 > mutate live GitHub/GCP state without a fresh GET-only plan and separate
 > target-specific approval. Technical Acceptance A, CHK-12, CHK-13, opt-in column
