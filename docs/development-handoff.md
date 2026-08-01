@@ -16,9 +16,9 @@ authoritative in their linked documents.
 | Item | State on 2026-08-01 | Evidence or source |
 |------|---------------------|--------------------|
 | Default branch | Release baseline v2.10.1 | [Release v2.10.1](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v2.10.1) |
-| Direct parent lock | `terraform-gcp-template` at `331a724dc112f9390c3f2d3322394cb6cd133984` | [Inheritance lock](../.github/inheritance/lock.json) |
+| Direct parent lock | `terraform-gcp-template` at `88d8dba9509629051028c25aca9934f33795f8dc` | [Inheritance lock](../.github/inheritance/lock.json) |
 | IaC governance prerequisite | Complete: exact `iac-scan` succeeded on PR #125 and its merged-main push | [PR run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29517379947), [main run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29518413106) |
-| Active work | ADR-0014 grandchild migration reached the final direct-parent checkpoint `331a724`: PR #293 contains the owner-qualified Terraform overlay, schema v2 three-layer profile, identity-free adapter, and leaf validator migration. After merge, refresh the foundation fleet report and close the migration issue if no drift remains. Acceptance S remains condition-gated. | [Issue #282](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/282), [PR #293](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/293), [Foundation ADR-0014](foundation/adr/0014-separate-inherited-agent-contracts-from-project-overlays.md), [Inheritance contract](../.github/inheritance/README.md) |
+| Active work | ADR-0014 migration is complete. PR #295 propagates the read-only fleet report through the final Terraform-family hop, records direct-parent commit `88d8dba`, and keeps the protected leaf validator behavior covered by local pytest tests. Acceptance S remains condition-gated. | [PR #295](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/295), [Foundation ADR-0014](foundation/adr/0014-separate-inherited-agent-contracts-from-project-overlays.md), [Inheritance contract](../.github/inheritance/README.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -37,9 +37,8 @@ caller and WIF condition are pinned together to `v2.0.2`.
 
 No cloud action is required. Continue in this order:
 
-1. Merge each Issue #282 lock checkpoint only after the GET-only inheritance planner
-   selects it. Preserve PR #280's newer accepted contract contents while advancing
-   provenance through Terraform parent PR #103, then migrate the profile to schema v2.
+1. Keep Template Sync review-gated. Accept a new direct-parent lock only after the
+   read-only inheritance plan and fleet report show no unresolved ownership boundary.
 2. Re-run the GET-only governance planner before any settings change. Treat every live
    target and run as separately approval-gated; implementation merge is not
    authorization for `apply`.
@@ -117,9 +116,9 @@ may be absent; CI remains authoritative.
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
 > `docs/development-handoff.md`. Confirm the v2.10.1 release baseline and direct-parent lock
-> `331a724dc112f9390c3f2d3322394cb6cd133984`. Verify Issue #282's final schema v2
-> profile and identity-free adapter migration, then refresh the foundation fleet report
-> without regressing PR #280's accepted contract contents. Keep the child-specific governance
+> `88d8dba9509629051028c25aca9934f33795f8dc`. Verify PR #295's read-only fleet report,
+> schema v2 profile, and identity-free adapter without regressing PR #280's accepted contract
+> contents. Keep the child-specific governance
 > planner authoritative with `iac-scan` preserved. Do not run governance `apply` or
 > mutate live GitHub/GCP state without a fresh GET-only plan and separate
 > target-specific approval. Technical Acceptance A, CHK-12, CHK-13, opt-in column
