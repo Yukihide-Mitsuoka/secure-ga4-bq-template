@@ -17,6 +17,7 @@ old one. One line per entry. AI agents append entries in the same PR as the chan
 
 | Date | ID | Decision | Link |
 |------|----|----------|------|
+| 2026-08-01 | LOG-0086 | 直接親lockを `5f3e831` からplannerが選択した次のfirst-parent checkpoint `037d38a`（terraform-gcp-template release 1.2.0）へ進める。親差分はrelease履歴 `CHANGELOG.md` だけであり、末端の独立したrelease履歴として保護し、内容変更なしで親証跡だけを受理する | [Issue #282](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/282) |
 | 2026-08-01 | LOG-0085 | 直接親lockを `4e99074` からplannerが選択した次のfirst-parent checkpoint `5f3e831`（terraform-gcp-template #95）へ進める。共通workflow規則は受理済み内容と一致し、親固有のmission、overlay、CLAUDE adapter、Makefile、decision log、ownership testは保護する。末端adapterの有効化は親 #103のowner-qualified overlay受理後に行う | [Issue #282](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/282) |
 | 2026-08-01 | LOG-0084 | 直接親lockを `1c13ce6` からplannerが選択した次のfirst-parent checkpoint `4e99074`（terraform-gcp-template #93）へ進める。同期範囲12パスのうち9パスは受理済み内容と一致し、secure-ga4固有のcontext-budget実装・テスト3パスは保護したまま、内容変更なしで親証跡だけを受理する | [Issue #282](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/282) |
 | 2026-08-01 | LOG-0083 | 直接親lockを `2634997` からplannerが選択した次のfirst-parent checkpoint `1c13ce6`（terraform-gcp-template #90）へ進める。親のmanifest v2 proving sliceに属するproject profile、project overlay、manifest、decision log、ownership testの5パスは末端へ継承せず、secure-ga4のschema v1と保護済みleaf identityを維持する | [Issue #282](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/282) |
