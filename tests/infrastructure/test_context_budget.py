@@ -23,6 +23,13 @@ class ContextBudgetTest(unittest.TestCase):
         }
         self.assertTrue(set(context_budget.REQUIRED_READS).issubset(actual_skills))
         self.assertTrue(report["largest_route_name"])
+        self.assertIn(context_budget.CANONICAL_GUARDRAILS, report["baseline_files"])
+        self.assertIn(".ai/contracts/foundation/agent-entry.md", report["baseline_files"])
+        self.assertIn(
+            ".ai/contracts/templates/yukihide-mitsuoka/terraform-gcp-template/agent-overlay.md",
+            report["baseline_files"],
+        )
+        self.assertIn(".ai/project/agent-overlay.md", report["baseline_files"])
 
     def test_project_document_maintenance_stays_conditional(self):
         target = ".ai/project-document-maintenance.md"
@@ -72,10 +79,18 @@ class ContextBudgetTest(unittest.TestCase):
     def test_baseline_contract_detector_preserves_safety_markers(self):
         self.assertTrue(
             {
-                "## 12. Claude Code integration",
-                ".claude/README.md",
-                "Claude Code MUST read",
+                ".github/inheritance/agent-profile.json",
+                "strengthen-only",
+                "must not weaken a foundation MUST",
             }.issubset(context_budget.BASELINE_CONTRACT_MARKERS["CLAUDE.md"])
+        )
+        self.assertIn(
+            ".ai/contracts/foundation/agent-entry.md",
+            context_budget.BASELINE_CONTRACT_MARKERS,
+        )
+        self.assertIn(
+            ".ai/contracts/foundation/guardrails.md",
+            context_budget.BASELINE_CONTRACT_MARKERS,
         )
         self.assertEqual(
             (

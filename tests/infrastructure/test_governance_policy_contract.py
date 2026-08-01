@@ -36,9 +36,11 @@ def load(path: Path) -> dict:
 
 def known_rule_ids() -> set[str]:
     pattern = re.compile(r"^#{2,3} ((?:GR|SEC|WF)-\d{3}):", re.MULTILINE)
+    paths = list((ROOT / ".ai").glob("*.md"))
+    paths.append(ROOT / ".ai/contracts/foundation/guardrails.md")
     return {
         rule_id
-        for path in sorted((ROOT / ".ai").glob("*.md"))
+        for path in sorted(paths)
         for rule_id in pattern.findall(path.read_text(encoding="utf-8"))
     }
 

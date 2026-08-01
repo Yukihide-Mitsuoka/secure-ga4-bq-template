@@ -12,14 +12,7 @@ TEMPLATE_OVERLAY = (
 )
 CLAUDE_ADAPTER = ROOT / "CLAUDE.md"
 
-SHARED_GOVERNANCE_SCRIPTS = (
-    "scripts/context_budget.py",
-    "scripts/github_governance.py",
-    "scripts/readme_ownership.py",
-    "scripts/setup-github.sh",
-    "scripts/template-check.sh",
-    "scripts/template_inheritance.py",
-)
+GOVERNANCE_SCRIPT = ROOT / "scripts/github_governance.py"
 
 EXPECTED_INPUTS = [
     {
@@ -92,19 +85,12 @@ def test_foundation_bugfix_skill_is_inherited_and_transportable() -> None:
         assert trigger in skill
 
 
-def test_guardrail_adapter_and_governance_tools_share_parent_ownership() -> None:
+def test_guardrail_adapter_and_governance_tool_share_canonical_rule_source() -> None:
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
-    ignore_entries = {
-        line.strip()
-        for line in IGNORE.read_text(encoding="utf-8").splitlines()
-        if line.strip() and not line.lstrip().startswith("#")
-    }
+    governance = GOVERNANCE_SCRIPT.read_text(encoding="utf-8")
 
     assert ".ai/guardrails.md" in manifest["inherited_paths"]
     assert ".ai/contracts/foundation/" in manifest["inherited_paths"]
-    assert "scripts/actions/" in manifest["inherited_paths"]
-    assert ":!scripts/actions/**" in ignore_entries
-    for path in SHARED_GOVERNANCE_SCRIPTS:
-        assert path in manifest["inherited_paths"]
-        assert path not in manifest["protected_paths"]
-        assert f":!{path}" in ignore_entries
+    assert "scripts/" in manifest["protected_paths"]
+    assert "CANONICAL_GUARDRAILS_PATH" in governance
+    assert ".ai/contracts/foundation/guardrails.md" in governance

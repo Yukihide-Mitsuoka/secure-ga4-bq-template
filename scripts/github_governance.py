@@ -13,6 +13,7 @@ from urllib.parse import quote
 SCHEMA_VERSION = 1
 MANAGER = "ai-dev-foundation"
 PROFILE_DIRECTORY = ".github/governance/profiles"
+CANONICAL_GUARDRAILS_PATH = ".ai/contracts/foundation/guardrails.md"
 MAX_PROFILES = 32
 API_VERSION = "2026-03-10"
 UNKNOWN = "unknown"
@@ -1738,10 +1739,14 @@ def _load_profiles(root):
 
 
 def _known_rule_ids(root):
+    paths = list((root / ".ai").glob("*.md"))
+    canonical_guardrails = root / CANONICAL_GUARDRAILS_PATH
+    if canonical_guardrails.is_file():
+        paths.append(canonical_guardrails)
     try:
         return {
             rule_id
-            for path in sorted((root / ".ai").glob("*.md"))
+            for path in sorted(paths)
             for rule_id in RULE_HEADING.findall(path.read_text(encoding="utf-8"))
         }
     except OSError as error:
