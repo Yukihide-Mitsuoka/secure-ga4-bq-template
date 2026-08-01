@@ -12,6 +12,15 @@ TEMPLATE_OVERLAY = (
 )
 CLAUDE_ADAPTER = ROOT / "CLAUDE.md"
 
+SHARED_GOVERNANCE_SCRIPTS = (
+    "scripts/context_budget.py",
+    "scripts/github_governance.py",
+    "scripts/readme_ownership.py",
+    "scripts/setup-github.sh",
+    "scripts/template-check.sh",
+    "scripts/template_inheritance.py",
+)
+
 EXPECTED_INPUTS = [
     {
         "layer": "foundation",
@@ -81,3 +90,21 @@ def test_foundation_bugfix_skill_is_inherited_and_transportable() -> None:
     assert "Sibling occurrences searched; results reported" in skill
     for trigger in ("バグ修正", "不具合修正", "バグ", "障害"):
         assert trigger in skill
+
+
+def test_guardrail_adapter_and_governance_tools_share_parent_ownership() -> None:
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    ignore_entries = {
+        line.strip()
+        for line in IGNORE.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+
+    assert ".ai/guardrails.md" in manifest["inherited_paths"]
+    assert ".ai/contracts/foundation/" in manifest["inherited_paths"]
+    assert "scripts/actions/" in manifest["inherited_paths"]
+    assert ":!scripts/actions/**" in ignore_entries
+    for path in SHARED_GOVERNANCE_SCRIPTS:
+        assert path in manifest["inherited_paths"]
+        assert path not in manifest["protected_paths"]
+        assert f":!{path}" in ignore_entries
