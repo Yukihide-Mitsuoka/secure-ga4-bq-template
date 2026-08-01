@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.11.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.10.1...v2.11.0) (2026-08-01)
+
+
+### Features
+
+* **inheritance:** complete ADR-0014 leaf migration ([#293](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/293)) ([0445206](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/0445206ecc76271989989ad7def0de7c27c5e1f6))
+
 ## [2.10.1](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.10.0...v2.10.1) (2026-08-01)
 
 
