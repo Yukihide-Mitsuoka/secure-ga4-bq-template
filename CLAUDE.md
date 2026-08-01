@@ -1,85 +1,19 @@
-# CLAUDE.md — AI Agent Operating Manual
+# AI Agent Entry Adapter
 
-Binding vendor-neutral manual. Every agent reads it completely at task start;
-`AGENTS.md` maps runtime-specific capabilities.
+Identity-free, vendor-neutral adapter. Every agent reads it completely at task start.
 
-Authority: guardrails > security > this file and `AGENTS.md` > other `.ai/` rules >
-`docs/`. Apply the higher authority and report every conflict.
+1. Read `.ai/guardrails.md` completely.
+2. Read `.github/inheritance/agent-profile.json`; require schema version 1 and
+   `strengthen-only` or stop.
+3. Read each `inputs[].path` completely in listed order; agents must not recursively
+   discover directories.
+4. Apply foundation first, parent-to-child templates, then project. Later inputs must
+   not weaken a foundation MUST, guardrail, or security control.
 
-## 1. Repository overview
-
-| Field | Value |
-|-------|-------|
-| Project | secure-ga4-bq-template — see [.ai/mission.md](.ai/mission.md) |
-| Stack | Terraform >=1.5 + Python 3.12 via uv — see [.ai/architecture.md](.ai/architecture.md) |
-| Architecture | Modular monolith with Clean Architecture and DDD modules; BigQuery mart controls and read-only inspection |
-| Branching | GitHub Flow; `main` always releasable |
-| Versioning | SemVer via Conventional Commits (automated) |
-
-## 2. Start every task
-
-1. Read [`.ai/guardrails.md`](.ai/guardrails.md) completely.
-2. Read the task router and context acquisition protocol in
-   [`.ai/README.md`](.ai/README.md) completely.
-3. Read `docs/development-handoff.md` completely when it exists.
-4. Select the task type, then read every routed rule and the matching `.skills/` file
-   completely.
-
-Do not recursively load a routed directory. Use the bounded discovery and broader
-fallback in `.ai/README.md`, then read every selected source completely. Reuse a complete,
-unchanged source already present in active context; reread it after context compaction.
-
-## 3. Change protocol
-
-- Use one issue, one task branch, and a reviewed PR. Task routes that change
-  implementation load the complete lifecycle in [`.ai/workflow.md`](.ai/workflow.md).
-- Code, tests, and required documentation land in the same PR. Architectural changes
-  require an approved ADR first.
-- Use the pull-request template completely. PR titles and commits follow Conventional
-  Commits; squash merge keeps `main` releasable.
-- Before opening a PR, perform the self-review in
-  [`.ai/review-checklist.md`](.ai/review-checklist.md).
-- Guardrails remain absolute, including no direct push to `main`, no check bypass, no
-  fabricated results, and no destructive operation without specific approval.
-
-<!-- Sections 11–14 retain stable numbers because repository rules link to them. -->
-
-## 11. Canonical commands
-
-Automation and agents use only these stable entry points for build, test, lint, and
-related project operations:
-
-```text
-make setup   make format   make lint   make test   make test-unit
-make test-integration   make coverage   make build   make run
-make security-scan   make sbom   make clean   make doctor
-```
-
-Their binding semantics live in [profiles/README.md](profiles/README.md). A fresh
-template can contain documented no-op implementations until its stack profile is wired.
-
-## 12. Claude Code integration
-
-Claude Code MUST read [`.claude/README.md`](.claude/README.md) completely and follow its
-runtime-specific integration requirements. Other runtimes apply equivalent controls as
-mapped in `AGENTS.md` and do not load the Claude-specific file.
+The loaded foundation contract governs all work. Higher rules win; report conflicts.
 
 ## 13. Escalation
-
-Stop and ask a human when:
-
-- rules conflict or a guardrail blocks the request;
-- an architectural change lacks an approved ADR;
-- authentication, payments, personal-data schema, data deletion, production
-  configuration, or spending money is involved;
-- ambiguity permits materially different implementations; or
-- the same failing approach would be attempted a third time.
-
-Report the context, options, recommendation, and specific required decision. Otherwise,
-decide, act, and record the reasoning (COD-052).
+See the contract's `Escalation` section.
 
 ## 14. Definition of done
-
-WF-090 is authoritative: acceptance criteria met, tests green, lint clean, documentation
-current, self-review complete, PR complete with green CI, and no guardrail violated.
-Report exactly what was and was not verified.
+See the contract's `Definition of done` section.

@@ -5,21 +5,59 @@ ROOT = Path(__file__).parents[2]
 MANIFEST = ROOT / ".github/inheritance/manifest.json"
 PROFILE = ROOT / ".github/inheritance/agent-profile.json"
 PROJECT_OVERLAY = ROOT / ".ai/project/agent-overlay.md"
+TEMPLATE_OVERLAY = (
+    ROOT / ".ai/contracts/templates/yukihide-mitsuoka/terraform-gcp-template/agent-overlay.md"
+)
+CLAUDE_ADAPTER = ROOT / "CLAUDE.md"
+
+EXPECTED_INPUTS = [
+    {
+        "layer": "foundation",
+        "repository": "Yukihide-Mitsuoka/ai-dev-foundation",
+        "path": ".ai/contracts/foundation/agent-entry.md",
+    },
+    {
+        "layer": "template",
+        "repository": "Yukihide-Mitsuoka/terraform-gcp-template",
+        "path": ".ai/contracts/templates/yukihide-mitsuoka/terraform-gcp-template/agent-overlay.md",
+    },
+    {
+        "layer": "project",
+        "repository": "Yukihide-Mitsuoka/secure-ga4-bq-template",
+        "path": ".ai/project/agent-overlay.md",
+    },
+]
 
 
-def test_parent_project_profile_is_not_used_as_the_leaf_profile() -> None:
+def test_leaf_profile_composes_foundation_template_and_project() -> None:
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     profile = json.loads(PROFILE.read_text(encoding="utf-8"))
     overlay = PROJECT_OVERLAY.read_text(encoding="utf-8")
 
-    assert manifest["schema_version"] == 1
+    assert manifest["schema_version"] == 2
     assert ".ai/contracts/foundation/" in manifest["inherited_paths"]
+    assert (
+        ".ai/contracts/templates/yukihide-mitsuoka/terraform-gcp-template/"
+        in manifest["inherited_paths"]
+    )
     assert ".github/inheritance/agent-profile.json" in manifest["protected_paths"]
     assert ".ai/project/" in manifest["protected_paths"]
-    assert profile["inputs"][-1] == {
-        "layer": "project",
-        "repository": "Yukihide-Mitsuoka/secure-ga4-bq-template",
-        "path": ".ai/project/agent-overlay.md",
-    }
+    assert profile["inputs"] == EXPECTED_INPUTS
     assert "Yukihide-Mitsuoka/secure-ga4-bq-template" in overlay
     assert "Yukihide-Mitsuoka/terraform-gcp-template" not in overlay
+
+
+def test_template_overlay_is_portable_and_adapter_is_profile_driven() -> None:
+    template_overlay = TEMPLATE_OVERLAY.read_text(encoding="utf-8")
+    adapter = CLAUDE_ADAPTER.read_text(encoding="utf-8")
+
+    assert "Terraform on Google Cloud" in template_overlay
+    assert "iac-scan" in template_overlay
+    assert "immutable release tags" in template_overlay
+    assert "Repository: `Yukihide-Mitsuoka/terraform-gcp-template`" not in template_overlay
+    assert ".ai/project/" not in template_overlay
+    assert len(adapter.splitlines()) <= 50
+    assert ".github/inheritance/agent-profile.json" in adapter
+    assert "strengthen-only" in adapter
+    assert "inputs[].path" in adapter
+    assert "Yukihide-Mitsuoka/secure-ga4-bq-template" not in adapter

@@ -17,6 +17,7 @@ old one. One line per entry. AI agents append entries in the same PR as the chan
 
 | Date | ID | Decision | Link |
 |------|----|----------|------|
+| 2026-08-01 | LOG-0092 | 直接親lockを最終checkpoint `331a724`（terraform-gcp-template #103）へ進め、owner-qualified Terraform family overlayを継承する。manifest schema v2とprofile順序 `foundation → terraform-gcp-template → secure-ga4 project`を有効化し、保護された旧フル版`CLAUDE.md`をidentity-free adapterへ手動移植する。製品所有の`scripts/`内validatorにはschema v2検証を移植し、ADR-0014のleaf移行を完了する | [Issue #282](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/282) |
 | 2026-08-01 | LOG-0091 | 直接親lockを `b47310e` からplannerが選択した次のfirst-parent checkpoint `40f914b`（terraform-gcp-template #101）へ進める。親差分は親自身のfoundation lockとdecision logだけであり、両パスを末端所有として保護する。所有者の迅速化指示により、内容変更のないcheckpoint 10–11を1 PR内の独立コミットとしてレビュー可能にまとめる | [Issue #282](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/282) |
 | 2026-08-01 | LOG-0090 | 直接親lockを `0c36d98` からplannerが選択した次のfirst-parent checkpoint `b47310e`（terraform-gcp-template #100）へ進める。親差分は親自身のfoundation lockとdecision logだけであり、両パスを末端所有として保護し、内容変更なしで直接親の証跡だけを受理する | [Issue #282](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/282) |
 | 2026-08-01 | LOG-0089 | 直接親lockを `49936af` からplannerが選択した次のfirst-parent checkpoint `0c36d98`（terraform-gcp-template #99）へ進める。親差分は親自身のfoundation lockとdecision logだけであり、両パスを末端所有として保護し、内容変更なしで直接親の証跡だけを受理する | [Issue #282](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/282) |

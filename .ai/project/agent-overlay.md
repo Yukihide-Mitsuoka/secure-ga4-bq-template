@@ -8,7 +8,8 @@ read_when: [agent-entry]
 # Secure GA4 BigQuery Template Agent Overlay
 
 This protected project layer contains repository identity and stack facts only. The
-explicit agent profile loads it after the inherited foundation contract.
+explicit agent profile loads it after the inherited foundation and Terraform template
+contracts.
 
 - Repository: `Yukihide-Mitsuoka/secure-ga4-bq-template`.
 - Role: reusable template that builds and inspects governed GA4-to-BigQuery mart layers.
