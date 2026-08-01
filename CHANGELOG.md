@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.10.1](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.10.0...v2.10.1) (2026-08-01)
+
+
+### Bug Fixes
+
+* **inheritance:** reject parent project profile ([#280](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/280)) ([6a54da9](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/6a54da95b4f08affa779d4c25aed18e7701b10b5))
+
 ## [2.10.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.9.0...v2.10.0) (2026-07-29)
 
 
