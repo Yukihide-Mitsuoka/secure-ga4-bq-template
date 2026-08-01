@@ -16,9 +16,9 @@ authoritative in their linked documents.
 | Item | State on 2026-08-01 | Evidence or source |
 |------|---------------------|--------------------|
 | Default branch | Release baseline v2.10.1 | [Release v2.10.1](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v2.10.1) |
-| Direct parent lock | `terraform-gcp-template` at `49936afbe5ae1f74dea0737b1e21a77885d1e1d3` | [Inheritance lock](../.github/inheritance/lock.json) |
+| Direct parent lock | `terraform-gcp-template` at `0c36d98168699085b7842b53e9b6ba917ef8c01d` | [Inheritance lock](../.github/inheritance/lock.json) |
 | IaC governance prerequisite | Complete: exact `iac-scan` succeeded on PR #125 and its merged-main push | [PR run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29517379947), [main run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29518413106) |
-| Active work | ADR-0014 grandchild migration is active in Issue #282. PR #290 advances checkpoint 8 to `49936af` after merged PR #289 while protecting the direct parent's own foundation lock and decision log. Continue one first-parent commit per reviewed PR through Terraform parent PR #103, then add the owner-qualified Terraform overlay, migrate the leaf profile to schema v2, and activate its adapter. Acceptance S remains condition-gated. | [Issue #282](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/282), [PR #290](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/290), [Foundation ADR-0014](foundation/adr/0014-separate-inherited-agent-contracts-from-project-overlays.md), [Inheritance contract](../.github/inheritance/README.md) |
+| Active work | ADR-0014 grandchild migration is active in Issue #282. PR #291 advances checkpoint 9 to `0c36d98` after merged PR #290 while protecting the direct parent's own foundation lock and decision log. Continue one first-parent commit per reviewed PR through Terraform parent PR #103, then add the owner-qualified Terraform overlay, migrate the leaf profile to schema v2, and activate its adapter. Acceptance S remains condition-gated. | [Issue #282](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/282), [PR #291](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/291), [Foundation ADR-0014](foundation/adr/0014-separate-inherited-agent-contracts-from-project-overlays.md), [Inheritance contract](../.github/inheritance/README.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -117,7 +117,7 @@ may be absent; CI remains authoritative.
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
 > `docs/development-handoff.md`. Confirm the v2.10.1 release baseline and direct-parent lock
-> `49936afbe5ae1f74dea0737b1e21a77885d1e1d3`. Continue Issue #282 one
+> `0c36d98168699085b7842b53e9b6ba917ef8c01d`. Continue Issue #282 one
 > planner-selected first-parent checkpoint per reviewed PR through Terraform parent PR #103,
 > without regressing PR #280's accepted contract contents. Keep the child-specific governance
 > planner authoritative with `iac-scan` preserved. Do not run governance `apply` or
