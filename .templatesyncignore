@@ -23,11 +23,13 @@ version.txt
 .ai/decision-log.md
 .ai/architecture.md
 .ai/release.md
+.ai/project/**
 .devcontainer/**
 .github/CODEOWNERS
 .github/governance/repository.json
 .github/inheritance/lock.json
 .github/inheritance/manifest.json
+.github/inheritance/agent-profile.json
 .templatesyncignore
 
 # secure-ga4-bq-template additions: never let the terraform-gcp-template sync touch the

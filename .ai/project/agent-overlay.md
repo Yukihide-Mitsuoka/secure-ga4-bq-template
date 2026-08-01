@@ -1,20 +1,22 @@
 ---
-id: terraform-gcp-template-agent-overlay
-title: Terraform GCP Template Agent Overlay
+id: secure-ga4-bq-template-agent-overlay
+title: Secure GA4 BigQuery Template Agent Overlay
 authority: 3
 read_when: [agent-entry]
 ---
 
-# Terraform GCP Template Agent Overlay
+# Secure GA4 BigQuery Template Agent Overlay
 
 This protected project layer contains repository identity and stack facts only. The
 explicit agent profile loads it after the inherited foundation contract.
 
-- Repository: `Yukihide-Mitsuoka/terraform-gcp-template`.
-- Role: reusable Terraform template for Google Cloud projects.
-- Stack: Terraform on Google Cloud, with root configurations under `infra/envs/`.
-- Modules: external modules come from `Yukihide-Mitsuoka/terraform-gcp-modules` at
-  immutable release tags; their implementations remain in the module repository.
-- Execution model: repository files describe desired configurations. Applying
-  Terraform, changing GitHub governance, and creating Google Cloud resources are
-  separate authenticated operations.
+- Repository: `Yukihide-Mitsuoka/secure-ga4-bq-template`.
+- Role: reusable template that builds and inspects governed GA4-to-BigQuery mart layers.
+- Stack: Terraform 1.5 or later and Python 3.12 through uv; BigQuery stores governed
+  marts while the inspection engine remains stateless.
+- Architecture: a modular monolith with Clean Architecture layers inside bounded
+  contexts under `src/modules/`.
+- Deployment target: Google Cloud through WIF-authenticated GitHub Actions; optional AI
+  reporting uses Gemini on Vertex AI with ADC or WIF.
+- Execution model: Terraform apply, live inspection, cloud deployment, and GitHub
+  governance changes are separate authenticated operations.

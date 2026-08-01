@@ -9,7 +9,7 @@
     },
     {
       "layer": "project",
-      "repository": "Yukihide-Mitsuoka/terraform-gcp-template",
+      "repository": "Yukihide-Mitsuoka/secure-ga4-bq-template",
       "path": ".ai/project/agent-overlay.md"
     }
   ]
