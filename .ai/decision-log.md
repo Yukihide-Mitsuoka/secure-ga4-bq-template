@@ -17,6 +17,7 @@ old one. One line per entry. AI agents append entries in the same PR as the chan
 
 | Date | ID | Decision | Link |
 |------|----|----------|------|
+| 2026-08-01 | LOG-0083 | 直接親lockを `2634997` からplannerが選択した次のfirst-parent checkpoint `1c13ce6`（terraform-gcp-template #90）へ進める。親のmanifest v2 proving sliceに属するproject profile、project overlay、manifest、decision log、ownership testの5パスは末端へ継承せず、secure-ga4のschema v1と保護済みleaf identityを維持する | [Issue #282](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/282) |
 | 2026-08-01 | LOG-0082 | 直接親lockを `1a917e2` からplannerが選択した次のfirst-parent checkpoint `2634997`（terraform-gcp-template #89）へ進める。plannerが変更候補としたfoundation contract 2ファイルはPR #280で受理済みの後続内容を維持し、中間checkpointへ後退させない | [Issue #282](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/282) |
 | 2026-08-01 | LOG-0081 | 直接親lockを `f3a565d` からplannerが選択した次のfirst-parent checkpoint `1a917e2`（terraform-gcp-template #87）へ進める。PR #280で受理済みの後続foundation contract、leaf profile、project overlayは中間checkpointへ後退させず、親 #103のowner-qualified Terraform overlayまでIssue #282で順番に証跡を進める | [Issue #282](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/282) |
 | 2026-08-01 | LOG-0080 | 受理済み基盤ADR-0014の多段移行として、直接親terraform-gcp-template自身のproject profileとoverlayをsecure-ga4-bq-templateのproject層として使用しない。親がowner-qualifiedなtemplate overlayを公開するまでは両ローカル名前空間を同期から保護し、再利用可能なfoundation contractだけを継承してmanifest schema v1を維持する | [Issue #279](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/279) |
