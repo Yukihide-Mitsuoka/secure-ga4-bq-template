@@ -32,6 +32,7 @@
     ".github/discussion-categories.md",
     ".github/governance/foundation.json",
     ".github/governance/profiles/",
+    ".github/inheritance/README.md",
     ".github/labels.yml",
     ".github/workflows/dast.yml",
     ".mdformat.toml",
