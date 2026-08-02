@@ -176,7 +176,7 @@ def test_cli_reports_valid_and_invalid_contracts(tmp_path, capsys):
 
 def test_repository_contract_and_legacy_ignore_are_consistent():
     result = inheritance.validate_inheritance(REPOSITORY_ROOT)
-    assert result["parent"]["commit"] == "340752b3ffffcd561e71bc92b0c401d37d903a13"
+    assert result["parent"]["commit"] == "d202d22405889d3e3ca16dee6ddbced719b35c39"
     assert {
         ".ai/project-document-maintenance.md",
         ".claude/README.md",

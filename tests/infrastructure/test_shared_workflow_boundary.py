@@ -33,4 +33,4 @@ def test_leaf_specific_release_and_scorecard_remain_direct_boundaries() -> None:
 def test_direct_parent_lock_matches_reviewed_workflow_checkpoint() -> None:
     lock = json.loads(LOCK.read_text(encoding="utf-8"))
 
-    assert lock["parent"]["commit"] == "340752b3ffffcd561e71bc92b0c401d37d903a13"
+    assert lock["parent"]["commit"] == "d202d22405889d3e3ca16dee6ddbced719b35c39"
