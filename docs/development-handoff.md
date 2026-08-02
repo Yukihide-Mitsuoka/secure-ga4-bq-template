@@ -16,9 +16,9 @@ authoritative in their linked documents.
 | Item | State on 2026-08-02 | Evidence or source |
 |------|---------------------|--------------------|
 | Default branch | Release baseline v2.11.0 | [Release v2.11.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v2.11.0) |
-| Direct parent lock | `terraform-gcp-template` at `5bbae934c0c972ac9aba6e4b7b025b0a58115f30` | [Inheritance lock](../.github/inheritance/lock.json) |
+| Direct parent lock | `terraform-gcp-template` at `36c2804d513ba35938fa25272a582ff7c43f371c` | [Inheritance lock](../.github/inheritance/lock.json) |
 | IaC governance prerequisite | Complete: exact `iac-scan` succeeded on PR #125 and its merged-main push | [PR run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29517379947), [main run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29518413106) |
-| Active work | ADR-0014 propagation is current through the reviewed parent checkpoint `5bbae934`. Four compatible protected workflows call synchronized local actions. The leaf-specific release workflow and Scorecard v4 dependency remain explicit manual-review boundaries so inheritance cannot weaken their controls. Acceptance S remains condition-gated. | [Issue #301](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/301), [Foundation ADR-0014](foundation/adr/0014-separate-inherited-agent-contracts-from-project-overlays.md), [Synchronized actions](../scripts/actions/README.md) |
+| Active work | Inheritance is current through `terraform-gcp-template` checkpoint `36c2804`. Fleet-audit guidance is synchronized, the obsolete Scorecard composite is removed, and the leaf-specific release workflow and Scorecard v4 dependency remain explicit manual-review boundaries. Acceptance S remains condition-gated. | [Issue #304](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/304), [Foundation ADR-0014](foundation/adr/0014-separate-inherited-agent-contracts-from-project-overlays.md), [Inheritance contract](../.github/inheritance/README.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -116,10 +116,10 @@ may be absent; CI remains authoritative.
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
 > `docs/development-handoff.md`. Confirm the v2.11.0 release baseline and direct-parent lock
-> `5bbae934c0c972ac9aba6e4b7b025b0a58115f30`. Verify PR #296's inherited bugfix skill
-> and PR #301's compatible local workflow callers. Preserve the leaf-specific release
+> `36c2804d513ba35938fa25272a582ff7c43f371c`. Verify Issue #304's ordered lock
+> acceptance, synchronized fleet-audit guidance, and direct Scorecard boundary. Preserve the leaf-specific release
 > workflow and Scorecard v4 dependency as explicit manual-review boundaries. Keep the
-> protected leaf regression and completed one-first-parent acceptance. Preserve PR #295's
+> protected leaf regression and completed one-first-parent acceptance. Preserve the
 > read-only fleet report, schema v2 profile, and identity-free adapter without regressing
 > PR #280's accepted contract contents. Keep the child-specific governance
 > planner authoritative with `iac-scan` preserved. Do not run governance `apply` or
