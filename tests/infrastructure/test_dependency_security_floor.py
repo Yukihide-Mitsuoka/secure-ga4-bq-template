@@ -4,7 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).parents[2]
 
 
-def test_cryptography_transitive_dependency_uses_the_patched_security_floor() -> None:
+def test_cryptography_transitive_dependency_uses_the_supported_floor() -> None:
     project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     lock = tomllib.loads((ROOT / "uv.lock").read_text(encoding="utf-8"))
     constraints = project["tool"]["uv"]["constraint-dependencies"]
