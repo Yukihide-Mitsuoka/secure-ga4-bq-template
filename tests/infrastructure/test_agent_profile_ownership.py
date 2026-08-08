@@ -97,3 +97,16 @@ def test_guardrail_adapter_and_governance_tool_share_canonical_rule_source() -> 
     assert "scripts/context_budget.py" in manifest["protected_paths"]
     assert "CANONICAL_GUARDRAILS_PATH" in governance
     assert ".ai/contracts/foundation/guardrails.md" in governance
+
+
+def test_parent_release_contract_test_is_an_explicit_leaf_boundary() -> None:
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    ignored = {
+        line.strip()
+        for line in IGNORE.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+
+    assert "scripts/tests/test_local_workflow_actions.py" in manifest["protected_paths"]
+    assert "scripts/**" in ignored
+    assert not (ROOT / "scripts/tests/test_local_workflow_actions.py").exists()
