@@ -29,6 +29,9 @@ dev = [
 
 [tool.uv]
 package = false
+# Keep the transitive crypto backend above the CI security floor without making it a
+# direct application dependency.
+constraint-dependencies = ["cryptography>=50.0.0"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
