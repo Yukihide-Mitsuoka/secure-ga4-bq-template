@@ -79,6 +79,7 @@
     "scripts/setup-github.sh",
     "scripts/template-check.sh",
     "scripts/template_inheritance.py",
+    "scripts/tests/test_local_workflow_actions.py",
     "service-packages/",
     "src/",
     "tests/",
