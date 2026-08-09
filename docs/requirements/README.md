@@ -33,7 +33,7 @@ updated: 2026-08-10
 
 ## 2. 全体アーキテクチャ
 
-最初の図は、システム境界と主要な入出力だけを示します。内部の処理は後続の3図で視点別に
+最初の図は、システム境界と主要な入出力だけを示します。内部の処理は後続の4図で視点別に
 拡大します。
 
 ```mermaid
@@ -52,7 +52,7 @@ flowchart LR
 手動実行ではADCで顧客GCPへ接続する境界を示します。GA4の日次exportは外部前提であり、
 点検成果物は顧客GCPへ自動適用されません。
 
-### 2.1 構築モード：マートとアクセス境界を作る
+### 2.1 構築モード：データをマートへ変換する
 
 ```mermaid
 flowchart TB
@@ -60,22 +60,28 @@ flowchart TB
   RAW --> TRANSFORM["dbt または Dataform<br/>顧客固有SQL"]
   TRANSFORM --> STAGING["staging"] --> INTERMEDIATE["intermediate"] --> MARTS["marts"]
   MARTS --> USERS["分析者・BI"]
-
-  PARAMS["Terraform変数"] --> TF["Terraform"]
-  TF --> CONTROL["datasets・taxonomy<br/>IAM・WIF・任意masking"]
-  CONTROL -->|"staging dataset"| STAGING
-  CONTROL -->|"intermediate dataset"| INTERMEDIATE
-  CONTROL -->|"marts dataset・列保護"| MARTS
-  CONTROL -->|"dataset / Policy Tag ID"| TRANSFORM
-  CATALOG["機密度catalog<br/>level・昇格元"] --> TRANSFORM
-  CATALOG -. "levelの整合契約" .-> CONTROL
 ```
 
-構築モードでは、Terraformがデータを格納する境界とアクセス制御を作り、dbt/Dataformが
-データを変換します。マートの指標・粒度・SQLは顧客固有実装です。catalogはTerraformを
-直接生成せず、変換定義とtaxonomy levelの整合をレビュー可能にします。
+GA4の日次exportで作られたrawデータを、dbt/Dataformが3層へ変換します。テンプレートが
+変換レールとサンプルを提供し、マートの指標・粒度・SQLは顧客固有実装です。
 
-### 2.2 点検・レポートモード：設定を読み、判断材料を作る
+### 2.2 構築モード：基盤と列保護を変換設定へ接続する
+
+```mermaid
+flowchart TB
+  PARAMS["Terraform変数"] --> TF["Terraform"]
+  TF --> INFRA["3層datasets・IAM・WIF<br/>taxonomy・任意masking"]
+  INFRA --> OUTPUTS["dataset IDs<br/>Policy Tag IDs"]
+  OUTPUTS --> PROFILE["dbt / Dataform設定"]
+  CATALOG["機密度catalog<br/>level・昇格元"] --> PROFILE
+  PROFILE --> MART["Policy Tag付き<br/>mart column"]
+```
+
+Terraformはデータを格納する境界、identity、列保護resourceを作り、その出力を変換設定へ
+渡します。catalogはTerraformを直接生成せず、変換定義とtaxonomy levelの整合をレビュー
+可能にします。
+
+### 2.3 点検・レポートモード：設定を読み、判断材料を作る
 
 ```mermaid
 flowchart TB
@@ -94,7 +100,7 @@ flowchart TB
 決定論的な正準結果です。是正案とAIレポートは人が確認する草案で、点検結果の変更や
 Terraform applyを行いません。
 
-### 2.3 GitHub Actions：変更時と定期実行を分離する
+### 2.4 GitHub Actions：変更時と定期実行を分離する
 
 ```mermaid
 flowchart TB
@@ -111,14 +117,15 @@ flowchart TB
 Pull Request経路は変更の品質とSQL費用上限を確認し、点検経路は読み取り専用identityで
 手動または週次実行します。deployer、cost gate、inspectorのidentityを兼用しません。
 
-### 2.4 図の読み分け
+### 2.5 図の読み分け
 
 | 知りたいこと | 読む図・文書 |
 |--------------|--------------|
 | 誰がどのシステム境界へ接続するか | 「全体アーキテクチャ」 |
-| dataset、変換、Policy Tagをどう構築するか | 「2.1 構築モード」 |
-| CHKとレポートが何を読み、何を出すか | 「2.2 点検・レポートモード」 |
-| PR・週次実行・WIF identityをどう分けるか | 「2.3 GitHub Actions」 |
+| rawからマートへどう変換するか | 「2.1 構築モード：データ変換」 |
+| dataset、IAM、Policy Tagをどう接続するか | 「2.2 構築モード：基盤と列保護」 |
+| CHKとレポートが何を読み、何を出すか | 「2.3 点検・レポートモード」 |
+| PR・週次実行・WIF identityをどう分けるか | 「2.4 GitHub Actions」 |
 | 提案前のメニューと匿名適合判定 | 「4.1 提案前の匿名スコープ」 |
 | Python内部のmodule境界 | [モジュール構成](../architecture/modules.md) |
 | 認証・GitHub変数・実行時設定 | [実行時設定](../deployment/configuration.md) |
