@@ -1,37 +1,267 @@
 ---
 id: requirements-index
-title: Requirements — Index
-updated: 2026-07-28
+title: secure-ga4-bq-template 全体像・要件索引
+status: maintained
+updated: 2026-08-10
 ---
 
-# Requirements
+# secure-ga4-bq-template 全体像・要件索引
 
-Normative requirement and design documents for this asset. These are the source of truth
-for **what** to build; `.ai/` stays the source of truth for **how** to work.
+この文書は、初めてこのリポジトリを見る人が、**何ができるか**、**どのような構成か**、
+**顧客へ何を確認して実装へ反映するか**を把握するための入口です。このページからリンクする
+要件・設計文書が「何を作るか」の正本であり、`.ai/`は「どのように作業するか」の正本です。
 
-| Doc | Content | Status |
-|-----|---------|--------|
-| [requirements-secure-asset.md](requirements-secure-asset.md) | Main requirements: 2 modes (build / inspect), 3 controls, GA4 sensitive-column catalog (FR-1.1), nested-column unnest design (FR-1.3), 11 deterministic security checkpoints (FR-4), additive description and promotion-source governance (FR-9/FR-10, CHK-12/CHK-13), asset-integration plan (§7.2) | v1.0 + CHK-12/CHK-13 |
-| [requirements-dbt-dataform-rail.md](requirements-dbt-dataform-rail.md) | Mart-build rail: dbt/Dataform engine selection via profile-copy, shared governance layer, CI dry-run cost gate | v1.0 |
-| [requirements-service-packaging.md](requirements-service-packaging.md) | Service packaging: evidenced common core, inspection-menu limits and qualification, 3 standard presets, conditional options, pricing rationale, and proposal-draft AI | v1.2 draft |
-| [design-modules-wif-wiring.md](design-modules-wif-wiring.md) | Implementation design: interfaces of the 5 new Terraform modules, WIF wiring (deployer SA / inspector SA), new CI workflows | baseline implemented v1; cost-gate extension in ADR-0006 |
-| [design-inspection-engine.md](design-inspection-engine.md) | Implementation design: FR-4, FR-9, and FR-10 inspection engine — module layout, snapshot model, deterministic rules for CHK-01..CHK-13, engagement params, CLI/report contract, delivery slices (ADR-0003/ADR-0011) | **implemented through CHK-13** |
-| [design-ai-report-generator.md](design-ai-report-generator.md) | A-level AI narrative report design: deterministic input frame, security boundary, CLI/output contract, and delivery slices (ADR-0004) | implemented-live-v1; `en`/`ja` language extension implemented in Issue #253 |
+実際の操作順は[利用ガイド](../usage.md)、13項目の検出条件とレポート例は
+[点検内容・効果・レポート](../inspection-capabilities.md)を参照してください。
 
-## Reading notes
+## 1. このリポジトリでできること
 
-- **Language**: the docs are Japanese, imported verbatim from the author's working
-  drafts (2026-07-10). This deviates from ADR-0002 (AI-facing docs in English)
-  deliberately: they are user-authored requirement *sources*, and translation would risk
-  meaning drift. English summaries will be added as implementation proceeds (LOG-0008).
-- **External references**: the docs cite personal-goal and interview-preparation
-  documents (`参照_*`, `面談準備_*`, `面談台本_*`). Those are intentionally **not** in
-  this repo — they are HR artifacts, not requirements. The links were flattened to plain
-  text marked リポジトリ外.
-- **Disclosure boundary**: this repository and its reviewed requirement sources are
-  public, including the pricing ranges and organization context they contain. Complete
-  inspection artifacts remain Internal under SEC-011 and must not be committed; see the
-  root README [Visibility](../../README.md#visibility) section.
-- **Design principle carried throughout**: deterministic guards decide (inspection
-  checkpoints, cost gates, preset detection); AI only writes text within the frame the
-  deterministic result provides. Do not invert this when implementing.
+このリポジトリは、GA4からBigQueryへエクスポート済みのデータを使う**マート層**について、
+構築・点検・継続運用を案件ごとに再利用するテンプレートです。
+
+| 利用場面 | できること | 主な入力 | 主な成果物・効果 |
+|----------|------------|----------|------------------|
+| 提案前 | 標準点検メニューを生成し、匿名の規模情報から標準範囲か別見積りかを判定する | project・dataset・table/view・leaf列の件数、特別作業の要否 | `inspection-menu.md`、`qualification.json`、`qualification.md` |
+| 既存環境の点検 | IAM、Policy Tag、監査ログ、費用設定、保持、description、昇格列宣言をCHK-01〜CHK-13で読み取り専用点検する | `inspection-params.yml`、機密度カタログ、ADCまたはWIF | `findings.json`、`findings.csv`、`summary.md` |
+| 是正検討 | findingごとの固定レシピと、任意のVertex AI説明草案を作る | 完全な`findings.json`、AI利用承認 | 自動適用しない`remediation-draft.md`、人がレビューする`ai-report.md` |
+| 新規・再構築 | 3層dataset、Policy Tag、IAM/WIFをTerraformで構成し、dbtまたはDataformでマートを構築する | Terraform変数、変換設定、マートSQL、機密度カタログ | レビュー可能なIaC・変換定義、列保護、最小権限境界 |
+| 継続運用 | 週次の読み取り専用点検と、PRごとのBigQuery dry-run費用gateを実行する | GitHub変数、WIF、SQL glob、byte予算 | 点検成果物、予算超過時に失敗するCI check |
+| 条件付きオプション | Policy Tagに連動したBigQuery列マスキングを構成する | mask方式、対象機密度、masked reader | cleartext・masked・deniedのアクセス境界 |
+
+このテンプレートの判定は決定論的なルールが行います。AIは任意の説明草案だけを担当し、
+点検結果を書き換えたり、是正を自動適用したりしません。
+
+## 2. 全体アーキテクチャ
+
+```mermaid
+flowchart TB
+  CUSTOMER["顧客要件・承認"]
+  ENGINEER["案件エンジニア"]
+
+  subgraph REPO["案件リポジトリ（このテンプレートから作成）"]
+    PARAMS["案件パラメータ<br/>Terraform / inspection / GitHub variables"]
+    CATALOG["機密度カタログ<br/>Policy Tag・昇格元宣言"]
+    TF["Terraform<br/>dataset・taxonomy・IAM・WIF"]
+    TRANSFORM["dbt または Dataform<br/>顧客固有の変換SQL"]
+    INSPECT["inspection<br/>CHK-01〜CHK-13"]
+    REPORT["reporting<br/>決定論的な是正案"]
+    PACKAGE["service_packaging<br/>メニュー・匿名適合判定"]
+  end
+
+  subgraph ACTIONS["GitHub Actions"]
+    CI["format・lint・test・security"]
+    COST["BQ Cost Gate<br/>SQL compile + dry-run"]
+    SCHEDULE["BQ Inspect<br/>手動 / 週次"]
+  end
+
+  subgraph GCP["顧客GCPプロジェクト"]
+    RAW["BigQuery GA4 raw export<br/>analytics_*"]
+    STAGING["staging dataset"]
+    INTERMEDIATE["intermediate dataset"]
+    MARTS["marts dataset<br/>Policy Tag・IAM・任意masking"]
+    BQJOB["BigQuery query service"]
+    META["BigQuery・IAM・taxonomy・logging metadata"]
+  end
+
+  GA4["GA4"] -->|"標準の日次export<br/>テンプレート範囲外"| RAW
+  CUSTOMER --> ENGINEER
+  ENGINEER --> PARAMS
+  ENGINEER --> CATALOG
+  PARAMS --> PACKAGE
+  PARAMS --> TF
+  PARAMS --> TRANSFORM
+  PARAMS --> INSPECT
+  CATALOG -. "levelの整合契約" .-> TF
+  CATALOG --> TRANSFORM
+  CATALOG --> INSPECT
+  PACKAGE --> MENU["inspection-menu / qualification"]
+  TF -->|"構成"| STAGING
+  TF -->|"構成"| INTERMEDIATE
+  TF -->|"構成"| MARTS
+  TF -->|"dataset / Policy Tag ID出力"| TRANSFORM
+  RAW --> TRANSFORM
+  TRANSFORM --> STAGING --> INTERMEDIATE --> MARTS
+  MARTS --> USERS["分析者・BI・下流処理"]
+  CI --> TF
+  CI --> TRANSFORM
+  COST -->|"WIF・query dry-run"| BQJOB
+  BQJOB -. "dry-runで参照見積り" .-> RAW
+  BQJOB -. "dry-runで参照見積り" .-> MARTS
+  SCHEDULE -->|"read-only WIF"| INSPECT
+  META -->|"row値を読まない"| INSPECT
+  INSPECT --> ARTIFACTS["findings.json / CSV / summary"]
+  ARTIFACTS --> REPORT
+  REPORT --> DRAFT["remediation-draft.md"]
+  REPORT -. "仮名化した入力・任意" .-> VERTEX["Vertex AI"]
+  VERTEX -. "alias単位の説明" .-> REPORT
+  REPORT --> AIREPORT["ai-report.md<br/>人がレビュー"]
+```
+
+この図から読み取るべき境界は次のとおりです。
+
+- GA4から`analytics_*`への日次export設定は前提であり、このテンプレートは作成しません。
+- Terraformはデータ層・列分類・IAM・WIFを構成し、dbt/Dataformは顧客固有の業務変換を担います。
+- Cost GateだけがSQLをdry-runします。通常点検はメタデータだけを読み、行値やquery結果を取得しません。
+- 点検結果と是正案は決定論的です。Vertex AIは承認された場合だけ仮名化済み入力から説明草案を作ります。
+- 点検成果物はInternalであり、公開リポジトリへcommitしません。
+
+Python内部の境界は[モジュール構成](../architecture/modules.md)、実行時の認証・変数は
+[実行時設定](../deployment/configuration.md)を参照してください。
+
+## 3. 標準実装と案件実装の境界
+
+| 項目 | テンプレートが提供するもの | 案件で決めて実装するもの |
+|------|----------------------------|--------------------------|
+| GA4 export | export済みBigQuery datasetを入力として扱う契約 | 顧客のGA4・GCP管理者によるリンクと出力先設定 |
+| マート | 3層構成、dbt/Dataformレール、サンプル、データテストの枠組み | 指標、粒度、結合、列、更新頻度、partition/cluster、SQL |
+| 列保護 | taxonomy、Policy Tag、任意masking、機密度カタログ | 顧客分類、対象列、clear/masked reader、例外 |
+| IAM/WIF | 最小権限を分離するTerraformとCI接続 | 実際の主体、repository、承認・運用責任者 |
+| 監査ログ | 設定を検査するCHK | sinkの出力先、保持、除外条件と案件IaC |
+| 点検 | CHK-01〜CHK-13、成果物schema、是正レシピ | 対象範囲、除外理由、閾値、保管先、受け入れ判断 |
+| AIレポート | provider境界、仮名化、英語・日本語の草案生成 | AI利用承認、region/model、顧客提出前レビュー |
+
+Row-level security、Cloud DLP、row値のPII検査、BIツール側のアクセス制御、収集時のPII防止、
+自動是正、最終的な法令適合判断は標準範囲外です。必要な場合は別スコープとして、
+データアクセス、費用、責任者、受け入れ条件を定義します。
+
+## 4. 顧客要件を実装へ変換する流れ
+
+| 段階 | 顧客と決めること | 主な記録・設定先 | 完了条件 |
+|------|------------------|------------------|----------|
+| 1. 事前適合 | 匿名の規模、WIF設定・query・row値検査の要否 | `engagement-scope.yml` | 標準範囲または別見積り理由が明示される |
+| 2. 目的と範囲 | 構築／点検／両方、対象、対象外、成功条件 | 案件要件書、`inspection-params.yml` | 分母、除外理由、受け入れ責任者が承認する |
+| 3. データ設計 | engine、入力、マート粒度、列、更新、ネスト展開、description | dbt/Dataform設定・モデル、catalog | モデルと機密度・由来宣言をレビューできる |
+| 4. セキュリティ | IAM主体、列機密度、clear/masked権限、CMEK、監査範囲 | Terraform変数、catalog、案件IaC | データ所有者とセキュリティ責任者が承認する |
+| 5. 運用と費用 | WIF、頻度、query予算、成果物保管、AI利用、rollback | GitHub変数、予算、運用手順 | 実行前承認と停止条件が揃う |
+| 6. 実装と受け入れ | 設定PR、認証不要gate、plan、データテスト、再点検 | PR、plan、点検成果物 | 期待結果と残存リスクを確認する |
+
+顧客名や担当者の連絡先は実装パラメータではありません。案件管理側で保持し、
+`engagement-scope.yml`や公開リポジトリへ入れません。
+
+### 4.1 提案前の匿名スコープ
+
+顧客名、project ID、dataset名を収集せず、次の件数と作業条件だけを確認します。
+
+| 顧客への質問 | `engagement-scope.yml`のフィールド |
+|--------------|--------------------------------------|
+| 対象GCP projectはいくつか | `counts.projects` |
+| 除外後のdatasetはいくつか | `counts.datasets` |
+| 走査対象のtable/viewはいくつか | `counts.table_resources` |
+| フラット化したleaf列はいくつか | `counts.leaf_columns` |
+| 顧客環境へWIFを新設する必要があるか | `special_conditions.customer_wif_setup` |
+| dry-run以外のBigQuery queryが必要か | `special_conditions.query_jobs_required` |
+| 行データまたは値の検査が必要か | `special_conditions.row_value_inspection_required` |
+
+`make qualify-inspection-scope SCOPE=<file>`は、version管理された標準メニューにこの回答を照合します。
+最終価格、クラウドアクセス承認、点検結果を決める処理ではありません。
+
+### 4.2 点検パラメータ
+
+| 顧客への質問 | 設定先・実装パラメータ |
+|--------------|-------------------------|
+| どのproject・locationを点検するか | `inspection-params.yml`: `project_id`、`expected_location` |
+| mart/raw datasetの命名規則と明示的な対象外は何か | `datasets.mart_patterns`、`datasets.raw_patterns`、`datasets.exclude` |
+| Data Access監査を重点化するdatasetはどれか | `audit.high_sensitivity_datasets` |
+| 監査ログの許容保持上限は何日か | `audit.retention_max_days` |
+| 大規模table・長期保持・CMEKの基準は何か | `thresholds.large_table_bytes`、`long_lived_days`、`require_cmek` |
+| どの列をhigh/medium/lowとし、昇格元を何とするか | `catalog/ga4-sensitivity.yml`: `overrides`、`promoted_columns` |
+| どの重大度からCIを失敗させるか | CLIまたは手動workflow: `FAIL_ON` / `fail_on`。定期実行はreport-only |
+
+未分類datasetは安全側に倒してマート相当で点検します。対象外は暗黙に省かず、理由とともに
+`datasets.exclude`へ宣言します。
+
+### 4.3 構築パラメータと顧客固有実装
+
+| 顧客への質問 | 設定・実装先 |
+|--------------|--------------|
+| project、location、3層dataset名は何か | Terraform: `project_id`、`region`、`layer_dataset_ids` |
+| layerごとに誰へ何のroleを付けるか | Terraform: `layer_iam_members` |
+| cleartext閲覧者、mask方式、masked readerは誰か | Terraform: `fine_grained_readers`、`data_policies`。maskingは既定で無効 |
+| GitHub Actionsを許可する案件repositoryはどれか | Terraform: `github_repository`、`github_repository_id`、SA/WIF ID群 |
+| dbtとDataformのどちらを使うか | `profiles/`から一方を選び、対応profileを有効化する |
+| GA4 exportのproject/datasetは何か | 変換profile: `ga4_export_project`、`ga4_export_dataset` |
+| nested keyをどの型・列名へ昇格するか | 変換SQLと`promoted_columns.<column>.source`を同じPRで更新する |
+| マートの粒度、指標、列、更新、partition、cluster、descriptionは何か | 顧客要件に基づくdbt/Dataformモデル実装 |
+| 監査ログの出力先、保持、除外条件は何か | 現在のrootに直接パラメータはないため、案件Terraformへ追加する |
+
+`deployer_roles`を広げる場合は、必要な操作から権限を導出して個別レビューします。
+既定値を根拠なく広げません。
+
+### 4.4 CI・費用・レポート
+
+| 顧客への質問 | 設定先・実装パラメータ |
+|--------------|-------------------------|
+| 点検を週次実行するか | 手動成功後にGitHub変数`BQ_INSPECT_ENABLED=true` |
+| dry-run対象SQLと標準byte上限は何か | `BQ_COST_GATE_SQL_GLOB`、`BQ_COST_GATE_DEFAULT_MAX_BYTES` |
+| SQL別の例外予算と理由はあるか | version管理YAMLと`BQ_COST_GATE_BUDGETS_FILE` |
+| Vertex AIで説明草案を生成してよいか | 案件承認、`GOOGLE_CLOUD_PROJECT`、`GOOGLE_CLOUD_LOCATION`、`GA4_BQ_REPORT_MODEL` |
+| レポート言語は何か | `make report-ai REPORT_LANGUAGE=en|ja`。既定は`en` |
+| 成果物を誰がどこへ何日保管するか | 案件運用手順。`reports/`はgit管理しない |
+
+WIF provider名やSAメールはTerraform出力をGitHub変数へ接続し、手入力で複製しません。
+
+## 5. 要件から設定への変換例
+
+架空案件で次の回答を得たとします。
+
+- 1 project、3 dataset、30 table/view、300 leaf列で、構築と点検の両方を行う。
+- locationは`US`、変換engineはDataform、sourceは`example-analytics.analytics_123456789`。
+- `event_params.customer_email`を`customer_email`へ昇格し、highとしてmaskする。
+- 分析者にはmask済み値だけを見せる。
+- 週次点検を行い、PRのSQLは1本あたり5,000,000,000 bytesを上限とする。
+- Vertex AI利用を承認し、顧客向け草案は日本語にする。
+
+| 反映先 | 主な値・作業 |
+|--------|--------------|
+| `engagement-scope.yml` | `projects: 1`、`datasets: 3`、`table_resources: 30`、`leaf_columns: 300` |
+| Terraform | project、`region=US`、一意な`layer_dataset_ids`、mask policy、masked reader |
+| Dataform | source project/dataset、location、Terraformが出力するdataset・Policy Tag ID |
+| 変換SQLとcatalog | typed列を実装し、`promoted_columns.customer_email.source`と`level: high`を宣言 |
+| `inspection-params.yml` | project、location、mart/raw pattern、catalog、承認済みthreshold |
+| GitHub variables | WIF出力、週次点検の有効化、5,000,000,000 bytesの費用gate |
+| AIレポート | 実行時に`REPORT_LANGUAGE=ja` |
+
+この回答だけでは、マートの指標・更新SQL、監査ログsink、成果物保管先は決まりません。
+追加の顧客回答と承認を得て、案件実装として確定します。
+
+## 6. 実行前に別途承認する事項
+
+次は設定値が決まっていても、自動的な実行許可にはなりません。
+
+- 顧客データまたはInternalな点検成果物へアクセスする主体と保管先
+- GCPリソースの作成・変更・削除、対象project、専用prefix、残存確認方法
+- BigQuery queryの実行、byte上限、費用上限、課金project
+- IAM付与、WIF設定、既存共有リソースへの影響
+- Vertex AIへの送信と、AI草案を顧客成果物へ含めるか
+- 本番変更時間、rollback条件、是正後の再点検責任者
+
+認証情報、顧客の行データ、完全な点検成果物は公開リポジトリへcommitしません。
+
+## 7. 要件確定の完了条件
+
+- [ ] 構築／点検／両方の選択と、標準範囲または別見積り理由が決まっている
+- [ ] 対象project・dataset・table/column分母・除外理由・locationが承認されている
+- [ ] マート利用者、データ所有者、デプロイ担当、点検担当の責任分界がある
+- [ ] IAM主体、機密度、clear/masked境界、CMEK、監査ログ方針が承認されている
+- [ ] マート粒度、必要列、昇格元、description、partition/cluster方針が決まっている
+- [ ] query費用、AI利用、成果物保管、変更・削除の承認条件が決まっている
+- [ ] 設定PR、認証不要gate、Terraform plan、データテスト、再点検を受け入れ手順に含めている
+
+## 8. 要件・設計文書索引
+
+| 文書 | 内容 | 状態 |
+|------|------|------|
+| [requirements-secure-asset.md](requirements-secure-asset.md) | 2モード（構築／点検）、3つの統制、機密度catalog、nested列展開、CHK-01〜CHK-13、asset統合計画 | v1.0 + CHK-12/CHK-13 |
+| [requirements-dbt-dataform-rail.md](requirements-dbt-dataform-rail.md) | profile-copyによるdbt/Dataform選択、共通governance層、CI dry-run費用gate | v1.0 |
+| [requirements-service-packaging.md](requirements-service-packaging.md) | 共通コア、標準点検メニュー、適合判定、3 preset、条件付きoption、価格根拠、提案草案AI | v1.2草案 |
+| [design-modules-wif-wiring.md](design-modules-wif-wiring.md) | Terraform module、deployer／inspector WIF、CI workflowの接続設計 | baseline v1実装済み、費用gateはADR-0006で拡張 |
+| [design-inspection-engine.md](design-inspection-engine.md) | inspection engineのmodule、snapshot、CHK-01〜CHK-13、案件parameter、CLI/report契約 | CHK-13まで実装済み |
+| [design-ai-report-generator.md](design-ai-report-generator.md) | 決定論的入力、security境界、CLI/output契約、英語・日本語のAI説明草案 | 実環境v1実装済み |
+
+### 読み方
+
+- 要件・設計文書は日本語を正本とし、顧客要件の意味を実装都合で変更しません。
+- 文中の`参照_*`、`面談準備_*`、`面談台本_*`はrepository外のHR資料であり、本要件には含みません。
+- この公開repositoryには価格帯や組織的な背景を含むレビュー済み要件を置けますが、完全な点検成果物は
+  SEC-011に従ってInternalとして扱います。
+- 点検checkpoint、費用gate、preset判定は決定論的な処理が決め、AIはその結果の範囲内で文章だけを作ります。
