@@ -13,6 +13,10 @@ on:
     - cron: "17 7 * * *"   # daily, 07:17 UTC
   workflow_dispatch:
 
+concurrency:
+  group: template-sync-${{ github.repository }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
@@ -25,7 +29,41 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Enforce one open Template Sync PR
+        id: sync-preflight
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          open_pulls="$(
+            gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 101 \
+              --json number,headRefName,url
+          )"
+          if [[ "$(jq 'length' <<<"$open_pulls")" -gt 100 ]]; then
+            echo "More than 100 open PRs prevent bounded Template Sync preflight" >&2
+            exit 1
+          fi
+          open_sync_prs="$(
+            jq '[.[] | select(.headRefName | startswith("chore/template_sync_")) | {number, url}]' \
+              <<<"$open_pulls"
+          )"
+          open_count="$(jq 'length' <<<"$open_sync_prs")"
+          if [[ "$open_count" -gt 1 ]]; then
+            echo "Multiple open Template Sync PRs require human review before synchronization" >&2
+            exit 1
+          fi
+          if [[ "$open_count" -eq 1 ]]; then
+            existing_number="$(jq -r '.[0].number' <<<"$open_sync_prs")"
+            existing_url="$(jq -r '.[0].url' <<<"$open_sync_prs")"
+            echo "should_sync=false" >> "$GITHUB_OUTPUT"
+            printf '### Template Sync deferred\n\nExisting PR [#%s](%s) remains the only open synchronization review.\n' \
+              "$existing_number" "$existing_url" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          echo "should_sync=true" >> "$GITHUB_OUTPUT"
       - uses: AndreasAugustin/actions-template-sync@8a0f668b83c32a0f673353086d74f12b8853d4f5 # v2
+        if: steps.sync-preflight.outputs.should_sync == 'true'
         id: template-sync
         with:
           # This repo syncs from terraform-gcp-template (its direct parent). Downstream
@@ -74,6 +112,5 @@ jobs:
 
           Before merge:
           - Review the accepted lock-to-source commit range.
-          - Port direct-parent workflow changes in a separate reviewed PR.
-          - Update .github/inheritance/lock.json only after the complete parent delta is accepted."
+          - Finalize manual boundaries and .github/inheritance/lock.json in this same reviewed PR."
           gh pr edit "$PR_NUMBER" --body "$body"
