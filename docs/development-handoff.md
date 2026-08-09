@@ -18,7 +18,7 @@ authoritative in their linked documents.
 | Default branch | Release baseline v2.11.0 | [Release v2.11.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v2.11.0) |
 | Direct parent lock | `terraform-gcp-template` at `8f15dd548ef8dd86192b2bc1440b6ef40fa8bdc2`; PR #308 merged and Issue #309 closed | [Inheritance lock](../.github/inheritance/lock.json), [PR #308](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/308) |
 | IaC governance prerequisite | Complete: exact `iac-scan` succeeded on PR #125 and its merged-main push | [PR run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29517379947), [main run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29518413106) |
-| Active work | Issue #314 turns the Japanese requirements index into the first-reader system overview: capabilities, full architecture, scope boundary, and customer-question to implementation-parameter mapping. It changes documentation only and uses no cloud resources. PR #313 and Issue #312 are complete; Acceptance S remains condition-gated. | [Issue #314](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/314), [PR #313](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/313), [System overview](requirements/README.md) |
+| Active work | PR #317 splits the dense whole-system diagram into one compact context view and three focused views for build, inspection/reporting, and GitHub Actions. It changes documentation only and uses no cloud resources. PR #315 and Issue #314 are complete; Acceptance S remains condition-gated. | [Issue #316](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/316), [PR #317](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/317), [System overview](requirements/README.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -37,7 +37,7 @@ caller and WIF condition are pinned together to `v2.0.2`.
 
 No cloud action is required. Continue in this order:
 
-1. Review and merge the Issue #314 documentation PR, then use the requirements system overview as the entry point for
+1. Review and merge PR #317, then use the requirements system overview as the entry point for
    future customer scoping. Keep all later Template Sync changes review-gated.
 2. Re-run the GET-only governance planner before any settings change. Treat every live
    target and run as separately approval-gated; implementation merge is not
