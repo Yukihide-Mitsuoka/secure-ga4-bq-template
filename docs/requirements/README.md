@@ -33,80 +33,97 @@ updated: 2026-08-10
 
 ## 2. 全体アーキテクチャ
 
+最初の図は、システム境界と主要な入出力だけを示します。内部の処理は後続の3図で視点別に
+拡大します。
+
 ```mermaid
-flowchart TB
-  CUSTOMER["顧客要件・承認"]
-  ENGINEER["案件エンジニア"]
-
-  subgraph REPO["案件リポジトリ（このテンプレートから作成）"]
-    PARAMS["案件パラメータ<br/>Terraform / inspection / GitHub variables"]
-    CATALOG["機密度カタログ<br/>Policy Tag・昇格元宣言"]
-    TF["Terraform<br/>dataset・taxonomy・IAM・WIF"]
-    TRANSFORM["dbt または Dataform<br/>顧客固有の変換SQL"]
-    INSPECT["inspection<br/>CHK-01〜CHK-13"]
-    REPORT["reporting<br/>決定論的な是正案"]
-    PACKAGE["service_packaging<br/>メニュー・匿名適合判定"]
-  end
-
-  subgraph ACTIONS["GitHub Actions"]
-    CI["format・lint・test・security"]
-    COST["BQ Cost Gate<br/>SQL compile + dry-run"]
-    SCHEDULE["BQ Inspect<br/>手動 / 週次"]
-  end
-
-  subgraph GCP["顧客GCPプロジェクト"]
-    RAW["BigQuery GA4 raw export<br/>analytics_*"]
-    STAGING["staging dataset"]
-    INTERMEDIATE["intermediate dataset"]
-    MARTS["marts dataset<br/>Policy Tag・IAM・任意masking"]
-    BQJOB["BigQuery query service"]
-    META["BigQuery・IAM・taxonomy・logging metadata"]
-  end
-
-  GA4["GA4"] -->|"標準の日次export<br/>テンプレート範囲外"| RAW
-  CUSTOMER --> ENGINEER
-  ENGINEER --> PARAMS
-  ENGINEER --> CATALOG
-  PARAMS --> PACKAGE
-  PARAMS --> TF
-  PARAMS --> TRANSFORM
-  PARAMS --> INSPECT
-  CATALOG -. "levelの整合契約" .-> TF
-  CATALOG --> TRANSFORM
-  CATALOG --> INSPECT
-  PACKAGE --> MENU["inspection-menu / qualification"]
-  TF -->|"構成"| STAGING
-  TF -->|"構成"| INTERMEDIATE
-  TF -->|"構成"| MARTS
-  TF -->|"dataset / Policy Tag ID出力"| TRANSFORM
-  RAW --> TRANSFORM
-  TRANSFORM --> STAGING --> INTERMEDIATE --> MARTS
-  MARTS --> USERS["分析者・BI・下流処理"]
-  CI --> TF
-  CI --> TRANSFORM
-  COST -->|"WIF・query dry-run"| BQJOB
-  BQJOB -. "dry-runで参照見積り" .-> RAW
-  BQJOB -. "dry-runで参照見積り" .-> MARTS
-  SCHEDULE -->|"read-only WIF"| INSPECT
-  META -->|"row値を読まない"| INSPECT
-  INSPECT --> ARTIFACTS["findings.json / CSV / summary"]
-  ARTIFACTS --> REPORT
-  REPORT --> DRAFT["remediation-draft.md"]
-  REPORT -. "仮名化した入力・任意" .-> VERTEX["Vertex AI"]
-  VERTEX -. "alias単位の説明" .-> REPORT
-  REPORT --> AIREPORT["ai-report.md<br/>人がレビュー"]
+flowchart LR
+  CUSTOMER["顧客・案件エンジニア"] --> REPO["案件リポジトリ<br/>要件・設定・変換・点検"]
+  REPO --> ACTIONS["GitHub Actions<br/>検証・費用gate・定期点検"]
+  ACTIONS -->|"WIF"| GCP["顧客GCP<br/>BigQuery・IAM・Policy Tag"]
+  REPO -->|"手動実行・ADC"| GCP
+  GA4["GA4"] -->|"日次export<br/>設定は範囲外"| GCP
+  GCP --> USERS["分析者・BI・下流処理"]
+  GCP -->|"metadata"| REPO
+  REPO --> OUTPUT["提案前判定・点検成果物<br/>是正案・任意のAI説明草案"]
 ```
 
-この図から読み取るべき境界は次のとおりです。
+この図は、案件リポジトリが顧客要件を実装と点検へ変換し、GitHub ActionsからはWIF、
+手動実行ではADCで顧客GCPへ接続する境界を示します。GA4の日次exportは外部前提であり、
+点検成果物は顧客GCPへ自動適用されません。
 
-- GA4から`analytics_*`への日次export設定は前提であり、このテンプレートは作成しません。
-- Terraformはデータ層・列分類・IAM・WIFを構成し、dbt/Dataformは顧客固有の業務変換を担います。
-- Cost GateだけがSQLをdry-runします。通常点検はメタデータだけを読み、行値やquery結果を取得しません。
-- 点検結果と是正案は決定論的です。Vertex AIは承認された場合だけ仮名化済み入力から説明草案を作ります。
-- 点検成果物はInternalであり、公開リポジトリへcommitしません。
+### 2.1 構築モード：マートとアクセス境界を作る
 
-Python内部の境界は[モジュール構成](../architecture/modules.md)、実行時の認証・変数は
-[実行時設定](../deployment/configuration.md)を参照してください。
+```mermaid
+flowchart TB
+  GA4["GA4"] -->|"日次export<br/>範囲外"| RAW["raw<br/>analytics_*"]
+  RAW --> TRANSFORM["dbt または Dataform<br/>顧客固有SQL"]
+  TRANSFORM --> STAGING["staging"] --> INTERMEDIATE["intermediate"] --> MARTS["marts"]
+  MARTS --> USERS["分析者・BI"]
+
+  PARAMS["Terraform変数"] --> TF["Terraform"]
+  TF --> CONTROL["datasets・taxonomy<br/>IAM・WIF・任意masking"]
+  CONTROL -->|"staging dataset"| STAGING
+  CONTROL -->|"intermediate dataset"| INTERMEDIATE
+  CONTROL -->|"marts dataset・列保護"| MARTS
+  CONTROL -->|"dataset / Policy Tag ID"| TRANSFORM
+  CATALOG["機密度catalog<br/>level・昇格元"] --> TRANSFORM
+  CATALOG -. "levelの整合契約" .-> CONTROL
+```
+
+構築モードでは、Terraformがデータを格納する境界とアクセス制御を作り、dbt/Dataformが
+データを変換します。マートの指標・粒度・SQLは顧客固有実装です。catalogはTerraformを
+直接生成せず、変換定義とtaxonomy levelの整合をレビュー可能にします。
+
+### 2.2 点検・レポートモード：設定を読み、判断材料を作る
+
+```mermaid
+flowchart TB
+  PARAMS["inspection-params.yml"] --> INSPECT["inspection<br/>CHK-01〜CHK-13"]
+  CATALOG["機密度catalog"] --> INSPECT
+  META["BigQuery・IAM・taxonomy・logging<br/>metadata"] -->|"read-only"| INSPECT
+  INSPECT --> FINDINGS["findings.json / CSV<br/>summary.md"]
+  FINDINGS --> REMEDIATION["remediation-draft.md<br/>自動適用しない"]
+  FINDINGS --> REPORTING["reporting"]
+  REPORTING -. "仮名化した入力・任意" .-> VERTEX["Vertex AI"]
+  VERTEX -. "alias単位の説明" .-> REPORTING
+  REPORTING --> AI["ai-report.md<br/>人がレビュー"]
+```
+
+通常点検が読むのはmetadataだけであり、行値やquery結果は取得しません。`findings.json`が
+決定論的な正準結果です。是正案とAIレポートは人が確認する草案で、点検結果の変更や
+Terraform applyを行いません。
+
+### 2.3 GitHub Actions：変更時と定期実行を分離する
+
+```mermaid
+flowchart TB
+  PR["Pull Request"] --> CI["format・lint・test・security"]
+  PR --> COST["BQ Cost Gate<br/>compile + dry-run"]
+  COST -->|"cost-gate WIF / SA"| BQ["BigQuery query service<br/>処理byteを見積り"]
+
+  TRIGGER["手動実行 / 週次schedule"] --> WORKFLOW["BQ Inspect"]
+  WORKFLOW -->|"read-only inspector WIF / SA"| META["GCP metadata APIs"]
+  META --> INSPECT["inspection"]
+  INSPECT --> ARTIFACT["Actions artifact<br/>findings・summary・是正案"]
+```
+
+Pull Request経路は変更の品質とSQL費用上限を確認し、点検経路は読み取り専用identityで
+手動または週次実行します。deployer、cost gate、inspectorのidentityを兼用しません。
+
+### 2.4 図の読み分け
+
+| 知りたいこと | 読む図・文書 |
+|--------------|--------------|
+| 誰がどのシステム境界へ接続するか | 「全体アーキテクチャ」 |
+| dataset、変換、Policy Tagをどう構築するか | 「2.1 構築モード」 |
+| CHKとレポートが何を読み、何を出すか | 「2.2 点検・レポートモード」 |
+| PR・週次実行・WIF identityをどう分けるか | 「2.3 GitHub Actions」 |
+| 提案前のメニューと匿名適合判定 | 「4.1 提案前の匿名スコープ」 |
+| Python内部のmodule境界 | [モジュール構成](../architecture/modules.md) |
+| 認証・GitHub変数・実行時設定 | [実行時設定](../deployment/configuration.md) |
+
+すべての点検成果物はInternalであり、公開リポジトリへcommitしません。
 
 ## 3. 標準実装と案件実装の境界
 
