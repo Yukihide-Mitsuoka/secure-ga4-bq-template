@@ -1,7 +1,7 @@
 ---
 id: inspection-capabilities
 title: BigQueryセキュリティ点検の内容・効果・レポート
-updated: 2026-07-28
+updated: 2026-08-10
 ---
 
 # BigQueryセキュリティ点検の内容・効果・レポート
@@ -239,7 +239,8 @@ Terraformレシピでは、これに加えてformat・validate・planを行い�
 AIへ送るのは`PROJECT`や`RESOURCE_001`のような別名、件数、check ID、重大度、承認済みの固定
 ガイダンスだけです。プロジェクトID、実リソース名、観測値、行データ、認証情報、`skipped`の
 詳細は送りません。AIは指摘の追加・削除・重大度変更・解決済み判定・コード生成ができません。
-本文の言語は現在の契約では固定されておらず、必ず人がレビューします。
+本文と固定見出しは`REPORT_LANGUAGE=en|ja`で選択でき、未指定時は英語です。言語によらず
+finding ID、重大度、resource、rule、決定論的な是正ヒントは変更せず、必ず人がレビューします。
 
 ## 納品時に説明するレポート構成
 

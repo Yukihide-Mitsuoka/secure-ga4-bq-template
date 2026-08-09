@@ -6,7 +6,7 @@
 > [secure-ga4-bq-template 利用ガイド](docs/usage.md)を参照してください。
 
 **Secure standard asset for GA4→BigQuery** — a template repository for engagements that
-build or inspect GA4→BQ **mart layers** with three security controls baked in:
+build or inspect GA4→BQ **mart layers** around three security controls:
 ① column-level security (policy tags) ② least-privilege IAM ③ cost-optimized audit
 logging. Built on [terraform-gcp-template](https://github.com/Yukihide-Mitsuoka/terraform-gcp-template)
 (which is built on [ai-dev-foundation](https://github.com/Yukihide-Mitsuoka/ai-dev-foundation)).
@@ -14,6 +14,21 @@ logging. Built on [terraform-gcp-template](https://github.com/Yukihide-Mitsuoka/
 > **AI agents:** stop reading this file. Your entry point is [CLAUDE.md](CLAUDE.md)
 > (Claude Code) or [AGENTS.md](AGENTS.md) (everyone else). Requirements live in
 > [docs/requirements/](docs/requirements/README.md).
+
+## このリポジトリでできること
+
+| 目的 | できること | 主な成果物 |
+|------|------------|------------|
+| 既存マートを点検する | 読み取り専用でIAM、列保護、監査ログ、費用、保持、description、昇格列宣言を13項目点検 | JSON、CSV、決定論サマリー、非適用の是正案 |
+| セキュアなマートを構築する | Terraformでdataset・Policy Tag・IAM/WIFを構成し、dbtまたはDataformでマートを実装 | IaC、変換モデル、Policy Tag付きマート |
+| 顧客へ結果を説明する | 固定findingを基に、英語または日本語の任意AI草案を生成 | 人がレビューする`ai-report.md` |
+| 提案前に範囲を確認する | 匿名の件数と作業条件を標準メニューへ照合 | メニュー、標準範囲／別見積りの判定 |
+| 継続的に検査する | WIFで週次点検し、PRのBigQuery SQLをdry-run予算でgateする | Actionsの点検成果物とCI check |
+
+このテンプレートは、GA4の日次export設定、顧客固有のマート業務ロジック、監査ログsink、
+自動是正を完成品として提供しません。エンジニアは顧客要件を案件パラメータと実装差分へ変換します。
+確認する情報と設定先は
+[できることと顧客案件の要件定義ガイド](docs/capabilities-and-engagement-requirements.md)にまとめています。
 
 ## Position in the template chain
 
