@@ -2,8 +2,8 @@
 
 <!-- repository-readme-owner: Yukihide-Mitsuoka/secure-ga4-bq-template -->
 
-> 日本語での導入・点検・構築手順は
-> [secure-ga4-bq-template 利用ガイド](docs/usage.md)を参照してください。
+> 初めて読む方は、[全体像・できること・要件定義](docs/requirements/README.md)を確認してから、
+> [日本語の利用ガイド](docs/usage.md)に沿って案件リポジトリを準備してください。
 
 **Secure standard asset for GA4→BigQuery** — a template repository for engagements that
 build or inspect GA4→BQ **mart layers** around three security controls:
@@ -15,20 +15,28 @@ logging. Built on [terraform-gcp-template](https://github.com/Yukihide-Mitsuoka/
 > (Claude Code) or [AGENTS.md](AGENTS.md) (everyone else). Requirements live in
 > [docs/requirements/](docs/requirements/README.md).
 
-## このリポジトリでできること
+## Using this template
 
-| 目的 | できること | 主な成果物 |
-|------|------------|------------|
-| 既存マートを点検する | 読み取り専用でIAM、列保護、監査ログ、費用、保持、description、昇格列宣言を13項目点検 | JSON、CSV、決定論サマリー、非適用の是正案 |
-| セキュアなマートを構築する | Terraformでdataset・Policy Tag・IAM/WIFを構成し、dbtまたはDataformでマートを実装 | IaC、変換モデル、Policy Tag付きマート |
-| 顧客へ結果を説明する | 固定findingを基に、英語または日本語の任意AI草案を生成 | 人がレビューする`ai-report.md` |
-| 提案前に範囲を確認する | 匿名の件数と作業条件を標準メニューへ照合 | メニュー、標準範囲／別見積りの判定 |
-| 継続的に検査する | WIFで週次点検し、PRのBigQuery SQLをdry-run予算でgateする | Actionsの点検成果物とCI check |
+The complete Japanese walkthrough, including inspect mode, build mode, outputs, and
+safety boundaries, is available in the [Japanese usage guide](docs/usage.md).
 
-このテンプレートは、GA4の日次export設定、顧客固有のマート業務ロジック、監査ログsink、
-自動是正を完成品として提供しません。エンジニアは顧客要件を案件パラメータと実装差分へ変換します。
-確認する情報と設定先は
-[できることと顧客案件の要件定義ガイド](docs/capabilities-and-engagement-requirements.md)にまとめています。
+1. **Create the engagement repo**: GitHub → "Use this template".
+2. **Repoint template sync**: in `.github/workflows/template-sync.yml`, change
+   `source_repo_path` to `Yukihide-Mitsuoka/secure-ga4-bq-template`; set the repo variable
+   `TEMPLATE_SYNC_ENABLED=true`.
+3. **Replace placeholders**: `grep -rn "{{" . --exclude-dir=.git` — engagement parameters
+   (sensitivity-catalog overrides, unnest keys, IAM principals, audit-log scope) are the
+   per-engagement input; the template body stays unchanged (FR-7).
+4. **Review GitHub governance** with GET-only `plan`, then use `audit` as the compliance
+   gate. A separately authorized local `apply` can enforce the reviewed policy; read its
+   authentication and partial-application constraints before use. See
+   [Usage](docs/foundation/guides/usage.md#5-review-and-optionally-apply-github-governance).
+   Collaboration settings share one verified repository PATCH action; squash-only merge
+   is applied before a linear-history Ruleset so every intermediate state remains valid.
+   `scripts/setup-github.sh` is a compatibility wrapper for the same `plan` and exactly
+   confirmed `apply` paths; it contains no independent governance policy.
+5. **Install local gates**: `make setup`.
+6. **Verify**: `make doctor && make build`.
 
 ## Position in the template chain
 
@@ -146,29 +154,6 @@ the repository variables `WIF_PROVIDER` and `INSPECTOR_SA`, then run **BQ Inspec
 manually. Set `BQ_INSPECT_ENABLED=true` only after that run succeeds to enable the weekly
 schedule. The workflow uploads `findings.json`, `findings.csv`, `summary.md`, and
 `remediation-draft.md`; it never applies remediation.
-
-## Using this template
-
-The complete Japanese walkthrough, including inspect mode, build mode, outputs, and
-safety boundaries, is available in the [Japanese usage guide](docs/usage.md).
-
-1. **Create the engagement repo**: GitHub → "Use this template".
-2. **Repoint template sync**: in `.github/workflows/template-sync.yml`, change
-   `source_repo_path` to `Yukihide-Mitsuoka/secure-ga4-bq-template`; set the repo variable
-   `TEMPLATE_SYNC_ENABLED=true`.
-3. **Replace placeholders**: `grep -rn "{{" . --exclude-dir=.git` — engagement parameters
-   (sensitivity-catalog overrides, unnest keys, IAM principals, audit-log scope) are the
-   per-engagement input; the template body stays unchanged (FR-7).
-4. **Review GitHub governance** with GET-only `plan`, then use `audit` as the compliance
-   gate. A separately authorized local `apply` can enforce the reviewed policy; read its
-   authentication and partial-application constraints before use. See
-   [Usage](docs/foundation/guides/usage.md#5-review-and-optionally-apply-github-governance).
-   Collaboration settings share one verified repository PATCH action; squash-only merge
-   is applied before a linear-history Ruleset so every intermediate state remains valid.
-   `scripts/setup-github.sh` is a compatibility wrapper for the same `plan` and exactly
-   confirmed `apply` paths; it contains no independent governance policy.
-5. **Install local gates**: `make setup`.
-6. **Verify**: `make doctor && make build`.
 
 ## License
 

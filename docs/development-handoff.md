@@ -18,7 +18,7 @@ authoritative in their linked documents.
 | Default branch | Release baseline v2.11.0 | [Release v2.11.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v2.11.0) |
 | Direct parent lock | `terraform-gcp-template` at `8f15dd548ef8dd86192b2bc1440b6ef40fa8bdc2`; PR #308 merged and Issue #309 closed | [Inheritance lock](../.github/inheritance/lock.json), [PR #308](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/308) |
 | IaC governance prerequisite | Complete: exact `iac-scan` succeeded on PR #125 and its merged-main push | [PR run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29517379947), [main run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29518413106) |
-| Active work | PR #313 adds the first-reader capability summary and the customer-question to implementation-parameter guide. It changes documentation only, uses no cloud resources, and closes Issue #312 when merged. Acceptance S remains condition-gated. | [Issue #312](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/312), [PR #313](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/313), [Engagement guide](capabilities-and-engagement-requirements.md) |
+| Active work | Issue #314 turns the Japanese requirements index into the first-reader system overview: capabilities, full architecture, scope boundary, and customer-question to implementation-parameter mapping. It changes documentation only and uses no cloud resources. PR #313 and Issue #312 are complete; Acceptance S remains condition-gated. | [Issue #314](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/314), [PR #313](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/313), [System overview](requirements/README.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -37,7 +37,7 @@ caller and WIF condition are pinned together to `v2.0.2`.
 
 No cloud action is required. Continue in this order:
 
-1. Review and merge PR #313, then use the new engagement guide as the entry point for
+1. Review and merge the Issue #314 documentation PR, then use the requirements system overview as the entry point for
    future customer scoping. Keep all later Template Sync changes review-gated.
 2. Re-run the GET-only governance planner before any settings change. Treat every live
    target and run as separately approval-gated; implementation merge is not
@@ -116,7 +116,7 @@ may be absent; CI remains authoritative.
 
 > Read `AGENTS.md`, `CLAUDE.md`, `.ai/guardrails.md`, `.ai/README.md`, and
 > `docs/development-handoff.md`. Confirm the v2.11.0 release baseline and direct-parent lock
-> `8f15dd548ef8dd86192b2bc1440b6ef40fa8bdc2`. Read the customer engagement guide before
+> `8f15dd548ef8dd86192b2bc1440b6ef40fa8bdc2`. Read the requirements system overview before
 > translating a customer request into implementation inputs. Verify Issue #306's ordered lock
 > acceptance, synchronized fleet-audit guidance, and direct Scorecard boundary. Preserve the leaf-specific release
 > workflow and Scorecard v4 dependency as explicit manual-review boundaries. Keep the
