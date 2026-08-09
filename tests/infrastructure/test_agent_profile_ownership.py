@@ -99,7 +99,7 @@ def test_guardrail_adapter_and_governance_tool_share_canonical_rule_source() -> 
     assert ".ai/contracts/foundation/guardrails.md" in governance
 
 
-def test_parent_release_contract_test_is_an_explicit_leaf_boundary() -> None:
+def test_parent_script_tests_are_an_explicit_leaf_boundary() -> None:
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     ignored = {
         line.strip()
@@ -107,6 +107,20 @@ def test_parent_release_contract_test_is_an_explicit_leaf_boundary() -> None:
         if line.strip() and not line.lstrip().startswith("#")
     }
 
-    assert "scripts/tests/test_local_workflow_actions.py" in manifest["protected_paths"]
+    assert "scripts/tests/" in manifest["protected_paths"]
     assert "scripts/**" in ignored
     assert not (ROOT / "scripts/tests/test_local_workflow_actions.py").exists()
+
+
+def test_python_inheritance_tools_remain_leaf_adapted_boundaries() -> None:
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    ignored = {
+        line.strip()
+        for line in IGNORE.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+
+    for path in ("scripts/makefile_profile.py", "scripts/template_inheritance.py"):
+        assert path in manifest["protected_paths"]
+        assert path not in manifest["inherited_paths"]
+        assert f":!{path}" not in ignored
