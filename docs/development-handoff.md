@@ -2,7 +2,7 @@
 id: development-handoff
 title: Development Handoff
 status: active
-updated: 2026-08-08
+updated: 2026-08-09
 ---
 
 # Development Handoff
@@ -18,7 +18,7 @@ authoritative in their linked documents.
 | Default branch | Release baseline v2.11.0 | [Release v2.11.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v2.11.0) |
 | Direct parent lock | `terraform-gcp-template` at `169c17a28c631235822993edc8eee92e14343aea` | [Inheritance lock](../.github/inheritance/lock.json) |
 | IaC governance prerequisite | Complete: exact `iac-scan` succeeded on PR #125 and its merged-main push | [PR run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29517379947), [main run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29518413106) |
-| Active work | Inheritance is current through `terraform-gcp-template` checkpoint `169c17a`. The parent release-contract test is explicitly protected because this leaf retains a separately tested release implementation; the leaf-specific release workflow and Scorecard v4 dependency remain manual-review boundaries. Acceptance S remains condition-gated. | [Issue #306](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/306), [Foundation ADR-0014](foundation/adr/0014-separate-inherited-agent-contracts-from-project-overlays.md), [Inheritance contract](../.github/inheritance/README.md) |
+| Active work | Template Sync PR #308 targets `terraform-gcp-template` checkpoint `8f15dd5`; the accepted lock remains `169c17a` until its complete delta converges. Issue #309 prepares the generic inherited tooling, single-flight workflow control, and leaf-adapted CodeQL/Scorecard boundaries needed before finalization. The leaf-specific release implementation remains protected and unchanged. Acceptance S remains condition-gated. | [Issue #309](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/309), [PR #308](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/308), [Foundation ADR-0015 at the exact parent source](https://github.com/Yukihide-Mitsuoka/terraform-gcp-template/blob/8f15dd548ef8dd86192b2bc1440b6ef40fa8bdc2/docs/foundation/adr/0015-consolidate-inheritance-acceptance-in-one-reviewed-pr.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -37,8 +37,10 @@ caller and WIF condition are pinned together to `v2.0.2`.
 
 No cloud action is required. Continue in this order:
 
-1. Keep Template Sync review-gated. Accept a new direct-parent lock only after the
-   read-only inheritance plan and fleet report show no unresolved ownership boundary.
+1. Merge Issue #309's protected-boundary preparation before updating PR #308. Then run
+   the read-only finalization plan against exact source `8f15dd5`, accept the lock only
+   after no unresolved ownership or deletion boundary remains, and keep Template Sync
+   review-gated.
 2. Re-run the GET-only governance planner before any settings change. Treat every live
    target and run as separately approval-gated; implementation merge is not
    authorization for `apply`.

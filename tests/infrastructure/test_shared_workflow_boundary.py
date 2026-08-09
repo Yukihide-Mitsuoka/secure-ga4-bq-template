@@ -26,7 +26,7 @@ def test_leaf_specific_release_and_scorecard_remain_direct_boundaries() -> None:
     assert "workflow_dispatch:" in release
     assert "uses: ./scripts/actions/release-please" not in release
     assert "github/codeql-action/upload-sarif@" in scorecard
-    assert "# v4.37.0" in scorecard
+    assert "# v4.37.6" in scorecard
     assert "uses: ./scripts/actions/scorecard" not in scorecard
 
 

@@ -12,7 +12,8 @@
 #   4. Child repositories with a manifest satisfy the local inheritance and legacy
 #      Template Sync protection contract.
 #   5. Declared AI context routes remain structurally valid and report measured budgets.
-#   6. Root README ownership is valid when marked; legacy missing markers remain warnings.
+#   6. Required Make targets have repository-owned implementations.
+#   7. Root README ownership is valid when marked; legacy missing markers remain warnings.
 
 set -u
 cd "$(dirname "$0")/.." || exit 9
@@ -59,7 +60,11 @@ fi
 python3 scripts/context_budget.py validate --root . || \
   err "AI context routes or budgets are invalid (ADR-0012)"
 
-# 6. ADR-0011: detect ownership mismatches without moving or rewriting files. Existing
+# 6. Required canonical Make targets must not retain Foundation template placeholders.
+python3 scripts/makefile_profile.py --root . || \
+  err "Required Make targets retain unresolved template placeholders"
+
+# 7. ADR-0011: detect ownership mismatches without moving or rewriting files. Existing
 # repositories without a marker receive a warning so rule propagation does not force a
 # fleet-wide migration. An unpacked repository without an origin also remains auditable
 # by the other doctor checks.
