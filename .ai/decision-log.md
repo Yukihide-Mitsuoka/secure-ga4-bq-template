@@ -17,6 +17,7 @@ old one. One line per entry. AI agents append entries in the same PR as the chan
 
 | Date | ID | Decision | Link |
 |------|----|----------|------|
+| 2026-08-09 | LOG-0098 | Template Sync PR #308を最新mainへ統合後、限定finalizerで直接親source `8f15dd5` に対する全継承ファイルの内容と実行権限を再検証し、未同期・手動移植・保護領域・所有権・削除の未解決事項がすべて0件であることを確認してlockを更新する。子固有のrelease実装、workflow、製品コード、GitHub/GCP設定は変更しない | [PR #308](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/308) |
 | 2026-08-09 | LOG-0097 | ADR-0015の末端適応として、Template Sync PR上で直接親の正確なsource commitに対する全継承ファイルの内容・実行権限・欠落・残存削除を監査し、通常同期、手動移植、保護領域、所有権、削除の未解決事項がない場合だけlockを原子的に更新する限定finalizerを追加する。保護workflowの自動書換え、クラウド操作、GitHub設定変更は行わず、再実行は冪等にする | [Issue #309](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/309) |
 | 2026-08-09 | LOG-0096 | ADR-0015の単一PR受入れに先立ち、`makefile_profile.py`を親版から移植するが、末端固有のPython整形規則へ適応すると親とbyte同一にならないため、継承CLIと親固有の`scripts/tests/`とともに保護境界へ分類する。Template Syncの単一実行制御とCodeQL/Scorecard更新は末端のcheckout v7・権限・repository identityを維持して適応し、製品コード、release実装、クラウド設定は変更しない | [Issue #309](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/309) |
 | 2026-08-02 | LOG-0095 | 直接親lockを `5bbae93` からfirst-parent順の5 checkpointを経て `36c2804`（terraform-gcp-template #126）へ進める。同期済みfleet監査と直接Scorecard境界を維持し、人間の承認負担を抑えるため1 PR内の独立コミットとして証跡をまとめ、親固有のlock・decision logは引き続き保護する | [Issue #304](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/304) |
