@@ -18,6 +18,8 @@ MAX_CONTRACT_BYTES = 1_000_000
 MAX_OWNERSHIP_ROOTS = 1_000
 MAX_AGENT_INPUTS = 32
 MAX_FLEET_REPOSITORIES = 32
+MAX_AUDITED_INHERITED_FILES = 10_000
+HASH_BATCH_SIZE = 256
 MAX_FIRST_PARENT_COMMITS = 100_000
 MAX_CHANGED_PATHS = 1_000
 REPOSITORY_TARGET = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
@@ -550,6 +552,85 @@ def _child_entry(child_root, parent_root, path):
     return object_id, bool(current.stat().st_mode & 0o111)
 
 
+def _parent_inherited_entries(parent_root, revision, ownership_roots):
+    output = _git(
+        parent_root,
+        ["ls-tree", "-r", "-z", revision, "--", *ownership_roots],
+        "inherited tree read",
+    )
+    entries = {}
+    for index, raw_entry in enumerate(entry for entry in output.split("\0") if entry):
+        try:
+            metadata, path = raw_entry.split("\t", 1)
+            mode, object_type, object_id = metadata.split(" ")
+        except ValueError as error:
+            raise InheritanceError("parent inherited tree has an invalid entry") from error
+        _ownership_root(path, f"parent inherited path[{index}]", file_only=True)
+        if (
+            not _owned_by(path, ownership_roots)
+            or object_type != "blob"
+            or mode not in {"100644", "100755"}
+        ):
+            raise InheritanceError(f"parent inherited path must be a regular file: {path}")
+        if path in entries:
+            raise InheritanceError(f"parent inherited tree contains a duplicate path: {path}")
+        entries[path] = (object_id, mode == "100755")
+        if len(entries) > MAX_AUDITED_INHERITED_FILES:
+            raise InheritanceError(f"inherited audit exceeds {MAX_AUDITED_INHERITED_FILES} files")
+    return entries
+
+
+def _child_inherited_entries(child_root, parent_root, ownership_roots):
+    output = _git(
+        child_root,
+        [
+            "ls-files",
+            "-z",
+            "--cached",
+            "--others",
+            "--exclude-standard",
+            "--",
+            *ownership_roots,
+        ],
+        "child inherited paths read",
+    )
+    files = []
+    for index, path in enumerate(path for path in output.split("\0") if path):
+        _ownership_root(path, f"inherited child path[{index}]", file_only=True)
+        if not _owned_by(path, ownership_roots):
+            raise InheritanceError(f"child inherited path is outside ownership: {path}")
+        current = child_root
+        missing = False
+        for part in path.split("/"):
+            current /= part
+            if current.is_symlink():
+                raise InheritanceError(f"inherited child path must not use a symlink: {path}")
+            if not current.exists():
+                missing = True
+                break
+        if missing:
+            continue
+        if not current.is_file():
+            raise InheritanceError(f"inherited child path must be a regular file: {path}")
+        files.append((path, current, bool(current.stat().st_mode & 0o111)))
+        if len(files) > MAX_AUDITED_INHERITED_FILES:
+            raise InheritanceError(f"inherited audit exceeds {MAX_AUDITED_INHERITED_FILES} files")
+
+    entries = {}
+    for start in range(0, len(files), HASH_BATCH_SIZE):
+        batch = files[start : start + HASH_BATCH_SIZE]
+        hashes = _git(
+            parent_root,
+            ["hash-object", "--no-filters", "--", *(str(item[1]) for item in batch)],
+            "child hash batch",
+        ).splitlines()
+        if len(hashes) != len(batch):
+            raise InheritanceError("child inherited file hashing returned an invalid result")
+        for (path, _current, executable), object_id in zip(batch, hashes, strict=True):
+            entries[path] = (object_id, executable)
+    return entries
+
+
 def plan_inheritance(root, parent_root):
     """Plan one first-parent commit without modifying either worktree."""
     contract = validate_inheritance(root)
@@ -598,6 +679,225 @@ def _manual_boundary_reason(path):
     if path.startswith(".github/inheritance/") or path == TEMPLATE_SYNC_IGNORE_PATH:
         return "inheritance-ownership-boundary"
     return "repository-owned-boundary"
+
+
+def _template_sync_excludes(path, excluded, exceptions):
+    return _owned_by(path, excluded) and not _owned_by(path, exceptions)
+
+
+def _child_default_ref(child_root):
+    return _git(
+        child_root,
+        ["symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD"],
+        "child default branch read",
+    ).strip()
+
+
+def _child_finalization_worktree(root):
+    child_root = Path(root).resolve(strict=True)
+    top_level = Path(
+        _git(child_root, ["rev-parse", "--show-toplevel"], "child root discovery").strip()
+    ).resolve()
+    if top_level != child_root:
+        raise InheritanceError("child root must be the Git worktree top level")
+    if _git(child_root, ["status", "--porcelain=v1"], "child status read"):
+        raise InheritanceError("child worktree must be clean before finalization")
+    branch = _git(
+        child_root,
+        ["symbolic-ref", "--quiet", "--short", "HEAD"],
+        "child branch read",
+    ).strip()
+    default_ref = _child_default_ref(child_root)
+    if branch == default_ref.removeprefix("origin/"):
+        raise InheritanceError("finalization must not run on the default branch")
+    remote = _git(child_root, ["remote", "get-url", "origin"], "child origin read").strip()
+    return child_root, _github_repository(remote), branch
+
+
+def _finalization_context(root, parent_root, source_commit):
+    contract = validate_inheritance(root)
+    child_root, child_repository, branch = _child_finalization_worktree(root)
+    parent_root = _parent_root(parent_root)
+    if type(source_commit) is not str or not COMMIT_ID.fullmatch(source_commit):
+        raise InheritanceError("source commit must be a full lowercase commit ID")
+    target, _candidate = _next_parent_commit(parent_root, contract)
+    accepted_range = _git(
+        parent_root,
+        [
+            "rev-list",
+            "--first-parent",
+            f"{contract['parent']['commit']}..{target}",
+        ],
+        "accepted source range read",
+    ).splitlines()
+    if source_commit != contract["parent"]["commit"] and source_commit not in accepted_range:
+        raise InheritanceError("source commit must be in the accepted first-parent range")
+    return child_root, parent_root, contract, child_repository, branch
+
+
+def _finalization_review(child_root, parent_root, contract, source_commit):
+    inherited = contract["ownership"]["inherited"]
+    excluded, exceptions = _read_template_sync_ignore(child_root)
+    parent_entries = _parent_inherited_entries(parent_root, source_commit, inherited)
+    child_entries = _child_inherited_entries(child_root, parent_root, inherited)
+    review = {
+        name: []
+        for name in (
+            "synchronized",
+            "pending_sync",
+            "pending_manual_port",
+            "manually_ported",
+            "protected_review",
+            "ownership_review",
+            "deletion_review",
+        )
+    }
+    for path in sorted(set(parent_entries) | set(child_entries)):
+        parent_entry = parent_entries.get(path)
+        child_entry = child_entries.get(path)
+        is_manual = _template_sync_excludes(path, excluded, exceptions)
+        if parent_entry is None:
+            review["deletion_review"].append(path)
+        elif child_entry == parent_entry:
+            review["manually_ported" if is_manual else "synchronized"].append(path)
+        elif is_manual:
+            review["pending_manual_port"].append(path)
+        else:
+            review["pending_sync"].append(path)
+
+    if source_commit != contract["parent"]["commit"]:
+        for path in _changed_paths(
+            parent_root,
+            contract["parent"]["commit"],
+            source_commit,
+        ):
+            if _path_owner(path, contract["ownership"]) != "unowned":
+                continue
+            if (
+                _parent_entry(parent_root, source_commit, path) is not None
+                or _child_entry(child_root, parent_root, path) is not None
+            ):
+                review["ownership_review"].append(path)
+
+    default_ref = _child_default_ref(child_root)
+    for path in _changed_paths(child_root, default_ref, "HEAD"):
+        owner = _path_owner(path, contract["ownership"])
+        if owner == "protected" and path != contract["lock_file"]:
+            review["protected_review"].append(path)
+        elif owner == "unowned":
+            review["ownership_review"].append(path)
+    for name in review:
+        review[name] = sorted(set(review[name]))
+    return review
+
+
+def _finalization_report(contract, repository, branch, source_commit, review):
+    blocked = any(
+        review[name]
+        for name in (
+            "pending_sync",
+            "pending_manual_port",
+            "protected_review",
+            "ownership_review",
+            "deletion_review",
+        )
+    )
+    needs_lock = contract["parent"]["commit"] != source_commit
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "status": "blocked"
+        if blocked
+        else "ready_to_finalize"
+        if needs_lock
+        else "already_finalized",
+        "repository": repository,
+        "branch": branch,
+        "parent": {
+            "repository": contract["parent"]["repository"],
+            "locked_commit": contract["parent"]["commit"],
+            "source_commit": source_commit,
+        },
+        **review,
+    }
+
+
+def plan_finalization(root, parent_root, source_commit):
+    """Audit exact-source convergence without modifying either worktree."""
+    child_root, parent_root, contract, repository, branch = _finalization_context(
+        root,
+        parent_root,
+        source_commit,
+    )
+    review = _finalization_review(child_root, parent_root, contract, source_commit)
+    return _finalization_report(contract, repository, branch, source_commit, review)
+
+
+def _raise_finalization_blocker(review):
+    messages = {
+        "pending_sync": "pending sync content must be accepted first",
+        "pending_manual_port": "unsupported manual port is required",
+        "protected_review": "protected review is required",
+        "ownership_review": "ownership review is required",
+        "deletion_review": "deletion review is required",
+    }
+    for category, message in messages.items():
+        if review[category]:
+            raise InheritanceError(f"{message}: {review[category]}")
+
+
+def _write_lock_commit(child_root, contract, source_commit):
+    lock_path = child_root / contract["lock_file"]
+    temporary = lock_path.with_name(f".{lock_path.name}.finalize.tmp")
+    if temporary.exists() or temporary.is_symlink():
+        raise InheritanceError("temporary lock path must be absent before finalization")
+    lock = _read_json(child_root, contract["lock_file"])
+    lock["parent"]["commit"] = source_commit
+    try:
+        temporary.write_text(json.dumps(lock, indent=2) + "\n", encoding="utf-8")
+        temporary.replace(lock_path)
+    except OSError as error:
+        try:
+            temporary.unlink(missing_ok=True)
+        except OSError as cleanup_error:
+            raise InheritanceError(
+                "inheritance lock update and temporary cleanup failed"
+            ) from cleanup_error
+        raise InheritanceError("inheritance lock update failed before acceptance") from error
+
+
+def apply_finalization(
+    root,
+    parent_root,
+    source_commit,
+    *,
+    confirm_repository,
+    confirm_source,
+):
+    """Advance the lock only after complete exact-source convergence."""
+    child_root, parent_root, contract, repository, branch = _finalization_context(
+        root,
+        parent_root,
+        source_commit,
+    )
+    if confirm_repository != repository or confirm_source != source_commit:
+        raise InheritanceError("repository and source confirmation must match exactly")
+    review = _finalization_review(child_root, parent_root, contract, source_commit)
+    _raise_finalization_blocker(review)
+    lock_updated = contract["parent"]["commit"] != source_commit
+    if lock_updated:
+        _write_lock_commit(child_root, contract, source_commit)
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "status": "finalized" if lock_updated else "already_finalized",
+        "repository": repository,
+        "branch": branch,
+        "parent": {
+            "repository": contract["parent"]["repository"],
+            "source_commit": source_commit,
+        },
+        "changes": {"lock_updated": lock_updated},
+        "review": review,
+    }
 
 
 def _fleet_repository(repository, child_root, parent_root):
@@ -722,6 +1022,18 @@ def main(argv=None):
     plan = commands.add_parser("plan", help="plan the next parent commit")
     plan.add_argument("--root", type=Path, default=Path("."), help="child repository root")
     plan.add_argument("--parent-root", type=Path, required=True, help="local parent Git worktree")
+    finalize = commands.add_parser("finalize-sync", help="audit or finalize an exact source")
+    finalize.add_argument("--root", type=Path, default=Path("."), help="child repository root")
+    finalize.add_argument(
+        "--parent-root",
+        type=Path,
+        required=True,
+        help="local parent Git worktree",
+    )
+    finalize.add_argument("--source-commit", required=True, help="exact parent source commit")
+    finalize.add_argument("--apply", action="store_true", help="advance the lock after audit")
+    finalize.add_argument("--confirm-repository", help="exact child repository confirmation")
+    finalize.add_argument("--confirm-source", help="exact source commit confirmation")
     fleet = commands.add_parser("fleet-report", help="report local propagation boundaries")
     fleet.add_argument(
         "--repository",
@@ -737,6 +1049,21 @@ def main(argv=None):
             report = validate_inheritance(args.root)
         elif args.command == "plan":
             report = plan_inheritance(args.root, args.parent_root)
+        elif args.command == "finalize-sync":
+            if args.apply:
+                report = apply_finalization(
+                    args.root,
+                    args.parent_root,
+                    args.source_commit,
+                    confirm_repository=args.confirm_repository,
+                    confirm_source=args.confirm_source,
+                )
+            else:
+                report = plan_finalization(
+                    args.root,
+                    args.parent_root,
+                    args.source_commit,
+                )
         else:
             report = fleet_report(args.repository)
     except InheritanceError as error:
