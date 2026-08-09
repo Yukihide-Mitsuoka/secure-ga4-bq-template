@@ -56,8 +56,8 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-  GA4["GA4"] -->|"日次export<br/>範囲外"| RAW["raw<br/>analytics_*"]
-  RAW --> TRANSFORM["dbt または Dataform<br/>顧客固有SQL"]
+  GA4["GA4"] -->|"日次export（範囲外）"| RAW["raw：analytics_*"]
+  RAW --> TRANSFORM["dbt または Dataform：顧客固有SQL"]
   TRANSFORM --> STAGING["staging"] --> INTERMEDIATE["intermediate"] --> MARTS["marts"]
   MARTS --> USERS["分析者・BI"]
 ```
@@ -70,11 +70,11 @@ GA4の日次exportで作られたrawデータを、dbt/Dataformが3層へ変換�
 ```mermaid
 flowchart TB
   PARAMS["Terraform変数"] --> TF["Terraform"]
-  TF --> INFRA["3層datasets・IAM・WIF<br/>taxonomy・任意masking"]
-  INFRA --> OUTPUTS["dataset IDs<br/>Policy Tag IDs"]
+  TF --> INFRA["3層datasets・IAM・WIF・taxonomy・任意masking"]
+  INFRA --> OUTPUTS["dataset IDs・Policy Tag IDs"]
   OUTPUTS --> PROFILE["dbt / Dataform設定"]
-  CATALOG["機密度catalog<br/>level・昇格元"] --> PROFILE
-  PROFILE --> MART["Policy Tag付き<br/>mart column"]
+  CATALOG["機密度catalog：level・昇格元"] --> PROFILE
+  PROFILE --> MART["Policy Tag付きmart column"]
 ```
 
 Terraformはデータを格納する境界、identity、列保護resourceを作り、その出力を変換設定へ
@@ -85,15 +85,15 @@ Terraformはデータを格納する境界、identity、列保護resourceを作�
 
 ```mermaid
 flowchart TB
-  PARAMS["inspection-params.yml"] --> INSPECT["inspection<br/>CHK-01〜CHK-13"]
+  PARAMS["inspection-params.yml"] --> INSPECT["inspection：CHK-01〜CHK-13"]
   CATALOG["機密度catalog"] --> INSPECT
-  META["BigQuery・IAM・taxonomy・logging<br/>metadata"] -->|"read-only"| INSPECT
-  INSPECT --> FINDINGS["findings.json / CSV<br/>summary.md"]
-  FINDINGS --> REMEDIATION["remediation-draft.md<br/>自動適用しない"]
+  META["BigQuery・IAM・taxonomy・logging metadata"] -->|"read-only"| INSPECT
+  INSPECT --> FINDINGS["findings.json・findings.csv・summary.md"]
+  FINDINGS --> REMEDIATION["remediation-draft.md（自動適用しない）"]
   FINDINGS --> REPORTING["reporting"]
   REPORTING -. "仮名化した入力・任意" .-> VERTEX["Vertex AI"]
   VERTEX -. "alias単位の説明" .-> REPORTING
-  REPORTING --> AI["ai-report.md<br/>人がレビュー"]
+  REPORTING --> AI["ai-report.md（人がレビュー）"]
 ```
 
 通常点検が読むのはmetadataだけであり、行値やquery結果は取得しません。`findings.json`が
@@ -105,13 +105,13 @@ Terraform applyを行いません。
 ```mermaid
 flowchart TB
   PR["Pull Request"] --> CI["format・lint・test・security"]
-  PR --> COST["BQ Cost Gate<br/>compile + dry-run"]
-  COST -->|"cost-gate WIF / SA"| BQ["BigQuery query service<br/>処理byteを見積り"]
+  PR --> COST["BQ Cost Gate：compile + dry-run"]
+  COST -->|"cost-gate WIF / SA"| BQ["BigQuery query service：処理byteを見積り"]
 
   TRIGGER["手動実行 / 週次schedule"] --> WORKFLOW["BQ Inspect"]
   WORKFLOW -->|"read-only inspector WIF / SA"| META["GCP metadata APIs"]
   META --> INSPECT["inspection"]
-  INSPECT --> ARTIFACT["Actions artifact<br/>findings・summary・是正案"]
+  INSPECT --> ARTIFACT["Actions artifact：findings・summary・是正案"]
 ```
 
 Pull Request経路は変更の品質とSQL費用上限を確認し、点検経路は読み取り専用identityで
