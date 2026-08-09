@@ -1,7 +1,7 @@
 ---
 id: secure-ga4-bq-usage
 title: secure-ga4-bq-template 利用ガイド
-updated: 2026-07-28
+updated: 2026-08-10
 ---
 
 # secure-ga4-bq-template 利用ガイド
@@ -12,6 +12,9 @@ updated: 2026-07-28
 
 新しい PC の準備、GitHub ガバナンス、テンプレート継承そのものについては、共通基盤の
 [日本語セットアップ手順](foundation/guides/usage.ja.md)を参照してください。
+
+初めに、[できることと顧客案件の要件定義ガイド](capabilities-and-engagement-requirements.md)で
+提供範囲と、顧客への確認事項をどの設定・実装へ反映するかを確認してください。
 
 ## 最初に利用目的を選ぶ
 
@@ -235,6 +238,7 @@ make security-scan
 | ------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | 共通基盤、新しい PC、GitHub 設定      | [共通基盤の日本語セットアップ手順](foundation/guides/usage.ja.md)                               |
 | この資産が満たす要件                  | [要件索引](requirements/README.md)                                                              |
+| できること、顧客ヒアリング、実装パラメータ | [顧客案件の要件定義ガイド](capabilities-and-engagement-requirements.md)                       |
 | 点検パラメータ、WIF、AI、コストゲート | [実行時設定](deployment/configuration.md)                                                       |
 | 点検内容、効果、レポート例            | [点検内容・効果・レポート](inspection-capabilities.md)                                         |
 | 機密度と昇格列の由来                  | [カタログガイド](../catalog/README.md)                                                          |
