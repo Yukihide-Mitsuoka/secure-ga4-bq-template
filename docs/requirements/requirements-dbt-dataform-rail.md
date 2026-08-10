@@ -29,7 +29,7 @@ GA4→BQのマート層を「安全な設定を宣言的に載せた状態」で
 「1つのメタモデルから両方を生成するコンパイラ」は作らない（＝過剰設計、決定論・単純さの思想に反する）。代わりに **薄い使い分け** を採る。
 
 **共通レイヤ（エンジン非依存・共有資産）**
-- レイヤ規約（dbt標準準拠）: データセットを `staging / intermediate / marts` に分離。命名 = `stg_ga4__events`（ソース二重アンダースコア）→ `int_*`（中間ロジック）→ `fct_*`/`dim_*`（マート）。タグ／機密度タクソノミーの参照名も共通化。
+- レイヤ規約（dbt標準準拠）: `staging`（`stg_ga4__events`、ソース二重アンダースコア）と `marts`（`fct_*`/`dim_*`）を標準とする。複数マートで共有する計算や複雑な結合がある場合だけ、両者の間に `intermediate`（`int_*`）を分離する。タグ／機密度タクソノミーの参照名も共通化。
 - ガバナンス: Terraform で taxonomy / policy tag / dataset / IAM を定義（どちらのエンジンでも同じものを参照）。
 - コストガード: CI で `bq query --dry-run` のスキャンバイト予算ゲート ＝ **エンジン非依存**（BQ側の見積りなので dbt/Dataform どちらでも同一ロジック）。
 
@@ -108,7 +108,7 @@ taxonomy/policy tag/dataset/IAM は Terraform 側で作成、モデルconfigは�
 | 1 | 事業モデル | 受託×再利用アセット（本線に同じ） | 本線 §2.1 |
 | 2 | 使い分け方式 | foundationのprofile方式（profile-copy）。実行時コンパイラは非目標 | §2.2 |
 | 3 | 置き場所 | 4段目テンプレ `secure-ga4-bq-template` 内（上流ベースには足さない） | §2.2, 本線 §7.2 |
-| 4 | 命名規約 | dbt標準準拠（`stg_ga4__* / int_* / fct_*・dim_*`、staging/intermediate/marts 分離） | §2.2 |
+| 4 | 命名規約 | dbt標準準拠（`stg_ga4__* / fct_*・dim_*`を標準とし、必要時だけ`int_*`をintermediateへ分離） | §2.2 |
 | 5 | コストゲート | モデル別の絶対上限（既定値＋上書き） | FR-3 |
 | 6 | Dataform対応 | `bigqueryPolicyTags` ネイティブ対応を確認済（フォールバック不要）。完全リソース名参照・列あたり1タグ | §2.3, FR-2 |
 | 7 | CI配置 | cost-gateは `gcp-cicd-workflows` に新規 `bq-cost-gate.yml`、SQL lintはfoundationの `make lint` 側 | FR-3〜4, 本線 §7.2 |
