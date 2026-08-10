@@ -58,12 +58,19 @@ flowchart LR
 flowchart TB
   GA4["GA4"] -->|"日次export（範囲外）"| RAW["raw：analytics_*"]
   RAW --> TRANSFORM["dbt または Dataform：顧客固有SQL"]
-  TRANSFORM --> STAGING["staging"] --> INTERMEDIATE["intermediate"] --> MARTS["marts"]
+  TRANSFORM --> STAGING["staging：入力の型・命名を正規化"]
+  STAGING -->|"標準経路"| MARTS["marts：利用目的別の完成形"]
+  STAGING -. "共通・複雑な変換が必要な場合だけ" .-> INTERMEDIATE["intermediate"]
+  INTERMEDIATE -.-> MARTS
   MARTS --> USERS["分析者・BI"]
 ```
 
-GA4の日次exportで作られたrawデータを、dbt/Dataformが3層へ変換します。テンプレートが
-変換レールとサンプルを提供し、マートの指標・粒度・SQLは顧客固有実装です。
+GA4の日次exportで作られたrawデータを、dbt/Dataformが利用目的別のマートへ変換します。
+`staging`はraw固有のnested構造、型、命名を吸収する標準層です。`intermediate`モデルは
+複数マートで共有する計算や複雑な結合を分離するときだけ追加し、単純な案件では
+`staging`から`marts`へ直接進みます。現行v2のTerraformが3つのdatasetを予約することは、
+3層すべてにモデルを作る要件を意味しません。テンプレートが変換レールとサンプルを提供し、
+マートの指標・粒度・SQLは顧客固有実装です。
 
 ### 2.2 構築モード：基盤と列保護を変換設定へ接続する
 
@@ -137,7 +144,7 @@ Pull Request経路は変更の品質とSQL費用上限を確認し、点検経�
 | 項目 | テンプレートが提供するもの | 案件で決めて実装するもの |
 |------|----------------------------|--------------------------|
 | GA4 export | export済みBigQuery datasetを入力として扱う契約 | 顧客のGA4・GCP管理者によるリンクと出力先設定 |
-| マート | 3層構成、dbt/Dataformレール、サンプル、データテストの枠組み | 指標、粒度、結合、列、更新頻度、partition/cluster、SQL |
+| マート | staging・martsを標準とし、必要時だけintermediateを挟むdbt/Dataformレール、サンプル、データテストの枠組み | 指標、粒度、結合、列、更新頻度、partition/cluster、SQL、intermediate分離の要否 |
 | 列保護 | taxonomy、Policy Tag、任意masking、機密度カタログ | 顧客分類、対象列、clear/masked reader、例外 |
 | IAM/WIF | 最小権限を分離するTerraformとCI接続 | 実際の主体、repository、承認・運用責任者 |
 | 監査ログ | 設定を検査するCHK | sinkの出力先、保持、除外条件と案件IaC |
