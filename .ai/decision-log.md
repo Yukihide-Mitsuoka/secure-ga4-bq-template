@@ -17,6 +17,7 @@ old one. One line per entry. AI agents append entries in the same PR as the chan
 
 | Date | ID | Decision | Link |
 |------|----|----------|------|
+| 2026-08-14 | LOG-0099 | Dataform profileのdirect dependency制約を変えず、transitive lockfileを現在サポートされるpatch releaseへ更新する。生成結果はnpmの標準監査とrepository全体のsecurity scanで検証し、profile利用者へ既知の不具合を含む古いlockを配布しない | [Dataform profile](../profiles/dataform-bigquery/skeleton/package-lock.json) |
 | 2026-08-10 | ADR-0012 (proposed) | `staging`と`marts`を必須、`intermediate`を任意とする。v2の既定3 Datasetは削除副作用を避けて維持し、案件が明示的に省略した場合だけDataset、output、IAM、cost-gate対象から除外する。任意レイヤーmapへの一般化と自動削除は行わない | [ADR-0012](../docs/adr/0012-make-intermediate-layer-optional.md) |
 | 2026-08-09 | LOG-0098 | Template Sync PR #308を最新mainへ統合後、限定finalizerで直接親source `8f15dd5` に対する全継承ファイルの内容と実行権限を再検証し、未同期・手動移植・保護領域・所有権・削除の未解決事項がすべて0件であることを確認してlockを更新する。子固有のrelease実装、workflow、製品コード、GitHub/GCP設定は変更しない | [PR #308](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/308) |
 | 2026-08-09 | LOG-0097 | ADR-0015の末端適応として、Template Sync PR上で直接親の正確なsource commitに対する全継承ファイルの内容・実行権限・欠落・残存削除を監査し、通常同期、手動移植、保護領域、所有権、削除の未解決事項がない場合だけlockを原子的に更新する限定finalizerを追加する。保護workflowの自動書換え、クラウド操作、GitHub設定変更は行わず、再実行は冪等にする | [Issue #309](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/309) |
