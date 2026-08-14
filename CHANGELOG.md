@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.11.1](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.11.0...v2.11.1) (2026-08-14)
+
+
+### Bug Fixes
+
+* upgrade protected workflow actions ([#322](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/322)) ([4ec4294](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/4ec42941de21f8f604e42ce9f2a1cb075ec10253)), closes [#320](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/320)
+
 ## [2.11.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.10.1...v2.11.0) (2026-08-01)
 
 
