@@ -1,7 +1,7 @@
 ---
 id: secure-ga4-bq-usage
 title: secure-ga4-bq-template 利用ガイド
-updated: 2026-08-10
+updated: 2026-08-24
 ---
 
 # secure-ga4-bq-template 利用ガイド
@@ -13,8 +13,8 @@ updated: 2026-08-10
 新しい PC の準備、GitHub ガバナンス、テンプレート継承そのものについては、共通基盤の
 [日本語セットアップ手順](foundation/guides/usage.ja.md)を参照してください。
 
-初めに、[全体像・要件索引](requirements/README.md)で、提供範囲、アーキテクチャ、顧客への
-確認事項をどの設定・実装へ反映するかを確認してください。
+初めに、[システム全体像](architecture/system-overview.md)で提供範囲を確認し、
+[顧客要件と実装パラメータ](requirements/customer-inputs.md)で顧客への確認事項を整理してください。
 
 ## 最初に利用目的を選ぶ
 
@@ -31,7 +31,7 @@ description、昇格列の由来宣言などを評価します。正式な要件
 [要件索引](requirements/README.md)にあります。
 
 点検項目ごとの検出条件、得られる効果、レポートの具体例は
-[BigQueryセキュリティ点検の内容・効果・レポート](inspection-capabilities.md)を参照してください。
+[点検ガイド](inspection.md)を参照してください。
 成果物一式をクラウド認証なしで確認する場合は、架空データだけを使う
 [合成点検レポートpack](../examples/reporting/README.md)を開いてください。
 
@@ -238,9 +238,10 @@ make security-scan
 | ------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | 共通基盤、新しい PC、GitHub 設定      | [共通基盤の日本語セットアップ手順](foundation/guides/usage.ja.md)                               |
 | この資産が満たす要件                  | [要件索引](requirements/README.md)                                                              |
-| できること、全体構成、顧客ヒアリング、実装パラメータ | [全体像・要件索引](requirements/README.md)                                        |
+| できること、全体構成                  | [システム全体像](architecture/system-overview.md)                                               |
+| 顧客ヒアリング、実装パラメータ        | [顧客要件と実装パラメータ](requirements/customer-inputs.md)                                    |
 | 点検パラメータ、WIF、AI、コストゲート | [実行時設定](deployment/configuration.md)                                                       |
-| 点検内容、効果、レポート例            | [点検内容・効果・レポート](inspection-capabilities.md)                                         |
+| 点検内容、効果、レポート例            | [点検ガイド](inspection.md)                                                                     |
 | 機密度と昇格列の由来                  | [カタログガイド](../catalog/README.md)                                                          |
 | Terraform と列マスキング              | [Terraform 構成](../infra/README.md)                                                            |
 | dbt / Dataform の選択                 | [dbt](../profiles/dbt-bigquery/README.md) / [Dataform](../profiles/dataform-bigquery/README.md) |

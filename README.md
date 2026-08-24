@@ -2,8 +2,13 @@
 
 <!-- repository-readme-owner: Yukihide-Mitsuoka/secure-ga4-bq-template -->
 
-> 初めて読む方は、[全体像・できること・要件定義](docs/requirements/README.md)を確認してから、
-> [日本語の利用ガイド](docs/usage.md)に沿って案件リポジトリを準備してください。
+> 初めて読む方は、知りたい内容から直接開いてください。
+>
+> - [何を点検するか](docs/inspection.md)
+> - [何ができ、どう接続するか](docs/architecture/system-overview.md)
+> - [顧客へ何を確認するか](docs/requirements/customer-inputs.md)
+> - [導入・実行方法](docs/usage.md)
+> - [文書全体の案内](docs/README.md)
 
 **Secure standard asset for GA4→BigQuery** — a template repository for engagements that
 build or inspect GA4→BQ **mart layers** around three security controls:
@@ -83,7 +88,7 @@ do not commit them to this repository. See the
 
 ## Inspection and AI reporting
 
-See the Japanese [inspection capabilities and report guide](docs/inspection-capabilities.md)
+See the Japanese [inspection guide](docs/inspection.md)
 for the 13 concrete checks, expected effects, sample findings, deliverables, and limits.
 The [synthetic report pack](examples/reporting/README.md) shows all five output formats
 without GCP credentials, customer data, or an AI request.
