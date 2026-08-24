@@ -2,7 +2,7 @@
 id: development-handoff
 title: Development Handoff
 status: active
-updated: 2026-08-10
+updated: 2026-08-24
 ---
 
 # Development Handoff
@@ -13,12 +13,12 @@ authoritative in their linked documents.
 
 ## Snapshot
 
-| Item | State on 2026-08-10 | Evidence or source |
+| Item | State on 2026-08-24 | Evidence or source |
 |------|---------------------|--------------------|
-| Default branch | Release baseline v2.11.0 | [Release v2.11.0](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v2.11.0) |
-| Direct parent lock | `terraform-gcp-template` at `8f15dd548ef8dd86192b2bc1440b6ef40fa8bdc2`; PR #308 merged and Issue #309 closed | [Inheritance lock](../.github/inheritance/lock.json), [PR #308](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/308) |
+| Default branch | Release baseline v2.11.1 | [Release v2.11.1](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/releases/tag/v2.11.1) |
+| Direct parent lock | `terraform-gcp-template` at `7aada28695a165035d5dd77705c803861a3287f1` | [Inheritance lock](../.github/inheritance/lock.json) |
 | IaC governance prerequisite | Complete: exact `iac-scan` succeeded on PR #125 and its merged-main push | [PR run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29517379947), [main run](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/actions/runs/29518413106) |
-| Active work | PR #317 and Issue #316 are complete. PR #319 and Issue #318 propose making `intermediate` optional while preserving the v2 default to prevent unintended Dataset deletion. ADR-0012 is awaiting repository-owner review; implementation must remain a separate PR after approval. No cloud resource is required. Acceptance S remains condition-gated. | [PR #319](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/319), [Issue #318](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/318), [ADR-0012](adr/0012-make-intermediate-layer-optional.md), [System overview](requirements/README.md) |
+| Active work | Issue #326 reorganizes user-facing documentation by reader task. ADR-0012 was accepted through PR #319; Issue #318 implementation remains next after the documentation work. No cloud resource is required. Acceptance S remains condition-gated. | [Issue #326](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/326), [Issue #318](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/318), [ADR-0012](adr/0012-make-intermediate-layer-optional.md), [Documentation index](README.md) |
 | Repository visibility | Public; project/resource IDs are not treated as secrets, but raw inspection artifacts remain Internal | [Security guidance](../.ai/security.md) |
 | Acceptance B | Complete: 11/11 checks proven deterministically and 8/11 live | [B evidence](verification/2026-07-12-inspection-engine-b-evidence.md) |
 | Technical Acceptance A | APPROVED on 2026-07-15: public-source materialization, WIF cost gate, 100% inspection, remediation draft, one AI report, and teardown completed | [Accepted evidence](verification/2026-07-15-public-ga4-acceptance-a-evidence.md) |
@@ -37,10 +37,11 @@ caller and WIF condition are pinned together to `v2.0.2`.
 
 No cloud action is required. Continue in this order:
 
-1. Review ADR-0012. If accepted, implement Issue #318 in a separate PR; do not change the v2
-   default or automatically remove an existing `intermediate` Dataset.
-2. Use the requirements system overview as the entry point for future customer scoping. Keep
-   all later Template Sync changes review-gated.
+1. Complete Issue #326 by landing the reader-task front door, focused point-inspection guide,
+   system overview, and customer-input mapping; then move historical design documents in a
+   follow-up PR without breaking accepted-ADR links.
+2. Implement Issue #318 in a separate PR; do not change the v2 default or automatically remove
+   an existing `intermediate` Dataset.
 3. Re-run the GET-only governance planner before any settings change. Treat every live
    target and run as separately approval-gated; implementation merge is not
    authorization for `apply`.

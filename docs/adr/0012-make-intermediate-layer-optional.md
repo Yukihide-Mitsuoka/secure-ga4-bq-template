@@ -1,15 +1,15 @@
 ---
 id: adr-0012
 title: ADR-0012 — intermediateレイヤーを明示的に任意化する
-status: proposed
-updated: 2026-08-10
+status: accepted
+updated: 2026-08-24
 ---
 
 # ADR-0012: intermediateレイヤーを明示的に任意化する
 
 | Field | Value |
 |-------|-------|
-| Status | proposed |
+| Status | accepted (2026-08-10, repository owner via merged PR #319) |
 | Date | 2026-08-10 |
 | Deciders | repository owner |
 | Author | Codex (AI agent) |
@@ -103,6 +103,6 @@ resource差分がなく、2 Dataset入力を採用した利用者だけがinterm
 
 **Follow-ups:**
 
-- repository ownerが本ADRを承認した後、Issue #318を別PRで実装する。
+- Issue #318を別PRで実装する。
 - Terraform contract test、変数例、dbt/Dataform利用手順、system overview、handoffを更新する。
 - 静的な`terraform validate`とunit testで2層・3層の契約を検証し、GCP resourceは作らない。
