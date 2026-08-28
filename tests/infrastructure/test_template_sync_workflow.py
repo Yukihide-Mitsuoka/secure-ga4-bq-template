@@ -1,11 +1,27 @@
+import json
 import unittest
 from pathlib import Path
 
 REPOSITORY_ROOT = Path(__file__).parents[2]
 WORKFLOW = REPOSITORY_ROOT / ".github" / "workflows" / "template-sync.yml"
+MANIFEST = REPOSITORY_ROOT / ".github" / "inheritance" / "manifest.json"
+IGNORE = REPOSITORY_ROOT / ".templatesyncignore"
 
 
 class TemplateSyncWorkflowTest(unittest.TestCase):
+    def test_unused_parent_test_selector_remains_leaf_owned(self):
+        path = "scripts/run-foundation-tests.sh"
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        ignored = {
+            line.strip()
+            for line in IGNORE.read_text(encoding="utf-8").splitlines()
+            if line.strip() and not line.lstrip().startswith("#")
+        }
+
+        self.assertIn(path, manifest["protected_paths"])
+        self.assertNotIn(path, manifest["inherited_paths"])
+        self.assertIn("scripts/**", ignored)
+
     def test_sync_pr_records_exact_action_source_commit(self):
         workflow = WORKFLOW.read_text(encoding="utf-8")
 

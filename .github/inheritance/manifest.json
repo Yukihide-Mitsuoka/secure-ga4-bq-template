@@ -76,6 +76,7 @@
     "scripts/github_governance.py",
     "scripts/makefile_profile.py",
     "scripts/readme_ownership.py",
+    "scripts/run-foundation-tests.sh",
     "scripts/seed-verification-data.sh",
     "scripts/setup-github.sh",
     "scripts/template-check.sh",
