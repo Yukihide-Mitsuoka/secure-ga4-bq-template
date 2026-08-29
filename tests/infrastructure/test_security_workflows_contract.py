@@ -8,6 +8,7 @@ ROOT = Path(__file__).parents[2]
 CODEQL = ROOT / ".github" / "workflows" / "codeql.yml"
 LABELS_SYNC = ROOT / ".github" / "workflows" / "labels-sync.yml"
 SCORECARD = ROOT / ".github" / "workflows" / "scorecard.yml"
+RELEASE = ROOT / ".github" / "workflows" / "release.yml"
 WORKFLOWS = ROOT / ".github" / "workflows"
 
 
@@ -43,6 +44,17 @@ def test_plan_limited_security_jobs_are_public_only() -> None:
 
     assert _job(CODEQL, "analyze")["if"] == expected
     assert _job(SCORECARD, "analysis")["if"] == expected
+
+
+def test_release_attestation_is_public_only() -> None:
+    steps = _job(RELEASE, "release-gates")["steps"]
+    attestation = next(
+        step for step in steps if step.get("uses", "").startswith("actions/attest-build-provenance@")
+    )
+
+    assert attestation["if"] == (
+        "github.event.repository.visibility == 'public' && hashFiles('dist/**') != ''"
+    )
 
 
 def test_labels_sync_job_can_read_the_private_repository() -> None:
