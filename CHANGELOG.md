@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.11.3](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.11.2...v2.11.3) (2026-08-29)
+
+
+### Bug Fixes
+
+* **inheritance:** advance terraform parent lock ([#333](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/333)) ([797c9b5](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/797c9b51ebcbc08dde559f8d43993356c8fd870e))
+
 ## [2.11.2](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.11.1...v2.11.2) (2026-08-29)
 
 
