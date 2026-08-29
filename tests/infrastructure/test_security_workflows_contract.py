@@ -49,7 +49,9 @@ def test_plan_limited_security_jobs_are_public_only() -> None:
 def test_release_attestation_is_public_only() -> None:
     steps = _job(RELEASE, "release-gates")["steps"]
     attestation = next(
-        step for step in steps if step.get("uses", "").startswith("actions/attest-build-provenance@")
+        step
+        for step in steps
+        if step.get("uses", "").startswith("actions/attest-build-provenance@")
     )
 
     assert attestation["if"] == (

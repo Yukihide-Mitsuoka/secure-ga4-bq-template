@@ -78,7 +78,7 @@ jobs:
       - name: Build release artifact
         run: make build
       - name: Attest build provenance (SLSA — SEC-031)
-        if: hashFiles('dist/**') != ''
+        if: github.event.repository.visibility == 'public' && hashFiles('dist/**') != ''
         uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
         with:
           subject-path: "dist/**"
