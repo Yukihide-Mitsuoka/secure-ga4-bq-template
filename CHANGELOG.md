@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.11.2](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.11.1...v2.11.2) (2026-08-29)
+
+
+### Bug Fixes
+
+* **ci:** skip public-only security jobs in private repos ([#329](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/329)) ([e60225f](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/e60225fe8b06ee62ab972a8065cf85c16a22db2c))
+
 ## [2.11.1](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.11.0...v2.11.1) (2026-08-14)
 
 
