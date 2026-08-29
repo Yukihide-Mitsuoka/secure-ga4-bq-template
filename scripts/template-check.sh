@@ -40,13 +40,11 @@ if grep -rlnE '^## (id|name): .+ (title|description): ' .ai .skills docs CLAUDE.
   err "^ file(s) above contain collapsed YAML frontmatter — run mdformat with mdformat-frontmatter (see LOG-0007)"
 fi
 
-# 3. Profiles keep their lockfiles below the repository root. The GR-020 size guard
-# must use recursive pathspecs or generated lockfiles can hard-fail an otherwise small PR.
-for lockfile in package-lock.json pnpm-lock.yaml; do
-  if ! grep -qF "':(exclude)**/$lockfile'" .github/workflows/ci.yml; then
-    err ".github/workflows/ci.yml: PR size guard does not exclude nested $lockfile files"
-  fi
-done
+# 3. The child-owned policy must classify lockfiles by basename so generated files at
+# any depth are excluded without broad pathspec exceptions.
+if ! grep -qF "PurePosixPath(filename).name in LOCKFILE_NAMES" scripts/pr_size_policy.py; then
+  err "scripts/pr_size_policy.py: nested lockfile classification is missing"
+fi
 
 # 4. ADR-0007: validate the actual child contract, not only unit-test fixtures. The
 # foundation root has no child manifest, so this remains a no-op there.

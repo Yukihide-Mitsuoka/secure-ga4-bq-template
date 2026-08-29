@@ -17,3 +17,5 @@ def test_doctor_validates_the_actual_child_inheritance_contract():
     assert "Required Make targets retain unresolved template placeholders" in script
     assert "python3 scripts/readme_ownership.py audit --root ." in script
     assert "Root README ownership is invalid (ADR-0011)" in script
+    assert "PurePosixPath(filename).name in LOCKFILE_NAMES" in script
+    assert "scripts/pr_size_policy.py" in script

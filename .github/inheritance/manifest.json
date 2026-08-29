@@ -75,6 +75,7 @@
     "scripts/export_dataform_sql.py",
     "scripts/github_governance.py",
     "scripts/makefile_profile.py",
+    "scripts/pr_size_policy.py",
     "scripts/readme_ownership.py",
     "scripts/run-foundation-tests.sh",
     "scripts/seed-verification-data.sh",

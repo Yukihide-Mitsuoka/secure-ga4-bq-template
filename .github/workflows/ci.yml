@@ -88,26 +88,35 @@ jobs:
         uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Check out policy implementation
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          fetch-depth: 0
+          persist-credentials: false
       - name: PR size guard (GR-020)
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          ADDITIONS: ${{ github.event.pull_request.additions }}
+          DELETIONS: ${{ github.event.pull_request.deletions }}
+          FILES: ${{ github.event.pull_request.changed_files }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+          TARGET_REPOSITORY: ${{ github.repository }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
-          # Generated lockfiles are excluded from the reviewability metric: nobody
-          # hand-reviews them line-by-line, and a routine Renovate lockfile bump
-          # must not hard-fail the guard. Everything else still counts.
-          STATS=$(git diff --numstat "$BASE_SHA" "$HEAD_SHA" -- . \
-            ':(exclude)*.lock' ':(exclude)**/package-lock.json' ':(exclude)**/pnpm-lock.yaml' \
-            ':(exclude)*.lock.hcl')
-          TOTAL=$(echo "$STATS" | awk '{a+=$1+$2} END {print a+0}')
-          FILES=$(echo "$STATS" | grep -c . || true)
-          echo "Changed lines (excl. lockfiles): $TOTAL, files: $FILES"
-          if [ "$TOTAL" -gt 800 ] || [ "$FILES" -gt 20 ]; then
-            echo "::error::PR exceeds hard size limit (GR-020). Split it (soft limit 400 lines/10 files, hard 800/20)."
-            exit 1
-          elif [ "$TOTAL" -gt 400 ] || [ "$FILES" -gt 10 ]; then
-            echo "::warning::PR exceeds the GR-020 soft limit — must be justified in the description (mechanical change?)."
-          fi
+          gh api --paginate --slurp \
+            "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files?per_page=100" \
+            > "${RUNNER_TEMP}/pr-files.json"
+          python3 scripts/pr_size_policy.py \
+            --files-json "${RUNNER_TEMP}/pr-files.json" \
+            --additions "${ADDITIONS}" \
+            --deletions "${DELETIONS}" \
+            --files "${FILES}" \
+            --pr-author "${PR_AUTHOR}" \
+            --head-repository "${HEAD_REPOSITORY}" \
+            --target-repository "${TARGET_REPOSITORY}" \
+            --head-ref "${HEAD_REF}" \
+            --base-ref "${BASE_REF}" \
+            --pr-body "${PR_BODY}"

@@ -17,6 +17,7 @@ old one. One line per entry. AI agents append entries in the same PR as the chan
 
 | Date | ID | Decision | Link |
 |------|----|----------|------|
+| 2026-08-29 | LOG-0101 | GR-020の数値上限を超えられるのは、GitHub Actionsが同一リポジトリに作成し、mainを対象とし、正確な直接親sourceを本文に持つTemplate Sync PRだけとする。fork、手動branch、別親、不正sourceはfail-closedで拒否し、全CIと人のreviewは維持する | [PR #327](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/pull/327) |
 | 2026-08-14 | LOG-0100 | Node.js 24移行を末端の保護workflow・test境界へ手動移植し、5つのJavaScript ActionをFoundation承認済みmajorとcommit SHAへ更新する。trigger、permission、inputは維持し、末端所有の回帰テストで今後の旧major再混入を拒否する | [Issue #320](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/320) |
 | 2026-08-14 | LOG-0099 | Dataform profileのdirect dependency制約を変えず、transitive lockfileを現在サポートされるpatch releaseへ更新する。生成結果はnpmの標準監査とrepository全体のsecurity scanで検証し、profile利用者へ既知の不具合を含む古いlockを配布しない | [Dataform profile](../profiles/dataform-bigquery/skeleton/package-lock.json) |
 | 2026-08-10 | ADR-0012 (proposed) | `staging`と`marts`を必須、`intermediate`を任意とする。v2の既定3 Datasetは削除副作用を避けて維持し、案件が明示的に省略した場合だけDataset、output、IAM、cost-gate対象から除外する。任意レイヤーmapへの一般化と自動削除は行わない | [ADR-0012](../docs/adr/0012-make-intermediate-layer-optional.md) |
