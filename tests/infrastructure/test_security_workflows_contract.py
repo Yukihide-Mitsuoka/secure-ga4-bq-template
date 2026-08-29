@@ -38,6 +38,13 @@ def test_codeql_analyzes_the_repository_primary_language() -> None:
     assert matrix["language"] == ["python"]
 
 
+def test_plan_limited_security_jobs_are_public_only() -> None:
+    expected = "github.event.repository.visibility == 'public'"
+
+    assert _job(CODEQL, "analyze")["if"] == expected
+    assert _job(SCORECARD, "analysis")["if"] == expected
+
+
 def test_labels_sync_job_can_read_the_private_repository() -> None:
     permissions = _job(LABELS_SYNC, "sync")["permissions"]
 
