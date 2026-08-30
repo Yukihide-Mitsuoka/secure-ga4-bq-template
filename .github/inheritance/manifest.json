@@ -43,6 +43,7 @@
     "SECURITY.md",
     "renovate.json",
     "scripts/actions/",
+    "scripts/template_sync_auth.py",
     "docs/foundation/"
   ],
   "protected_paths": [
