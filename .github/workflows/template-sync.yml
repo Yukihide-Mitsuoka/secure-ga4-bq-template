@@ -6,6 +6,7 @@
 # TEMPLATE_SYNC_ENABLED is set to "true". So the template repo itself and any unmodified
 # downstream repo never run it (no spurious scheduled failures). To enable sync in a
 # downstream repo: set variable TEMPLATE_SYNC_ENABLED=true and verify its direct parent.
+# Private parents additionally require the documented GitHub App variables and secret.
 name: Template Sync
 
 on:
@@ -29,6 +30,8 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
       - name: Enforce one open Template Sync PR
         id: sync-preflight
         shell: bash
@@ -62,10 +65,42 @@ jobs:
             exit 0
           fi
           echo "should_sync=true" >> "$GITHUB_OUTPUT"
+      - name: Validate direct parent and source authentication
+        if: steps.sync-preflight.outputs.should_sync == 'true'
+        id: source-auth
+        shell: bash
+        env:
+          SOURCE_AUTH: ${{ vars.TEMPLATE_SYNC_SOURCE_AUTH || 'public' }}
+          HAS_SOURCE_APP_CLIENT_ID: ${{ vars.TEMPLATE_SYNC_SOURCE_APP_CLIENT_ID != '' }}
+          HAS_SOURCE_APP_PRIVATE_KEY: ${{ secrets.TEMPLATE_SYNC_SOURCE_APP_PRIVATE_KEY != '' }}
+          SOURCE_REPOSITORY: "Yukihide-Mitsuoka/terraform-gcp-template"
+        run: |
+          set -euo pipefail
+          source_auth="$(python3 scripts/template_sync_auth.py \
+            --root . \
+            --source-repository "$SOURCE_REPOSITORY" \
+            --mode "$SOURCE_AUTH" \
+            --has-client-id "$HAS_SOURCE_APP_CLIENT_ID" \
+            --has-private-key "$HAS_SOURCE_APP_PRIVATE_KEY")"
+          echo "mode=$(jq -r .mode <<<"$source_auth")" >> "$GITHUB_OUTPUT"
+          echo "owner=$(jq -r .owner <<<"$source_auth")" >> "$GITHUB_OUTPUT"
+          echo "repository=$(jq -r .repository <<<"$source_auth")" >> "$GITHUB_OUTPUT"
+      - name: Create direct-parent read token
+        if: steps.source-auth.outputs.mode == 'github-app'
+        id: source-app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
+        with:
+          client-id: ${{ vars.TEMPLATE_SYNC_SOURCE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.TEMPLATE_SYNC_SOURCE_APP_PRIVATE_KEY }}
+          owner: ${{ steps.source-auth.outputs.owner }}
+          repositories: ${{ steps.source-auth.outputs.repository }}
+          permission-contents: read
       - uses: AndreasAugustin/actions-template-sync@8a0f668b83c32a0f673353086d74f12b8853d4f5 # v2
         if: steps.sync-preflight.outputs.should_sync == 'true'
         id: template-sync
         with:
+          source_gh_token: ${{ steps.source-app-token.outputs.token || github.token }}
+          target_gh_token: ${{ github.token }}
           # This repo syncs from terraform-gcp-template (its direct parent). Downstream
           # engagement repos created from THIS template must repoint this to
           # Yukihide-Mitsuoka/secure-ga4-bq-template.
@@ -78,12 +113,12 @@ jobs:
             .github/inheritance/lock.json in this PR.
           pr_labels: "type:ci,type:dependencies"
           pr_commit_msg: "build: sync with terraform-gcp-template"
-      - name: Record exact direct-parent source commit
+      - name: Resolve exact direct-parent source commit
         if: steps.template-sync.outputs.pr_branch != ''
+        id: source-provenance
         shell: bash
         env:
-          GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ steps.template-sync.outputs.pr_number }}
+          GH_TOKEN: ${{ steps.source-app-token.outputs.token || github.token }}
           PR_BRANCH: ${{ steps.template-sync.outputs.pr_branch }}
           SOURCE_SHORT: ${{ steps.template-sync.outputs.template_git_hash }}
           SOURCE_REPOSITORY: "Yukihide-Mitsuoka/terraform-gcp-template"
@@ -101,6 +136,18 @@ jobs:
             echo "Unable to expand the Template Sync source commit" >&2
             exit 1
           fi
+          echo "commit=$SOURCE_COMMIT" >> "$GITHUB_OUTPUT"
+      - name: Record exact direct-parent source commit
+        if: steps.template-sync.outputs.pr_branch != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.template-sync.outputs.pr_number }}
+          PR_BRANCH: ${{ steps.template-sync.outputs.pr_branch }}
+          SOURCE_COMMIT: ${{ steps.source-provenance.outputs.commit }}
+          SOURCE_REPOSITORY: "Yukihide-Mitsuoka/terraform-gcp-template"
+        run: |
+          set -euo pipefail
           if [[ -z "$PR_NUMBER" ]]; then
             PR_NUMBER="$(gh pr view "$PR_BRANCH" --json number --jq .number)"
           fi
