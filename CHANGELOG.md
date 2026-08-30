@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.11.4](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.11.3...v2.11.4) (2026-08-30)
+
+
+### Bug Fixes
+
+* **inheritance:** declare private sync auth ownership ([#336](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/336)) ([f6a0509](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/f6a05093db70522b17c4aca24108c8e6f09b1caf))
+
 ## [2.11.3](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.11.2...v2.11.3) (2026-08-29)
 
 
