@@ -1,4 +1,5 @@
 import json
+import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).parents[2]
@@ -124,3 +125,12 @@ def test_python_inheritance_tools_remain_leaf_adapted_boundaries() -> None:
         assert path in manifest["protected_paths"]
         assert path not in manifest["inherited_paths"]
         assert f":!{path}" not in ignored
+
+
+def test_leaf_formatter_does_not_rewrite_inherited_python() -> None:
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    inherited_script = "scripts/template_sync_auth.py"
+
+    assert inherited_script in manifest["inherited_paths"]
+    assert inherited_script in project["tool"]["ruff"]["extend-exclude"]
