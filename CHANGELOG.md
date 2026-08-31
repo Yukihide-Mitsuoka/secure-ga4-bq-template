@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.11.5](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.11.4...v2.11.5) (2026-08-31)
+
+
+### Bug Fixes
+
+* **inheritance:** accept private repository docs policy ([#338](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/338)) ([bc6be87](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/bc6be871f9cfa83984638b2faa58b04d0760af0c))
+
 ## [2.11.4](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.11.3...v2.11.4) (2026-08-30)
 
 
