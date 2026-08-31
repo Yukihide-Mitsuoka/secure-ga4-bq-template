@@ -7,6 +7,7 @@ import re
 import sys
 from pathlib import Path
 
+
 REPOSITORY = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 MAX_MANIFEST_BYTES = 1_000_000
 SUPPORTED_MODES = {"public", "github-app"}
@@ -45,7 +46,9 @@ def validate(
         raise ConfigurationError(
             "Template Sync could not read the declared direct parent"
         ) from error
-    if not isinstance(declared_parent, str) or not REPOSITORY.fullmatch(declared_parent):
+    if not isinstance(declared_parent, str) or not REPOSITORY.fullmatch(
+        declared_parent
+    ):
         raise ConfigurationError("Template Sync declared direct parent is invalid")
     if declared_parent != source_repository:
         raise ConfigurationError(

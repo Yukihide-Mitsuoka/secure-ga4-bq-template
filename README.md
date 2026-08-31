@@ -154,7 +154,3 @@ the repository variables `WIF_PROVIDER` and `INSPECTOR_SA`, then run **BQ Inspec
 manually. Set `BQ_INSPECT_ENABLED=true` only after that run succeeds to enable the weekly
 schedule. The workflow uploads `findings.json`, `findings.csv`, `summary.md`, and
 `remediation-draft.md`; it never applies remediation.
-
-## License
-
-MIT — see [LICENSE](LICENSE).

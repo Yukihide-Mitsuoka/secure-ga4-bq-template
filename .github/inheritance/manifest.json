@@ -38,8 +38,6 @@
     ".pre-commit-config.yaml",
     ".skills/",
     "AGENTS.md",
-    "CONTRIBUTING.md",
-    "LICENSE",
     "SECURITY.md",
     "renovate.json",
     "scripts/actions/",

@@ -42,6 +42,7 @@ line-length = 100
 target-version = "py312"
 # Terraform/profile dirs carry no Python; keep ruff scoped to executable Python and tests.
 include = ["src/**/*.py", "scripts/**/*.py", "tests/**/*.py"]
+extend-exclude = ["scripts/template_sync_auth.py"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
