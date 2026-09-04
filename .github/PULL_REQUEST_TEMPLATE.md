@@ -1,47 +1,52 @@
-<!-- Title must be a Conventional Commit: type(scope): summary — it becomes the squash commit. -->
+<!-- Title: type(scope): summary. ADR-0021: Foundation/template producers write
+English prose; consumer leaves write Japanese prose. Fixed headings stay English. -->
 
-## What & why
+## What and why
 
-<!-- 2-5 sentences: the change and the reason. Link the issue. -->
+<!-- Explain the change and why it is needed; link the issue. -->
 
 Refs: #
 
 ## Change classification (ARC-020)
 
-- [ ] Local (inside one module, contract unchanged)
-- [ ] Contract (MODULE.md public API / event changed — consumers updated in this PR)
+- [ ] Local (one module, no contract change)
+- [ ] Contract (MODULE.md public API or event; consumers updated in this PR)
 - [ ] Architectural (ADR required — link: )
 
-## Breaking change?
+## Breaking changes
 
-- [ ] No
-- [ ] Yes — commit carries `!` + `BREAKING CHANGE:` footer; migration notes: <!-- link/inline -->
+- [ ] None
+- [ ] Yes — add the breaking-change title marker and describe migration:
 
-## Testing (GR-021 / TST-002)
+## Tests (GR-021 / TST-002)
 
-<!-- What is covered, at which pyramid level. For bug fixes: link the failing-first regression test commit. -->
+<!-- State test levels and results; include fail-first evidence for bug fixes. -->
 
-- How verified: <!-- paste the essential `make test` result -->
-- Not verified (be honest — GR-042): <!-- e.g. "not tested on Windows" / "none" -->
+- How verified:
+- Not verified (state omissions honestly, GR-042):
 
-## Dependencies (GR-023 / COD-040) — delete section if none added/upgraded-major
+## Dependencies (GR-023 / COD-040; remove if not applicable)
 
 | Package | Purpose | Alternatives considered | License | Maintenance signal |
-|---------|---------|------------------------|---------|--------------------|
-|         |         |                        |         |                    |
+|------------|------|----------------|--------------|----------|
+|            |      |                |              |          |
 
 ## Documentation (DOC-030)
 
-- [ ] Doc-update matrix checked; updated: <!-- list files, or "n/a — no matrix trigger" -->
+- [ ] Doc-update matrix checked — updated files or reason not applicable:
 
 ## AI disclosure
 
-- [ ] Authored by AI agent: <!-- agent/model name --> — self-review against `.ai/review-checklist.md` completed
-- [ ] Authored by human
-- Prompts/context notes (optional, helps reviewers):
+- [ ] Authored by an AI agent — agent name:
+- [ ] Authored by a human
+- [ ] Self-reviewed with .ai/review-checklist.md
+- Prompts or context notes (optional):
 
-## Self-review checklist (WF-090)
+## Self-review (WF-090)
 
-- [ ] `make format && make lint && make test` green — output reported above
-- [ ] Diff within size limits (GR-020) and contains no unrelated changes
-- [ ] No guardrail violated (`.ai/guardrails.md`)
+- [ ] make format, make lint, and make test passed; results recorded above
+- [ ] Diff is within GR-020 limits and contains no unrelated changes
+- [ ] No .ai/guardrails.md violations
+
+<!-- Language exceptions require the approved label and a visible reason under
+## Language exception (or ## 言語例外). -->
