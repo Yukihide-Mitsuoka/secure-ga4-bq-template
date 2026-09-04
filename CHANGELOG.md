@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.11.6](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.11.5...v2.11.6) (2026-09-04)
+
+
+### Bug Fixes
+
+* **ci:** 利用先PRの日本語規則を強制する ([#345](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/345)) ([c5be132](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/c5be1329f98a03b39ad56e9b26e8ee0e5c1dfdde))
+* **inheritance:** PR役割判定の互換性を復元する ([#346](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/346)) ([b2d04cd](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/b2d04cd547b7aa332bacbb6bda284a4c4d1342b9))
+* **sync:** prepare PR language inheritance boundary ([#343](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/issues/343)) ([14e9180](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/commit/14e9180e47e7f1d48056c45a1c84e6848f4ca52b))
+
 ## [2.11.5](https://github.com/Yukihide-Mitsuoka/secure-ga4-bq-template/compare/v2.11.4...v2.11.5) (2026-08-31)
 
 
