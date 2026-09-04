@@ -130,7 +130,11 @@ def test_python_inheritance_tools_remain_leaf_adapted_boundaries() -> None:
 def test_leaf_formatter_does_not_rewrite_inherited_python() -> None:
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    inherited_script = "scripts/template_sync_auth.py"
+    inherited_scripts = {
+        "scripts/pr_language_policy.py",
+        "scripts/pr_repository_role.py",
+        "scripts/template_sync_auth.py",
+    }
 
-    assert inherited_script in manifest["inherited_paths"]
-    assert inherited_script in project["tool"]["ruff"]["extend-exclude"]
+    assert inherited_scripts <= set(manifest["inherited_paths"])
+    assert inherited_scripts <= set(project["tool"]["ruff"]["extend-exclude"])
