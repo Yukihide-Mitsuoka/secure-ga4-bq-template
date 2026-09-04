@@ -1,6 +1,8 @@
 import unittest
 from pathlib import Path
 
+from scripts.pr_repository_role import resolve_role
+
 ROOT = Path(__file__).parents[2]
 
 
@@ -27,6 +29,12 @@ class PullRequestLanguageCallerTest(unittest.TestCase):
         self.assertIn("English for Foundation and inheritable", rules)
         self.assertIn("template producers, Japanese for consumer leaves", rules)
         self.assertIn("PR language guide", rules)
+
+    def test_secure_ga4_is_resolved_as_a_consumer_leaf(self):
+        self.assertEqual(
+            resolve_role(ROOT, "Yukihide-Mitsuoka/secure-ga4-bq-template"),
+            "consumer",
+        )
 
 
 if __name__ == "__main__":

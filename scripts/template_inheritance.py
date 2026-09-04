@@ -14,6 +14,7 @@ AGENT_PROFILE_SCHEMA_VERSION = 1
 MANIFEST_PATH = ".github/inheritance/manifest.json"
 AGENT_PROFILE_PATH = ".github/inheritance/agent-profile.json"
 TEMPLATE_SYNC_IGNORE_PATH = ".templatesyncignore"
+FOUNDATION_BOOTSTRAP_EXPORT_PATH = ".ai/contracts/foundation/inheritance-export.json"
 MAX_CONTRACT_BYTES = 1_000_000
 MAX_OWNERSHIP_ROOTS = 1_000
 MAX_AGENT_INPUTS = 32
@@ -32,6 +33,11 @@ REQUIRED_PROTECTED_PATHS = {
     ".templatesyncignore",
 }
 REQUIRED_TEMPLATE_SYNC_IGNORES = {".github/workflows/"}
+BOOTSTRAP_MANUAL_BOUNDARIES = {
+    ".ai/project/agent-overlay.md",
+    ".github/workflows/template-sync.yml",
+    "README.md",
+}
 
 
 class InheritanceError(ValueError):
@@ -200,6 +206,50 @@ def _covers(outer, inner):
 
 def _owned_by(path, roots):
     return any(root == path or (root.endswith("/") and path.startswith(root)) for root in roots)
+
+
+def _validate_bootstrap_export(export_path, export, parent_repository):
+    """Validate the export subset consumed by the inherited repository-role resolver."""
+    _object(
+        export,
+        {
+            "schema_version",
+            "repository",
+            "branch",
+            "inherited_paths",
+            "protected_paths",
+            "agent_inputs",
+        },
+        "inheritance export",
+    )
+    if type(export["schema_version"]) is not int or export["schema_version"] != 1:
+        raise InheritanceError("inheritance export.schema_version must be 1")
+    repository = _repository(export["repository"], "inheritance export.repository")
+    if repository.casefold() != parent_repository.casefold():
+        raise InheritanceError("inheritance export repository does not match parent origin")
+    branch = _branch(export["branch"], "inheritance export.branch")
+    inherited = _ownership_roots(export["inherited_paths"], "inheritance export.inherited_paths")
+    protected = _ownership_roots(export["protected_paths"], "inheritance export.protected_paths")
+    _reject_overlaps(inherited + protected, "inheritance export")
+    missing = sorted(
+        path
+        for path in REQUIRED_PROTECTED_PATHS
+        | BOOTSTRAP_MANUAL_BOUNDARIES
+        | {"docs/inheritance/readmes/"}
+        if not _owned_by(path, protected)
+    )
+    if missing:
+        raise InheritanceError(f"inheritance export is missing protected paths: {missing}")
+    if not _owned_by(export_path, inherited):
+        raise InheritanceError("inheritance export must inherit its own export file")
+    return {
+        "path": export_path,
+        "repository": repository,
+        "branch": branch,
+        "inherited_paths": inherited,
+        "protected_paths": protected,
+        "agent_inputs": export["agent_inputs"],
+    }
 
 
 def _require_regular_file(root, relative_path, label):
