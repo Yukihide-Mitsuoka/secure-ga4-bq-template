@@ -7,6 +7,8 @@ docs/**
 profiles/**
 catalog/**
 scripts/**
+:!scripts/pr_language_policy.py
+:!scripts/pr_repository_role.py
 :!scripts/actions/
 :!scripts/actions/**
 service-packages/**
