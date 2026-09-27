@@ -38,6 +38,11 @@ safety boundaries, is available in the [Japanese usage guide](docs/usage.md).
 5. **Install local gates**: `make setup`.
 6. **Verify**: `make doctor && make build`.
 
+[基盤のTaskfile移行](https://github.com/Yukihide-Mitsuoka/ai-dev-foundation/pull/237)中は、
+[`Taskfile.yml`](Taskfile.yml)でも同名タスクを検証できます。Taskは
+[公式手順](https://taskfile.dev/docs/installation)で先に導入してください。
+CI・フックの保護された入口がレビューPRで切り替わるまでは`make`が正規の経路です。
+
 ## Position in the template chain
 
 ```

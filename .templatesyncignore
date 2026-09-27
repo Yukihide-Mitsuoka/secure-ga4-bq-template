@@ -15,6 +15,7 @@ service-packages/**
 CLAUDE.md
 README.md
 Makefile
+Taskfile.yml
 CHANGELOG.md
 .env.example
 .gitignore
